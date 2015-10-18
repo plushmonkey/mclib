@@ -3,7 +3,9 @@
 
 #include "../DataBuffer.h"
 #include "../MCString.h"
+#include "../Position.h"
 #include "../Protocol.h"
+#include <map>
 
 namespace Minecraft {
 namespace Packets {
@@ -76,20 +78,6 @@ public:
     MCString GetServerId() const { return m_ServerId; }
 };
 
-class PluginMessagePacket : public InboundPacket { // 0x3F
-private:
-    MCString m_Channel;
-    std::string m_Data;
-
-public:
-    PluginMessagePacket();
-    bool Deserialize(DataBuffer& data, std::size_t packetLength);
-    void Dispatch(PacketHandler* handler);
-
-    std::wstring GetChannel() const { return m_Channel.GetUTF16(); }
-    std::string GetData() const { return m_Data; }
-};
-
 class LoginSuccessPacket : public InboundPacket { // 0x02
 private:
     MCString m_UUID;
@@ -153,6 +141,116 @@ public:
     u8 GetMaxPlayers() const { return m_MaxPlayers; }
     std::wstring GetLevelType() const { return m_LevelType.GetUTF16(); }
     bool GetReducedDebug() const { return m_ReducedDebug; }
+};
+
+class SpawnPositionPacket : public InboundPacket { // 0x05
+private:
+    Position m_Location;
+
+public:
+    SpawnPositionPacket();
+    bool Deserialize(DataBuffer& data, std::size_t packetLength);
+    void Dispatch(PacketHandler* handler);
+
+    Position GetLocation() const { return m_Location; }
+};
+
+class PlayerPositionAndLookPacket : public InboundPacket { // 0x08
+private:
+    double m_X, m_Y, m_Z;
+    float m_Yaw, m_Pitch;
+    u8 m_Flags;
+
+public:
+    PlayerPositionAndLookPacket();
+    bool Deserialize(DataBuffer& data, std::size_t packetLength);
+    void Dispatch(PacketHandler* handler);
+
+    double GetX() const { return m_X; }
+    double GetY() const { return m_Y; }
+    double GetZ() const { return m_Z; }
+    float GetYaw() const { return m_Yaw; }
+    float GetPitch() const { return m_Pitch; }
+    u8 GetFlags() const { return m_Flags; }
+};
+
+class HeldItemChangePacket : public InboundPacket { // 0x09
+private:
+    u8 m_Slot;
+public:
+    HeldItemChangePacket();
+    bool Deserialize(DataBuffer& data, std::size_t packetLength);
+    void Dispatch(PacketHandler* handler);
+
+    u8 GetSlot() const { return m_Slot; }
+};
+
+class StatisticsPacket : public InboundPacket { // 0x37
+public:
+    typedef std::map<std::wstring, s32> Statistics;
+
+private:
+    Statistics m_Statistics;
+
+public:
+    StatisticsPacket();
+    bool Deserialize(DataBuffer& data, std::size_t packetLength);
+    void Dispatch(PacketHandler* handler);
+
+    const Statistics& GetStatistics() const { return m_Statistics; }
+};
+
+class PlayerListItemPacket : public InboundPacket { // 0x38
+private:
+    
+public:
+    PlayerListItemPacket();
+    bool Deserialize(DataBuffer& data, std::size_t packetLength);
+    void Dispatch(PacketHandler* handler);
+
+    
+};
+
+class PlayerAbilitiesPacket : public InboundPacket { // 0x39
+private:
+    u8 m_Flags;
+    float m_FlyingSpeed;
+    float m_WalkingSpeed;
+
+public:
+    PlayerAbilitiesPacket();
+    bool Deserialize(DataBuffer& data, std::size_t packetLength);
+    void Dispatch(PacketHandler* handler);
+
+    u8 GetFlags() const { return m_Flags; }
+    float GetFlyingSpeed() const { return m_FlyingSpeed; }
+    float GetWalkingSpeed() const { return m_WalkingSpeed; }
+};
+
+class PluginMessagePacket : public InboundPacket { // 0x3F
+private:
+    MCString m_Channel;
+    std::string m_Data;
+
+public:
+    PluginMessagePacket();
+    bool Deserialize(DataBuffer& data, std::size_t packetLength);
+    void Dispatch(PacketHandler* handler);
+
+    std::wstring GetChannel() const { return m_Channel.GetUTF16(); }
+    std::string GetData() const { return m_Data; }
+};
+
+class ServerDifficultyPacket : public InboundPacket { // 0x41
+private:
+    u8 m_Difficulty;
+
+public:
+    ServerDifficultyPacket();
+    bool Deserialize(DataBuffer& data, std::size_t packetLength);
+    void Dispatch(PacketHandler* handler);
+
+    u8 GetDifficulty() const { return m_Difficulty; }
 };
 
 

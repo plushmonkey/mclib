@@ -43,6 +43,181 @@ void JoinGamePacket::Dispatch(PacketHandler* handler) {
     handler->HandlePacket(this);
 }
 
+SpawnPositionPacket::SpawnPositionPacket() {
+    m_Id = 0x05;
+    m_ProtocolState = Minecraft::ProtocolState::Play;
+}
+
+bool SpawnPositionPacket::Deserialize(DataBuffer& data, std::size_t packetLength) {
+    data >> m_Location;
+    return true;
+}
+
+void SpawnPositionPacket::Dispatch(PacketHandler* handler) {
+    handler->HandlePacket(this);
+}
+
+PlayerPositionAndLookPacket::PlayerPositionAndLookPacket() {
+    m_Id = 0x08;
+    m_ProtocolState = Minecraft::ProtocolState::Play;
+}
+
+bool PlayerPositionAndLookPacket::Deserialize(DataBuffer& data, std::size_t packetLength) {
+    data >> m_X >> m_Y >> m_Z;
+    data >> m_Yaw >> m_Pitch;
+    data >> m_Flags;
+    return true;
+}
+
+void PlayerPositionAndLookPacket::Dispatch(PacketHandler* handler) {
+    handler->HandlePacket(this);
+}
+
+HeldItemChangePacket::HeldItemChangePacket() {
+    m_Id = 0x09;
+    m_ProtocolState = Minecraft::ProtocolState::Play;
+}
+
+bool HeldItemChangePacket::Deserialize(DataBuffer& data, std::size_t packetLength) {
+    data >> m_Slot;
+    return true;
+}
+
+void HeldItemChangePacket::Dispatch(PacketHandler* handler) {
+    handler->HandlePacket(this);
+}
+
+StatisticsPacket::StatisticsPacket() {
+    m_Id = 0x37;
+    m_ProtocolState = Minecraft::ProtocolState::Play;
+}
+
+bool StatisticsPacket::Deserialize(DataBuffer& data, std::size_t packetLength) {
+    VarInt count;
+    data >> count;
+
+    for (s32 i = 0; i < count.GetInt(); ++i) {
+        MCString str;
+        VarInt value;
+
+        data >> str;
+        data >> value;
+
+        m_Statistics[str.GetUTF16()] = value.GetInt();
+    }
+
+    return true;
+}
+
+void StatisticsPacket::Dispatch(PacketHandler* handler) {
+    handler->HandlePacket(this);
+}
+
+PlayerListItemPacket::PlayerListItemPacket() {
+    m_Id = 0x38;
+    m_ProtocolState = Minecraft::ProtocolState::Play;
+}
+
+bool PlayerListItemPacket::Deserialize(DataBuffer& data, std::size_t packetLength) {
+    VarInt action;
+    VarInt numPlayers;
+
+    data >> action;
+    data >> numPlayers;
+
+    for (s32 i = 0; i < numPlayers.GetInt(); ++i) {
+        UUID uuid;
+
+        data >> uuid;
+
+        switch (action.GetInt()) {
+            case 0: // Add player
+            {
+                MCString name;
+                VarInt numProperties;
+
+                data >> name;
+                data >> numProperties;
+
+                for (s32 j = 0; j < numProperties.GetInt(); ++j) {
+                    MCString propertyName;
+                    MCString propertyValue;
+                    u8 isSigned;
+                    MCString signature;
+
+                    data >> propertyName;
+                    data >> propertyValue;
+                    data >> isSigned;
+                    if (isSigned)
+                        data >> signature;
+                }
+
+                VarInt gameMode, ping;
+                data >> gameMode;
+                data >> ping;
+
+                u8 hasDisplayName;
+                MCString displayName;
+
+                data >> hasDisplayName;
+                if (hasDisplayName)
+                    data >> displayName;
+            }
+            break;
+            case 1: // Update gamemode
+            {
+                VarInt gameMode;
+                data >> gameMode;
+            }
+            break;
+            case 2: // Update latency
+            {
+                VarInt ping;
+                data >> ping;
+            } 
+            break;
+            case 3: // Update display name
+            {
+                u8 hasDisplayName;
+                MCString displayName;
+
+                data >> hasDisplayName;
+                if (hasDisplayName)
+                    data >> displayName;
+            }
+            break;
+            case 4: // Remove player
+            {
+                // no fields
+            }
+            break;
+        }
+    }
+
+    return true;
+}
+
+void PlayerListItemPacket::Dispatch(PacketHandler* handler) {
+    handler->HandlePacket(this);
+}
+
+PlayerAbilitiesPacket::PlayerAbilitiesPacket() {
+    m_Id = 0x39;
+    m_ProtocolState = Minecraft::ProtocolState::Play;
+}
+
+bool PlayerAbilitiesPacket::Deserialize(DataBuffer& data, std::size_t packetLength) {
+    data >> m_Flags;
+    data >> m_FlyingSpeed;
+    data >> m_WalkingSpeed;
+
+    return true;
+}
+
+void PlayerAbilitiesPacket::Dispatch(PacketHandler* handler) {
+    handler->HandlePacket(this);
+}
+
 PluginMessagePacket::PluginMessagePacket() {
     m_Id = 0x3F;
     m_ProtocolState = Minecraft::ProtocolState::Play;
@@ -59,6 +234,20 @@ bool PluginMessagePacket::Deserialize(DataBuffer& data, std::size_t packetLength
 }
 
 void PluginMessagePacket::Dispatch(PacketHandler* handler) {
+    handler->HandlePacket(this);
+}
+
+ServerDifficultyPacket::ServerDifficultyPacket() {
+    m_Id = 0x41;
+    m_ProtocolState = Minecraft::ProtocolState::Play;
+}
+
+bool ServerDifficultyPacket::Deserialize(DataBuffer& data, std::size_t packetLength) {
+    data >> m_Difficulty;
+    return true;
+}
+
+void ServerDifficultyPacket::Dispatch(PacketHandler* handler) {
     handler->HandlePacket(this);
 }
 

@@ -66,8 +66,29 @@ Packet* PlayPacketFactory::CreatePacket(DataBuffer& data, std::size_t length) {
     case 0x03:
         //packet = new Inbound::TimeUpdatePacket();
         break;
+    case 0x05:
+        packet = new Inbound::SpawnPositionPacket();
+        break;
+    case 0x08:
+        packet = new Inbound::PlayerPositionAndLookPacket();
+        break;
+    case 0x09:
+        packet = new Inbound::HeldItemChangePacket();
+        break;
+    case 0x37:
+        packet = new Inbound::StatisticsPacket();
+        break;
+    case 0x38:
+        packet = new Inbound::PlayerListItemPacket();
+        break;
+    case 0x39:
+        packet = new Inbound::PlayerAbilitiesPacket();
+        break;
     case 0x3F:
         packet = new Inbound::PluginMessagePacket();
+        break;
+    case 0x41:
+        packet = new Inbound::ServerDifficultyPacket();
         break;
     default:
         throw std::runtime_error("Unknown packet type " + std::to_string(id) + " received during play protocol state.");

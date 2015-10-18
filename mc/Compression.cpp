@@ -4,7 +4,6 @@
 
 namespace Minecraft {
 
-
 DataBuffer CompressionNone::Compress(DataBuffer& buffer) {
     return buffer;
 }
@@ -15,6 +14,20 @@ DataBuffer CompressionNone::Decompress(DataBuffer& buffer, std::size_t packetLen
     return ret;
 }
 
+unsigned long inflate(const std::string& source, std::string& dest) {
+    unsigned long size = dest.size();
+    uncompress((Bytef*)&dest[0], &size, (const Bytef*)source.c_str(), source.length());
+    return size;
+}
+
+unsigned long deflate(const std::string& source, std::string& dest) {
+    unsigned long size = source.length();
+    dest.resize(size);
+
+    compress((Bytef*)&dest[0], &size, (const Bytef*)source.c_str(), source.length());
+    dest.resize(size);
+    return size;
+}
 
 DataBuffer CompressionZ::Compress(DataBuffer& buffer) {
     return buffer;
@@ -36,9 +49,14 @@ DataBuffer CompressionZ::Decompress(DataBuffer& buffer, std::size_t packetLength
         return ret;
     }
 
-    std::string deflateddData;
-    buffer.ReadSome(deflateddData, uncompressedLength.GetInt());
-    return DataBuffer();
+    std::string deflatedData;
+    buffer.ReadSome(deflatedData, compressedLength);
+
+    std::string inflated;
+    inflated.resize(uncompressedLength.GetInt());
+
+    inflate(deflatedData, inflated);
+    return DataBuffer(inflated);
 }
 
 } // ns Minecraft

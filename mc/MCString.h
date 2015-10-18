@@ -20,11 +20,12 @@ public:
 
     std::wstring GetUTF16() const;
 
-    // Store MCString into the buffer
-    void Serialize(DataBuffer& buffer) const;
-    // Grab MCString from the buffer
-    void Deserialize(DataBuffer& buffer);
+    friend DataBuffer& operator<<(DataBuffer& out, const MCString& str);
+    friend DataBuffer& operator>>(DataBuffer& in, MCString& str);
 };
+
+DataBuffer& operator<<(DataBuffer& out, const MCString& pos);
+DataBuffer& operator>>(DataBuffer& in, MCString& pos);
 
 } // ns Minecraft
 

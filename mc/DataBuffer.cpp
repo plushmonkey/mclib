@@ -57,24 +57,4 @@ std::ostream& operator<<(std::ostream& os, const DataBuffer& buffer) {
     return os;
 }
 
-DataBuffer& DataBuffer::operator<<(const MCString& data) {
-    data.Serialize(*this);
-    return *this;
-}
-
-DataBuffer& DataBuffer::operator>>(MCString& data) {
-    data.Deserialize(*this);
-    return *this;
-}
-
-DataBuffer& DataBuffer::operator<<(const VarInt& data) {
-    data.Serialize(*this);
-    return *this;
-}
-
-DataBuffer& DataBuffer::operator>>(VarInt& data) {
-    data.Deserialize(*this);
-    return *this;
-}
-
 } // ns Minecraft

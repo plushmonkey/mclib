@@ -6,5 +6,6 @@
 #include "DataBuffer.h"
 #include "MCString.h"
 #include "VarInt.h"
+#include "UUID.h"
 
 #endif

@@ -99,6 +99,8 @@
     <ClCompile Include="Packets\PacketDispatcher.cpp" />
     <ClCompile Include="Packets\PacketFactory.cpp" />
     <ClCompile Include="Packets\PacketHandler.cpp" />
+    <ClCompile Include="Position.cpp" />
+    <ClCompile Include="UUID.cpp" />
     <ClCompile Include="VarInt.cpp" />
     <ClCompile Include="Yggdrasil.cpp" />
   </ItemGroup>
@@ -119,9 +121,11 @@
     <ClInclude Include="Packets\PacketDispatcher.h" />
     <ClInclude Include="Packets\PacketFactory.h" />
     <ClInclude Include="Packets\PacketHandler.h" />
+    <ClInclude Include="Position.h" />
     <ClInclude Include="Protocol.h" />
     <ClInclude Include="Tokenizer.h" />
     <ClInclude Include="Types.h" />
+    <ClInclude Include="UUID.h" />
     <ClInclude Include="VarInt.h" />
     <ClInclude Include="Yggdrasil.h" />
   </ItemGroup>

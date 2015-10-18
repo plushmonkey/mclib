@@ -23,8 +23,14 @@ void PacketDispatcher::UnregisterHandler(Minecraft::ProtocolState protocolState,
 }
 
 void PacketDispatcher::UnregisterHandler(PacketHandler* handler) {
-    for (auto& pair : m_Handlers)
-        UnregisterHandler(pair.first.first, pair.first.second, handler);
+    for (auto& pair : m_Handlers) {
+        for (auto& pairHandler : pair.second) {
+            if (pairHandler == handler)
+                UnregisterHandler(pair.first.first, pair.first.second, handler);
+        }
+    }
+
+        //UnregisterHandler(pair.first.first, pair.first.second, handler);
 }
 
 void PacketDispatcher::Dispatch(Packet* packet) {

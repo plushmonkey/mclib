@@ -19,26 +19,28 @@ MCString::MCString(const std::wstring& str) : m_UTF16(str)
 
 std::wstring MCString::GetUTF16() const { return m_UTF16; }
 
-void MCString::Serialize(DataBuffer& buffer) const {
+DataBuffer& operator<<(DataBuffer& out, const MCString& str) {
     std::string utf8;
-    utf8::utf16to8(m_UTF16.begin(), m_UTF16.end(), std::back_inserter(utf8));
+    utf8::utf16to8(str.m_UTF16.begin(), str.m_UTF16.end(), std::back_inserter(utf8));
 
     //s32 bytes = utf8.size();
     VarInt bytes = (s32)utf8.size();
-    buffer << bytes;
-    buffer << utf8;
-}
+    out << bytes;
+    out << utf8;
 
-void MCString::Deserialize(DataBuffer& buffer) {
-    //s32 bytes;
+    return out;
+}
+DataBuffer& operator>>(DataBuffer& in, MCString& str) {
     VarInt bytes;
-    buffer >> bytes;
+    in >> bytes;
 
     std::string utf8;
-    buffer.ReadSome(utf8, bytes.GetInt());
+    in.ReadSome(utf8, bytes.GetInt());
 
-    m_UTF16.clear();
-    utf8::utf8to16(utf8.begin(), utf8.end(), std::back_inserter(m_UTF16));
+    str.m_UTF16.clear();
+    utf8::utf8to16(utf8.begin(), utf8.end(), std::back_inserter(str.m_UTF16));
+
+    return in;
 }
 
 } // ns Minecraft

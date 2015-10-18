@@ -24,11 +24,15 @@ public:
     s32 GetInt() const { return (s32)m_Value; }
     s64 GetLong() const { return m_Value; }
 
-    void Serialize(DataBuffer& buffer) const;
-    void Deserialize(DataBuffer& buffer);
+
+    friend DataBuffer& operator<<(DataBuffer& out, const VarInt& pos);
+    friend DataBuffer& operator>>(DataBuffer& in, VarInt& pos);
 };
 
 typedef VarInt VarLong;
+
+DataBuffer& operator<<(DataBuffer& out, const VarInt& var);
+DataBuffer& operator>>(DataBuffer& in, VarInt& var);
 
 }
 

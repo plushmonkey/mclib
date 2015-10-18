@@ -62,9 +62,6 @@ public:
         return *this;
     }
 
-    DataBuffer& operator<<(const MCString& data);
-    DataBuffer& operator<<(const VarInt& data);
-
     template <typename T>
     DataBuffer& operator>>(T& data) {
         data = *(T *)&m_Buffer[m_ReadOffset];
@@ -86,9 +83,6 @@ public:
         m_ReadOffset = m_Buffer.size();
         return *this;
     }
-
-    DataBuffer& operator>>(MCString& data);
-    DataBuffer& operator>>(VarInt& data);
 
     void ReadSome(char* buffer, std::size_t amount) {
         strncpy(buffer, (char*)&m_Buffer.at(m_ReadOffset), amount);

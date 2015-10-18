@@ -51,7 +51,39 @@ public:
         m_Dispatcher.RegisterHandler(Minecraft::ProtocolState::Login, 0x03, this);
 
         m_Dispatcher.RegisterHandler(Minecraft::ProtocolState::Play, 0x01, this);
+        m_Dispatcher.RegisterHandler(Minecraft::ProtocolState::Play, 0x05, this);
+        m_Dispatcher.RegisterHandler(Minecraft::ProtocolState::Play, 0x08, this);
+        m_Dispatcher.RegisterHandler(Minecraft::ProtocolState::Play, 0x37, this);
+        m_Dispatcher.RegisterHandler(Minecraft::ProtocolState::Play, 0x38, this);
+        m_Dispatcher.RegisterHandler(Minecraft::ProtocolState::Play, 0x39, this);
         m_Dispatcher.RegisterHandler(Minecraft::ProtocolState::Play, 0x3F, this);
+        m_Dispatcher.RegisterHandler(Minecraft::ProtocolState::Play, 0x41, this);
+    }
+
+    void HandlePacket(Minecraft::Packets::Inbound::PlayerPositionAndLookPacket* packet) {
+        Minecraft::Position pos(packet->GetX(), packet->GetY(), packet->GetZ());
+
+        std::cout << "Pos: " << pos << std::endl;
+    }
+
+
+    void HandlePacket(Minecraft::Packets::Inbound::PlayerListItemPacket* packet) {
+        std::cout << "Player list item received\n";
+    }
+
+    void HandlePacket(Minecraft::Packets::Inbound::StatisticsPacket* packet) {
+        const auto& stats = packet->GetStatistics();
+
+        for (auto& kv : stats)
+            std::wcout << kv.first << " = " << kv.second << std::endl;
+    }
+
+    void HandlePacket(Minecraft::Packets::Inbound::PlayerAbilitiesPacket* packet) {
+        std::cout << "Abilities: " << (int)packet->GetFlags() << ", " << packet->GetFlyingSpeed() << ", " << packet->GetWalkingSpeed() << std::endl;
+    }
+
+    void HandlePacket(Minecraft::Packets::Inbound::SpawnPositionPacket* packet) {
+        std::cout << "Spawn position: " << packet->GetLocation() << std::endl;
     }
 
     void HandlePacket(Minecraft::Packets::Inbound::DisconnectPacket* packet) {
@@ -130,6 +162,10 @@ public:
 
     void HandlePacket(Minecraft::Packets::Inbound::PluginMessagePacket* packet) {
         std::wcout << "Plugin message received on channel " << packet->GetChannel() << std::endl;
+    }
+
+    void HandlePacket(Minecraft::Packets::Inbound::ServerDifficultyPacket* packet) {
+        std::wcout << "New server difficulty: " << (int)packet->GetDifficulty() << std::endl;
     }
 
     bool Connect() {
