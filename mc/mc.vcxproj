@@ -90,6 +90,7 @@
     <ClCompile Include="HTTPClient.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="MCString.cpp" />
+    <ClCompile Include="NBT.cpp" />
     <ClCompile Include="Network\IPAddress.cpp" />
     <ClCompile Include="Network\Network.cpp" />
     <ClCompile Include="Network\Socket.cpp" />
@@ -100,6 +101,7 @@
     <ClCompile Include="Packets\PacketFactory.cpp" />
     <ClCompile Include="Packets\PacketHandler.cpp" />
     <ClCompile Include="Position.cpp" />
+    <ClCompile Include="Slot.cpp" />
     <ClCompile Include="UUID.cpp" />
     <ClCompile Include="VarInt.cpp" />
     <ClCompile Include="Yggdrasil.cpp" />
@@ -112,6 +114,7 @@
     <ClInclude Include="Hash.h" />
     <ClInclude Include="HTTPClient.h" />
     <ClInclude Include="MCString.h" />
+    <ClInclude Include="NBT.h" />
     <ClInclude Include="Network\IPAddress.h" />
     <ClInclude Include="Network\Network.h" />
     <ClInclude Include="Network\Socket.h" />
@@ -123,6 +126,7 @@
     <ClInclude Include="Packets\PacketHandler.h" />
     <ClInclude Include="Position.h" />
     <ClInclude Include="Protocol.h" />
+    <ClInclude Include="Slot.h" />
     <ClInclude Include="Tokenizer.h" />
     <ClInclude Include="Types.h" />
     <ClInclude Include="UUID.h" />

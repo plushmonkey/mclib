@@ -87,6 +87,45 @@ void HeldItemChangePacket::Dispatch(PacketHandler* handler) {
     handler->HandlePacket(this);
 }
 
+SetSlotPacket::SetSlotPacket() {
+    m_Id = 0x2F;
+    m_ProtocolState = Minecraft::ProtocolState::Play;
+}
+
+bool SetSlotPacket::Deserialize(DataBuffer& data, std::size_t packetLength) {
+    data >> m_WindowId;
+    data >> m_SlotIndex;
+    data >> m_Slot;
+    return true;
+}
+
+void SetSlotPacket::Dispatch(PacketHandler* handler) {
+    handler->HandlePacket(this);
+}
+
+
+WindowItemsPacket::WindowItemsPacket() {
+    m_Id = 0x30;
+    m_ProtocolState = Minecraft::ProtocolState::Play;
+}
+
+bool WindowItemsPacket::Deserialize(DataBuffer& data, std::size_t packetLength) {
+    data >> m_WindowId;
+    s16 count;
+    data >> count;
+
+    for (s16 i = 0; i < count; ++i) {
+        Slot slot;
+        data >> slot;
+    }
+
+    return true;
+}
+
+void WindowItemsPacket::Dispatch(PacketHandler* handler) {
+    handler->HandlePacket(this);
+}
+
 StatisticsPacket::StatisticsPacket() {
     m_Id = 0x37;
     m_ProtocolState = Minecraft::ProtocolState::Play;
@@ -248,6 +287,75 @@ bool ServerDifficultyPacket::Deserialize(DataBuffer& data, std::size_t packetLen
 }
 
 void ServerDifficultyPacket::Dispatch(PacketHandler* handler) {
+    handler->HandlePacket(this);
+}
+
+WorldBorderPacket::WorldBorderPacket() {
+    m_Id = 0x44;
+    m_ProtocolState = Minecraft::ProtocolState::Play;
+}
+
+bool WorldBorderPacket::Deserialize(DataBuffer& data, std::size_t packetLength) {
+    VarInt action;
+
+    data >> action;
+
+    switch (action.GetInt()) {
+        case 0: // Set size
+        {
+            data >> m_Radius;
+        }
+        break;
+        case 1: // Lerp size
+        {
+            double oldRadius;
+
+            data >> oldRadius;
+            data >> m_Radius;
+            VarLong speed;
+
+            data >> speed;
+        }
+        break;
+        case 2: // Set center
+        {
+            double x, z;
+            data >> x >> z;
+        }
+        break;
+        case 3: // Initialize
+        {
+            double x, z;
+            data >> x >> z;
+
+            double oldRadius;
+            data >> oldRadius >> m_Radius;
+
+            VarLong speed;
+            data >> speed;
+
+            VarInt portalTeleportBoundary, warningTime, warningBlocks;
+
+            data >> portalTeleportBoundary >> warningTime >> warningBlocks;
+        }
+        break;
+        case 4: // Set warning time
+        {
+            VarInt warningTime;
+            data >> warningTime;
+        }
+        break;
+        case 5: // Set warning blocks
+        {
+            VarInt warningBlocks;
+            data >> warningBlocks;
+        }
+        break;
+    }
+    return true;
+}
+
+void WorldBorderPacket::Dispatch(PacketHandler* handler) {
     handler->HandlePacket(this);
 }
 

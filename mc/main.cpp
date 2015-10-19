@@ -53,11 +53,26 @@ public:
         m_Dispatcher.RegisterHandler(Minecraft::ProtocolState::Play, 0x01, this);
         m_Dispatcher.RegisterHandler(Minecraft::ProtocolState::Play, 0x05, this);
         m_Dispatcher.RegisterHandler(Minecraft::ProtocolState::Play, 0x08, this);
+        m_Dispatcher.RegisterHandler(Minecraft::ProtocolState::Play, 0x2F, this);
+        m_Dispatcher.RegisterHandler(Minecraft::ProtocolState::Play, 0x30, this);
         m_Dispatcher.RegisterHandler(Minecraft::ProtocolState::Play, 0x37, this);
         m_Dispatcher.RegisterHandler(Minecraft::ProtocolState::Play, 0x38, this);
         m_Dispatcher.RegisterHandler(Minecraft::ProtocolState::Play, 0x39, this);
         m_Dispatcher.RegisterHandler(Minecraft::ProtocolState::Play, 0x3F, this);
         m_Dispatcher.RegisterHandler(Minecraft::ProtocolState::Play, 0x41, this);
+        m_Dispatcher.RegisterHandler(Minecraft::ProtocolState::Play, 0x44, this);
+    }
+
+    void HandlePacket(Minecraft::Packets::Inbound::SetSlotPacket* packet) {
+        std::cout << "Set slot\n";
+    }
+
+    void HandlePacket(Minecraft::Packets::Inbound::WindowItemsPacket* packet) {
+        std::cout << "Received window items\n";
+    }
+
+    void HandlePacket(Minecraft::Packets::Inbound::WorldBorderPacket* packet) {
+        std::cout << "Received world border packet\n";
     }
 
     void HandlePacket(Minecraft::Packets::Inbound::PlayerPositionAndLookPacket* packet) {
@@ -249,7 +264,6 @@ public:
     }
 
 };
-
 
 int main(void) {
     Connection conn("192.168.2.5", 25565);

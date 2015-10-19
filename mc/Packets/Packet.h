@@ -177,6 +177,7 @@ public:
 class HeldItemChangePacket : public InboundPacket { // 0x09
 private:
     u8 m_Slot;
+
 public:
     HeldItemChangePacket();
     bool Deserialize(DataBuffer& data, std::size_t packetLength);
@@ -184,6 +185,29 @@ public:
 
     u8 GetSlot() const { return m_Slot; }
 };
+
+class SetSlotPacket : public InboundPacket { // 0x2F
+private:
+    u8 m_WindowId;
+    s16 m_SlotIndex;
+    Slot m_Slot;
+
+public:
+    SetSlotPacket();
+    bool Deserialize(DataBuffer& data, std::size_t packetLength);
+    void Dispatch(PacketHandler* handler);
+};
+
+class WindowItemsPacket : public InboundPacket { // 0x30
+private:
+    u8 m_WindowId;
+
+public:
+    WindowItemsPacket();
+    bool Deserialize(DataBuffer& data, std::size_t packetLength);
+    void Dispatch(PacketHandler* handler);
+};
+
 
 class StatisticsPacket : public InboundPacket { // 0x37
 public:
@@ -251,6 +275,17 @@ public:
     void Dispatch(PacketHandler* handler);
 
     u8 GetDifficulty() const { return m_Difficulty; }
+};
+
+class WorldBorderPacket : public InboundPacket { // 0x44
+private:
+    double m_Radius;
+
+public:
+    WorldBorderPacket();
+    bool Deserialize(DataBuffer& data, std::size_t packetLength);
+    void Dispatch(PacketHandler* handler);
+    
 };
 
 

@@ -30,12 +30,14 @@ public:
     virtual void HandlePacket(Inbound::SpawnPositionPacket* packet) { } // 0x05
     virtual void HandlePacket(Inbound::PlayerPositionAndLookPacket* packet) { } // 0x08
     virtual void HandlePacket(Inbound::HeldItemChangePacket* packet) { } // 0x09
-
+    virtual void HandlePacket(Inbound::SetSlotPacket* packet) { } // 0x2F
+    virtual void HandlePacket(Inbound::WindowItemsPacket* packet) { } // 0x30
     virtual void HandlePacket(Inbound::StatisticsPacket* packet) { } // 0x37
     virtual void HandlePacket(Inbound::PlayerListItemPacket* packet) { } // 0x38
     virtual void HandlePacket(Inbound::PlayerAbilitiesPacket* packet) { } // 0x39
     virtual void HandlePacket(Inbound::PluginMessagePacket* packet) { } // 0x3F
-    virtual void HandlePacket(Inbound::ServerDifficultyPacket* packet) { } // 0x14
+    virtual void HandlePacket(Inbound::ServerDifficultyPacket* packet) { } // 0x41
+    virtual void HandlePacket(Inbound::WorldBorderPacket* packet) { } // 0x44
 };
 
 } // ns Packets

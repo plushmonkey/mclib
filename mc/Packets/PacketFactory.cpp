@@ -75,6 +75,12 @@ Packet* PlayPacketFactory::CreatePacket(DataBuffer& data, std::size_t length) {
     case 0x09:
         packet = new Inbound::HeldItemChangePacket();
         break;
+    case 0x2F:
+        packet = new Inbound::SetSlotPacket();
+        break;
+    case 0x30:
+        packet = new Inbound::WindowItemsPacket();
+        break;
     case 0x37:
         packet = new Inbound::StatisticsPacket();
         break;
@@ -89,6 +95,9 @@ Packet* PlayPacketFactory::CreatePacket(DataBuffer& data, std::size_t length) {
         break;
     case 0x41:
         packet = new Inbound::ServerDifficultyPacket();
+        break;
+    case 0x44:
+        packet = new Inbound::WorldBorderPacket();
         break;
     default:
         throw std::runtime_error("Unknown packet type " + std::to_string(id) + " received during play protocol state.");

@@ -7,5 +7,7 @@
 #include "MCString.h"
 #include "VarInt.h"
 #include "UUID.h"
+#include "NBT.h"
+#include "Slot.h"
 
 #endif
