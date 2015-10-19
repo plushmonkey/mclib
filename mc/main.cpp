@@ -64,7 +64,11 @@ public:
     }
 
     void HandlePacket(Minecraft::Packets::Inbound::SetSlotPacket* packet) {
-        std::cout << "Set slot\n";
+        Minecraft::Slot slot = packet->GetSlot();
+        int window = packet->GetWindowId();
+        int index = packet->GetSlotIndex();
+
+        std::cout << "Set slot (" << window << ", " << index << ")\n";
     }
 
     void HandlePacket(Minecraft::Packets::Inbound::WindowItemsPacket* packet) {
@@ -76,14 +80,38 @@ public:
     }
 
     void HandlePacket(Minecraft::Packets::Inbound::PlayerPositionAndLookPacket* packet) {
-        Minecraft::Position pos(packet->GetX(), packet->GetY(), packet->GetZ());
+        s32 x = (s32)packet->GetX();
+        s32 y = (s32)packet->GetY(); 
+        s32 z = (s32)packet->GetZ();
+        Minecraft::Position pos(x, y , z);
 
         std::cout << "Pos: " << pos << std::endl;
     }
 
 
     void HandlePacket(Minecraft::Packets::Inbound::PlayerListItemPacket* packet) {
-        std::cout << "Player list item received\n";
+        using namespace Minecraft::Packets::Inbound;
+
+        PlayerListItemPacket::Action action = packet->GetAction();
+
+        std::vector<PlayerListItemPacket::ActionDataPtr> dataList = packet->GetActionData();
+
+        for (auto actionData : dataList) {
+            switch (action) {
+            case PlayerListItemPacket::Action::AddPlayer:
+                std::wcout << "Adding player " << actionData->name << " uuid: " << actionData->uuid << std::endl;
+            break;
+            case PlayerListItemPacket::Action::UpdateGamemode:
+                std::wcout << "Updating gamemode to " << actionData->gamemode << " for player " << actionData->uuid << std::endl;
+            break;
+            case PlayerListItemPacket::Action::UpdateLatency:
+                std::wcout << "Ping for " << actionData->uuid << " is " << actionData->ping << std::endl;
+            break;
+            case PlayerListItemPacket::Action::RemovePlayer:
+                std::cout << "Removing player " << actionData->uuid << std::endl;
+            break;
+            }
+        }
     }
 
     void HandlePacket(Minecraft::Packets::Inbound::StatisticsPacket* packet) {
@@ -119,21 +147,12 @@ public:
             std::cerr << e.what() << std::endl;
             std::abort();
         }
-        
-        SHA_CTX shaCtx;
-        SHA1_Init(&shaCtx);
-        SHA1_Update(&shaCtx, serverId.c_str(), serverId.size());
-        SHA1_Update(&shaCtx, sharedSecret.c_str(), sharedSecret.length());
-        SHA1_Update(&shaCtx, pubkey.c_str(), pubkey.length());
-
-        unsigned char digest[20] = { 0 };
-        SHA1_Final(digest, &shaCtx);
-
-        std::string hexDigest = Sha::Sha1HexDigest(digest);
 
         try {
-            Minecraft::JoinResponse joinResp = m_Yggdrasil.JoinServer(hexDigest);
-
+            if (!m_Yggdrasil.JoinServer(serverId, sharedSecret, pubkey)) {
+                std::cerr << "Failed to join server through Yggdrasil." << std::endl;
+                std::abort();
+            }
         } catch (const Minecraft::YggdrasilException& e) {
             std::cerr << e.what() << std::endl;
             std::abort();

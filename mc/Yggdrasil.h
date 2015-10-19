@@ -28,14 +28,6 @@ public:
     }
 };
 
-struct JoinResponse {
-    std::string profileId;
-    std::string playerName;
-
-    std::string textureValue;
-    std::string signature;
-};
-
 class Yggdrasil {
 private:
     HTTPClient* m_Http;
@@ -80,15 +72,25 @@ public:
 
     /**
      * Posts a new session to the session server.
-     * The server hash is a sha1 hex digest.
-     * First it's updated with the serverID string,
-     * then it's updated with the shared secret,
-     * finally it's updated with public key.
-     * @param serverHash the java-style hex digest
-     * @return a struct containing profileID, playerName, and texture data.
+     * Computes the sha1 hex digest then posts it to the api.
+     * @param serverId The id of the server received in EncryptionRequestPacket.
+     * @param sharedSecret The shared secret that was generated when encryption started.
+     * @param publicKey The public key received in EncryptionRequestPacket.
+     * @return true if it successfully posted the session to the server.
      * @throws YggdrasilException if it can't connect to the server, or if it receives an error from the server.
      */
-    JoinResponse JoinServer(const std::string& serverHash);
+    bool JoinServer(const std::wstring& serverId, const std::string& sharedSecret, const std::string& publicKey);
+
+    /**
+    * Posts a new session to the session server.
+    * The server hash is a sha1 hex digest.
+    * First it's updated with the serverID string,
+    * then it's updated with the shared secret,
+    * finally it's updated with public key.
+    * @param serverHash the java-style hex digest
+    * @throws YggdrasilException if it can't connect to the server, or if it receives an error from the server.
+    */
+    bool JoinServer(const std::string& serverHash);
 
     // Todo: refresh, validate, signout
 };

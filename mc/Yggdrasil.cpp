@@ -2,6 +2,8 @@
 
 #include <iostream>
 #include <json/json.h>
+#include <openssl/sha.h>
+#include "Hash.h"
 
 namespace {
 const std::string DefaultClientToken = "pmToken";
@@ -14,7 +16,22 @@ void Yggdrasil::Initialize() {
     m_SessionURL = "https://sessionserver.mojang.com/session/minecraft/";
 }
 
-JoinResponse Yggdrasil::JoinServer(const std::string& serverHash) {
+bool Yggdrasil::JoinServer(const std::wstring& serverId, const std::string& sharedSecret, const std::string& publicKey) {
+    SHA_CTX shaCtx;
+    SHA1_Init(&shaCtx);
+    SHA1_Update(&shaCtx, serverId.c_str(), serverId.size());
+    SHA1_Update(&shaCtx, sharedSecret.c_str(), sharedSecret.length());
+    SHA1_Update(&shaCtx, publicKey.c_str(), publicKey.length());
+
+    unsigned char digest[20] = { 0 };
+    SHA1_Final(digest, &shaCtx);
+
+    std::string serverHash = Sha::Sha1HexDigest(digest);
+
+    return this->JoinServer(serverHash);
+}
+
+bool Yggdrasil::JoinServer(const std::string& serverHash) {
     if (m_AccessToken.length() == 0)
         throw YggdrasilException("Error trying to join a server before authenticating.");
 
@@ -24,33 +41,9 @@ JoinResponse Yggdrasil::JoinServer(const std::string& serverHash) {
     data["serverId"] = serverHash;
 
     HTTPResponse resp = m_Http->PostJSON(m_SessionURL + "join", data);
-    if (resp.status == 0)
-        throw YggdrasilException("Error connecting to session server.");
 
-    return JoinResponse();
-
-    /*Json::Reader reader;
-    Json::Value result;
-        
-    if (!reader.parse(resp.body, result))
-        throw YggdrasilException("Error parsing response from session server.");
-
-    if (resp.status != 200) {
-        if (!result["error"].isNull())
-            throw YggdrasilException(result["error"].asString(), result["errorMessage"].asString());
-        else
-            throw YggdrasilException("Unknown error with session server. Status: " + std::to_string(resp.status) + ".");
-    }
-
-    JoinResponse joinResponse;
-
-    joinResponse.profileId = result["id"].asString();
-    joinResponse.playerName = result["name"].asString();
-    joinResponse.textureValue = result["properties"][0]["value"].asString(); // base64 encoded
-    joinResponse.signature = result["properties"][0]["signature"].asString();
-
-
-    return joinResponse;*/
+    // Always returns 204 No Content, but it might change in the future
+    return resp.status >= 200 && resp.status < 300;
 }
 
 bool Yggdrasil::Authenticate(const std::string& username, const std::string& password, const std::string& client) {

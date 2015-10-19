@@ -166,17 +166,23 @@ bool PlayerListItemPacket::Deserialize(DataBuffer& data, std::size_t packetLengt
 
     for (s32 i = 0; i < numPlayers.GetInt(); ++i) {
         UUID uuid;
-
         data >> uuid;
 
+        ActionDataPtr actionData = std::make_shared<ActionData>();
+        actionData->uuid = uuid;
+
         switch (action.GetInt()) {
-            case 0: // Add player
+            case AddPlayer:
             {
+                m_Action = AddPlayer;
+
                 MCString name;
                 VarInt numProperties;
 
                 data >> name;
                 data >> numProperties;
+
+                actionData->name = name.GetUTF16();
 
                 for (s32 j = 0; j < numProperties.GetInt(); ++j) {
                     MCString propertyName;
@@ -189,6 +195,8 @@ bool PlayerListItemPacket::Deserialize(DataBuffer& data, std::size_t packetLengt
                     data >> isSigned;
                     if (isSigned)
                         data >> signature;
+
+                    actionData->properties[propertyName.GetUTF16()] = propertyValue.GetUTF16();
                 }
 
                 VarInt gameMode, ping;
@@ -201,36 +209,59 @@ bool PlayerListItemPacket::Deserialize(DataBuffer& data, std::size_t packetLengt
                 data >> hasDisplayName;
                 if (hasDisplayName)
                     data >> displayName;
+                
+                actionData->gamemode = gameMode.GetInt();
+                actionData->ping = ping.GetInt();
+                actionData->displayName = displayName.GetUTF16();
             }
             break;
-            case 1: // Update gamemode
+            case UpdateGamemode:
             {
+                m_Action = UpdateGamemode;
+
                 VarInt gameMode;
                 data >> gameMode;
+
+                actionData->gamemode = gameMode.GetInt();
             }
             break;
-            case 2: // Update latency
+            case UpdateLatency:
             {
+                m_Action = UpdateLatency;
+
                 VarInt ping;
                 data >> ping;
+
+                actionData->ping = ping.GetInt();
             } 
             break;
-            case 3: // Update display name
+            case UpdateDisplay:
             {
+                m_Action = UpdateDisplay;
+
                 u8 hasDisplayName;
                 MCString displayName;
 
                 data >> hasDisplayName;
                 if (hasDisplayName)
                     data >> displayName;
+
+                actionData->displayName = displayName.GetUTF16();
             }
             break;
-            case 4: // Remove player
+            case RemovePlayer:
             {
-                // no fields
+                m_Action = RemovePlayer;
+
+                std::shared_ptr<ActionData> actionData = std::make_shared<ActionData>();
+                actionData->uuid = uuid;
+
+                m_Data.push_back(actionData);
             }
             break;
         }
+
+        m_Data.push_back(actionData);
     }
 
     return true;

@@ -1,6 +1,8 @@
 #ifndef COMMON_H_
 #define COMMON_H_
 
+#include <memory>
+
 #include "Types.h"
 
 #include "DataBuffer.h"

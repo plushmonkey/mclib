@@ -196,6 +196,10 @@ public:
     SetSlotPacket();
     bool Deserialize(DataBuffer& data, std::size_t packetLength);
     void Dispatch(PacketHandler* handler);
+
+    u8 GetWindowId() const { return m_WindowId; }
+    s16 GetSlotIndex() const { return m_SlotIndex; }
+    Slot GetSlot() const { return m_Slot; }
 };
 
 class WindowItemsPacket : public InboundPacket { // 0x30
@@ -225,14 +229,31 @@ public:
 };
 
 class PlayerListItemPacket : public InboundPacket { // 0x38
+public:
+    enum Action { AddPlayer = 0, UpdateGamemode, UpdateLatency, UpdateDisplay, RemovePlayer };
+
+    struct ActionData {
+        UUID uuid;
+        std::wstring name;
+        std::map<std::wstring, std::wstring> properties;
+        s32 gamemode;
+        s32 ping;
+        std::wstring displayName;
+    };
+    typedef std::shared_ptr<ActionData> ActionDataPtr;
+
 private:
-    
+    Action m_Action;
+    std::vector<ActionDataPtr> m_Data;
+
 public:
     PlayerListItemPacket();
     bool Deserialize(DataBuffer& data, std::size_t packetLength);
     void Dispatch(PacketHandler* handler);
 
-    
+    Action GetAction() const { return m_Action; }
+
+    const std::vector<ActionDataPtr>& GetActionData() const { return m_Data; }
 };
 
 class PlayerAbilitiesPacket : public InboundPacket { // 0x39

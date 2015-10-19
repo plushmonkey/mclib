@@ -38,6 +38,7 @@ DataBuffer& operator>>(DataBuffer& in, Slot& slot) {
         in.SetReadOffset(in.GetReadOffset() - 1);
         in >> slot.m_NBT;
     }
+    return in;
 }
 
 } // ns Minecraft
