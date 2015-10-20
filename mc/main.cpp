@@ -53,6 +53,8 @@ public:
         m_Dispatcher.RegisterHandler(Minecraft::ProtocolState::Play, 0x01, this);
         m_Dispatcher.RegisterHandler(Minecraft::ProtocolState::Play, 0x05, this);
         m_Dispatcher.RegisterHandler(Minecraft::ProtocolState::Play, 0x08, this);
+        m_Dispatcher.RegisterHandler(Minecraft::ProtocolState::Play, 0x0F, this);
+        m_Dispatcher.RegisterHandler(Minecraft::ProtocolState::Play, 0x26, this);
         m_Dispatcher.RegisterHandler(Minecraft::ProtocolState::Play, 0x2F, this);
         m_Dispatcher.RegisterHandler(Minecraft::ProtocolState::Play, 0x30, this);
         m_Dispatcher.RegisterHandler(Minecraft::ProtocolState::Play, 0x37, this);
@@ -61,6 +63,16 @@ public:
         m_Dispatcher.RegisterHandler(Minecraft::ProtocolState::Play, 0x3F, this);
         m_Dispatcher.RegisterHandler(Minecraft::ProtocolState::Play, 0x41, this);
         m_Dispatcher.RegisterHandler(Minecraft::ProtocolState::Play, 0x44, this);
+    }
+
+    void HandlePacket(Minecraft::Packets::Inbound::SpawnMobPacket* packet) {
+        const auto& metadata = packet->GetMetadata();
+        
+        std::cout << "Received SpawnMobPacket" << std::endl;
+    }
+
+    void HandlePacket(Minecraft::Packets::Inbound::MapChunkBulkPacket* packet) {
+        std::cout << "Received MapChunkBulkPacket" << std::endl;
     }
 
     void HandlePacket(Minecraft::Packets::Inbound::SetSlotPacket* packet) {
@@ -312,6 +324,9 @@ public:
     }
 
 };
+
+
+#include "Entity.h"
 
 int main(void) {
     Connection conn("192.168.2.5", 25565);

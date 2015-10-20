@@ -87,6 +87,73 @@ void HeldItemChangePacket::Dispatch(PacketHandler* handler) {
     handler->HandlePacket(this);
 }
 
+SpawnMobPacket::SpawnMobPacket() {
+    m_Id = 0x0F;
+    m_ProtocolState = Minecraft::ProtocolState::Play;
+}
+
+bool SpawnMobPacket::Deserialize(DataBuffer& data, std::size_t packetLength) {
+    VarInt entityId;
+
+    data >> entityId;
+    m_EntityId = entityId.GetInt();
+    data >> m_Type;
+    data >> m_X;
+    data >> m_Y;
+    data >> m_Z;
+    data >> m_Yaw;
+    data >> m_Pitch;
+    data >> m_HeadPitch;
+    data >> m_VelocityX;
+    data >> m_VelocityY;
+    data >> m_VelocityZ;
+    data >> m_Metadata;
+
+    return true;
+}
+
+void SpawnMobPacket::Dispatch(PacketHandler* handler) {
+    handler->HandlePacket(this);
+}
+
+MapChunkBulkPacket::MapChunkBulkPacket() {
+    m_Id = 0x26;
+    m_ProtocolState = Minecraft::ProtocolState::Play;
+}
+
+bool MapChunkBulkPacket::Deserialize(DataBuffer& data, std::size_t packetLength) {
+    data >> m_SkyLight;
+    VarInt count;
+    data >> count;
+
+    struct ChunkMeta {
+        s32 x;
+        s32 z;
+        u16 bitmask;
+    };
+
+    // Array of meta
+    for (s32 i = 0; i < count.GetInt(); ++i) {
+        ChunkMeta meta;
+        data >> meta.x;
+        data >> meta.z;
+        data >> meta.bitmask;
+
+    }
+
+    // Array of chunk
+    for (s32 i = 0; i < count.GetInt(); ++i) {
+        
+    }
+
+    return true;
+}
+
+void MapChunkBulkPacket::Dispatch(PacketHandler* handler) {
+    handler->HandlePacket(this);
+}
+
+
 SetSlotPacket::SetSlotPacket() {
     m_Id = 0x2F;
     m_ProtocolState = Minecraft::ProtocolState::Play;

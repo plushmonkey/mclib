@@ -188,6 +188,39 @@ public:
     u8 GetSlot() const { return m_Slot; }
 };
 
+class SpawnMobPacket : public InboundPacket { // 0x0F
+private:
+    s32 m_EntityId;
+    u8 m_Type;
+    s32 m_X;
+    s32 m_Y;
+    s32 m_Z;
+    u8 m_Yaw;
+    u8 m_Pitch;
+    u8 m_HeadPitch;
+    s16 m_VelocityX;
+    s16 m_VelocityY;
+    s16 m_VelocityZ;
+    EntityMetadata m_Metadata;
+
+public:
+    SpawnMobPacket();
+    bool Deserialize(DataBuffer& data, std::size_t packetLength);
+    void Dispatch(PacketHandler* handler);
+
+    const EntityMetadata& GetMetadata() const { return m_Metadata; }
+};
+
+class MapChunkBulkPacket : public InboundPacket { // 0x26
+private:
+    bool m_SkyLight;
+
+public:
+    MapChunkBulkPacket();
+    bool Deserialize(DataBuffer& data, std::size_t packetLength);
+    void Dispatch(PacketHandler* handler);
+};
+
 class SetSlotPacket : public InboundPacket { // 0x2F
 private:
     u8 m_WindowId;

@@ -11,5 +11,6 @@
 #include "UUID.h"
 #include "NBT.h"
 #include "Slot.h"
+#include "Entity.h"
 
 #endif

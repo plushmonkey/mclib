@@ -88,6 +88,7 @@
     <ClCompile Include="DataBuffer.cpp" />
     <ClCompile Include="Compression.cpp" />
     <ClCompile Include="Encryption.cpp" />
+    <ClCompile Include="Entity.cpp" />
     <ClCompile Include="Hash.cpp" />
     <ClCompile Include="HTTPClient.cpp" />
     <ClCompile Include="main.cpp" />
@@ -113,6 +114,7 @@
     <ClInclude Include="DataBuffer.h" />
     <ClInclude Include="Compression.h" />
     <ClInclude Include="Encryption.h" />
+    <ClInclude Include="Entity.h" />
     <ClInclude Include="Hash.h" />
     <ClInclude Include="HTTPClient.h" />
     <ClInclude Include="MCString.h" />

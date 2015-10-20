@@ -30,6 +30,8 @@ public:
     virtual void HandlePacket(Inbound::SpawnPositionPacket* packet) { } // 0x05
     virtual void HandlePacket(Inbound::PlayerPositionAndLookPacket* packet) { } // 0x08
     virtual void HandlePacket(Inbound::HeldItemChangePacket* packet) { } // 0x09
+    virtual void HandlePacket(Inbound::SpawnMobPacket* packet) { } // 0x2F
+    virtual void HandlePacket(Inbound::MapChunkBulkPacket* packet) { } // 0x2F
     virtual void HandlePacket(Inbound::SetSlotPacket* packet) { } // 0x2F
     virtual void HandlePacket(Inbound::WindowItemsPacket* packet) { } // 0x30
     virtual void HandlePacket(Inbound::StatisticsPacket* packet) { } // 0x37
