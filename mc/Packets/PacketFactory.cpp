@@ -76,7 +76,7 @@ Packet* PlayPacketFactory::CreatePacket(DataBuffer& data, std::size_t length) {
         packet = new Inbound::HeldItemChangePacket();
         break;
     case 0x26:
-//        packet = new Inbound::MapChunkBulkPacket();
+        //packet = new Inbound::MapChunkBulkPacket();
         break;
     case 0x2F:
         packet = new Inbound::SetSlotPacket();

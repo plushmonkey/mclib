@@ -19,6 +19,11 @@ private:
 public:
     Slot() { }
 
+    s16 GetItemId() const { return m_ItemId; }
+    u8 GetItemCount() const { return m_ItemCount; }
+    s16 GetItemDamage() const { return m_ItemDamage; }
+    const NBT::NBT& GetNBT() const { return m_NBT; }
+
     friend DataBuffer& operator<<(DataBuffer& out, const Slot& slot);
     friend DataBuffer& operator>>(DataBuffer& in, Slot& slot);
 };

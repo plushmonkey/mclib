@@ -68,15 +68,41 @@ public:
         int window = packet->GetWindowId();
         int index = packet->GetSlotIndex();
 
-        std::cout << "Set slot (" << window << ", " << index << ")\n";
+        std::cout << "Set slot (" << window << ", " << index << ") = " << slot.GetItemId() << "\n";
     }
 
     void HandlePacket(Minecraft::Packets::Inbound::WindowItemsPacket* packet) {
-        std::cout << "Received window items\n";
+        std::cout << "Received window items for WindowId " << (int)packet->GetWindowId() << "." << std::endl;
+
+        const std::vector<Minecraft::Slot>& slots = packet->GetSlots();
+        
+        for (const Minecraft::Slot& slot : slots) {
+            s16 id = slot.GetItemId();
+            u8 count = slot.GetItemCount();
+            s16 dmg = slot.GetItemDamage();
+            const Minecraft::NBT::NBT& nbt = slot.GetNBT();
+
+            if (id != -1) {
+                std::cout << "Item: " << id << " Amount: " << (int)count << " Dmg: " << dmg << std::endl;
+            }
+        }
     }
 
     void HandlePacket(Minecraft::Packets::Inbound::WorldBorderPacket* packet) {
+        using namespace Minecraft::Packets::Inbound;
+        WorldBorderPacket::Action action = packet->GetAction();
+
         std::cout << "Received world border packet\n";
+
+        switch (action) {
+            case WorldBorderPacket::Action::Initialize:
+            {
+                std::cout << "World border radius: " << packet->GetRadius() << std::endl;
+                std::cout << "World border center: " << packet->GetX() << ", " << packet->GetZ() << std::endl;
+                std::cout << "World border warning time: " << packet->GetWarningTime() << " seconds , blocks: " << packet->GetWarningBlocks() << " meters" << std::endl;
+            }
+            break;
+        }
     }
 
     void HandlePacket(Minecraft::Packets::Inbound::PlayerPositionAndLookPacket* packet) {
@@ -100,6 +126,9 @@ public:
             switch (action) {
             case PlayerListItemPacket::Action::AddPlayer:
                 std::wcout << "Adding player " << actionData->name << " uuid: " << actionData->uuid << std::endl;
+
+                for (auto& property : actionData->properties)
+                    std::wcout << property.first << " = " << property.second << std::endl;
             break;
             case PlayerListItemPacket::Action::UpdateGamemode:
                 std::wcout << "Updating gamemode to " << actionData->gamemode << " for player " << actionData->uuid << std::endl;
@@ -277,7 +306,7 @@ public:
         buffer << packetSize;
         buffer << packetBuffer;
 
-        // 221 99
+        // todo: compression
 
         m_Socket->Send(m_Encrypter->Encrypt(buffer));
     }

@@ -101,6 +101,7 @@ public:
     bool Deserialize(DataBuffer& data, std::size_t packetLength);
     void Dispatch(PacketHandler* handler);
 
+    // Packets of this size or higher may be compressed
     s64 GetMaxPacketSize() const { return m_MaxPacketSize.GetLong(); }
 };
 
@@ -183,6 +184,7 @@ public:
     bool Deserialize(DataBuffer& data, std::size_t packetLength);
     void Dispatch(PacketHandler* handler);
 
+    // The new slot that the player selected (0-8)
     u8 GetSlot() const { return m_Slot; }
 };
 
@@ -197,19 +199,34 @@ public:
     bool Deserialize(DataBuffer& data, std::size_t packetLength);
     void Dispatch(PacketHandler* handler);
 
+    // 0 is inventory window
     u8 GetWindowId() const { return m_WindowId; }
+
+    /**
+     * 0-3 are armor slots,
+     * 4-7 are crafting area slots
+     * 8 is crafting result
+     * 9 is start of top row of inventory, each row has 9 slots
+     * 36 (9*3 + 9) is start of hotbar
+     */
     s16 GetSlotIndex() const { return m_SlotIndex; }
+
     Slot GetSlot() const { return m_Slot; }
 };
 
 class WindowItemsPacket : public InboundPacket { // 0x30
 private:
     u8 m_WindowId;
+    std::vector<Slot> m_Slots;
 
 public:
     WindowItemsPacket();
     bool Deserialize(DataBuffer& data, std::size_t packetLength);
     void Dispatch(PacketHandler* handler);
+    u8 GetWindowId() const { return m_WindowId; }
+
+    // Contains every slot for the window, even empty ones (-1 itemId in Slot)
+    const std::vector<Slot>& GetSlots() const { return m_Slots; }
 };
 
 
@@ -299,14 +316,68 @@ public:
 };
 
 class WorldBorderPacket : public InboundPacket { // 0x44
+public:
+    enum Action { SetSize, LerpSize, SetCenter, Initialize, SetWarningTime, SetWarningBlocks };
+
 private:
     double m_Radius;
+    double m_OldRadius;
+    double m_X;
+    double m_Z;
+    s64 m_Speed;
+    s32 m_PortalTeleportBoundary;
+    s32 m_WarningTime;
+    s32 m_WarningBlocks;
+
+    Action m_Action;
 
 public:
     WorldBorderPacket();
     bool Deserialize(DataBuffer& data, std::size_t packetLength);
     void Dispatch(PacketHandler* handler);
-    
+
+    // Radius from center to world border
+    double GetRadius() const { return m_Radius; };
+
+    // Old radius from center to world border
+    double GetOldRadius() const { return m_OldRadius; };
+
+    // Center X coord
+    double GetX() const { return m_X; }
+
+    // Center Y coord
+    double GetZ() const { return m_Z; }
+
+    /**
+     * Number of real-time ticks/seconds (?) until New Radius is reached. 
+     * From experiments, it appears that Notchian server does not sync 
+     * world border speed to game ticks, so it gets out of sync with 
+     * server lag 
+     */
+    s64 GetSpeed() const { return m_Speed; }
+
+    /**
+     * Resulting coordinates from a portal teleport are limited to +-value. 
+     * Usually 29999984.
+     */
+    s32 GetPortalTeleportBoundary() const { return m_PortalTeleportBoundary; }
+    /** 
+     * Causes the screen to be tinted red when a contracting world border will reach 
+     * the player within the specified time. The default is 15 seconds. 
+     * The tint will not display if the user is using fast graphics. 
+     * Unit: seconds
+     */
+    s32 GetWarningTime() const { return m_WarningTime; }
+    /**
+     * Causes the screen to be tinted red when the player is within 
+     * the specified number of blocks from the world border. 
+     * The default is 5 blocks. 
+     * The tint will not display if the user is using fast graphics.
+     */
+    s32 GetWarningBlocks() const { return m_WarningBlocks; };
+
+    // Different values are set depending on which action is happening
+    Action GetAction() const { return m_Action; }
 };
 
 

@@ -117,6 +117,8 @@ bool WindowItemsPacket::Deserialize(DataBuffer& data, std::size_t packetLength) 
     for (s16 i = 0; i < count; ++i) {
         Slot slot;
         data >> slot;
+
+        m_Slots.push_back(slot);
     }
 
     return true;
@@ -331,55 +333,60 @@ bool WorldBorderPacket::Deserialize(DataBuffer& data, std::size_t packetLength) 
 
     data >> action;
 
-    switch (action.GetInt()) {
-        case 0: // Set size
+    m_Action = (Action)action.GetInt();
+
+    switch (m_Action) {
+        case SetSize:
         {
             data >> m_Radius;
         }
         break;
-        case 1: // Lerp size
+        case LerpSize:
         {
-            double oldRadius;
-
-            data >> oldRadius;
+            data >> m_OldRadius;
             data >> m_Radius;
             VarLong speed;
 
             data >> speed;
+            m_Speed = speed.GetLong();
         }
         break;
-        case 2: // Set center
+        case SetCenter:
         {
-            double x, z;
-            data >> x >> z;
+            data >> m_X >> m_Z;
         }
         break;
-        case 3: // Initialize
+        case Initialize:
         {
-            double x, z;
-            data >> x >> z;
+            data >> m_X >> m_Z;
 
-            double oldRadius;
-            data >> oldRadius >> m_Radius;
+            data >> m_OldRadius >> m_Radius;
 
             VarLong speed;
             data >> speed;
+            m_Speed = speed.GetLong();
 
             VarInt portalTeleportBoundary, warningTime, warningBlocks;
 
-            data >> portalTeleportBoundary >> warningTime >> warningBlocks;
+            data >> portalTeleportBoundary >> warningBlocks >> warningTime;
+
+            m_PortalTeleportBoundary = portalTeleportBoundary.GetInt();
+            m_WarningTime = warningTime.GetInt();
+            m_WarningBlocks = warningBlocks.GetInt();
         }
         break;
-        case 4: // Set warning time
+        case SetWarningTime:
         {
             VarInt warningTime;
             data >> warningTime;
+            m_WarningTime = warningTime.GetInt();
         }
         break;
-        case 5: // Set warning blocks
+        case SetWarningBlocks:
         {
             VarInt warningBlocks;
             data >> warningBlocks;
+            m_WarningBlocks = warningBlocks.GetInt();
         }
         break;
     }
