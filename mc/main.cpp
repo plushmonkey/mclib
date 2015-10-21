@@ -361,32 +361,23 @@ public:
             toHandle << m_Encrypter->Decrypt(buffer);
 
             Minecraft::Packets::Packet* packet = nullptr;
-            
-            try {
-                packet = CreatePacket(toHandle);
-            } catch (const std::exception&) {
-                // temporary
-            }
 
-            // todo: cleanup this loop once protocol is done
-            while (true) {
-                if (packet)
-                    m_Dispatcher.Dispatch(packet);
-
-                if (toHandle.IsFinished()) {
-                    toHandle = Minecraft::DataBuffer();
-                    break;
-                }
-
-                toHandle = Minecraft::DataBuffer(toHandle, toHandle.GetReadOffset());
-
+            do {
                 try {
                     packet = CreatePacket(toHandle);
-                    if (!packet) break;
+                    if (packet)
+                        m_Dispatcher.Dispatch(packet);
+                    else
+                        break;
                 } catch (const std::exception&) {
-                    // temporary
+                    // Temporary until protocol is finished
                 }
-            }
+            } while (!toHandle.IsFinished() && toHandle.GetSize() > 0);
+
+            if (toHandle.IsFinished())
+                toHandle = Minecraft::DataBuffer();
+            else if (toHandle.GetReadOffset() != 0)
+                toHandle = Minecraft::DataBuffer(toHandle, toHandle.GetReadOffset());
         }
     }
 
