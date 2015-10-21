@@ -104,7 +104,7 @@ public:
         int window = packet->GetWindowId();
         int index = packet->GetSlotIndex();
 
-        std::cout << "Set slot (" << window << ", " << index << ") = " << slot.GetItemId() << "\n";
+        std::cout << "Set slot (" << window << ", " << index << ") = " << slot.GetItemId() << ":" << slot.GetItemDamage() << "\n";
     }
 
     void HandlePacket(Minecraft::Packets::Inbound::WindowItemsPacket* packet) {
@@ -160,18 +160,17 @@ public:
 
         using namespace Minecraft::Packets;
 
-        if (m_LastPosition) {
+        if (m_LastPosition)
             delete m_LastPosition;
-        } else {
-            // Used to verify position
-            Outbound::PlayerPositionAndLookPacket response(packet->GetX(), packet->GetY(), packet->GetZ(),
-                packet->GetYaw(), packet->GetPitch(), onGround);
 
-            Send(&response);
+        // Used to verify position
+        Outbound::PlayerPositionAndLookPacket response(packet->GetX(), packet->GetY(), packet->GetZ(),
+            packet->GetYaw(), packet->GetPitch(), onGround);
 
-            Outbound::ClientStatusPacket status(Outbound::ClientStatusPacket::Action::PerformRespawn);
-            Send(&status);
-        }
+        Send(&response);
+
+        Outbound::ClientStatusPacket status(Outbound::ClientStatusPacket::Action::PerformRespawn);
+        Send(&status);
 
         m_LastPosition = new Inbound::PlayerPositionAndLookPacket();
         *m_LastPosition = *packet;
