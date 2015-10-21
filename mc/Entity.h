@@ -10,6 +10,9 @@
 
 namespace Minecraft {
 
+
+typedef s32 EntityId;
+
 class EntityMetadata {
 public:
     class Type {

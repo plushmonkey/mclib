@@ -61,7 +61,7 @@ Packet* PlayPacketFactory::CreatePacket(DataBuffer& data, std::size_t length) {
         packet = new Inbound::JoinGamePacket();
         break;
     case 0x02:
-        //packet = new Inbound::ChatPacket();
+        packet = new Inbound::ChatPacket();
         break;
     case 0x03:
         //packet = new Inbound::TimeUpdatePacket();
@@ -77,6 +77,9 @@ Packet* PlayPacketFactory::CreatePacket(DataBuffer& data, std::size_t length) {
         break;
     case 0x0F:
         packet = new Inbound::SpawnMobPacket();
+        break;
+    case 0x1C:
+        packet = new Inbound::EntityMetadataPacket();
         break;
     case 0x26:
         packet = new Inbound::MapChunkBulkPacket();

@@ -18,6 +18,11 @@ MCString::MCString(const std::wstring& str) : m_UTF16(str)
 }
 
 std::wstring MCString::GetUTF16() const { return m_UTF16; }
+std::string MCString::GetUTF8() const {
+    std::string utf8;
+    utf8::utf16to8(m_UTF16.begin(), m_UTF16.end(), std::back_inserter(utf8));
+    return utf8;
+}
 
 DataBuffer& operator<<(DataBuffer& out, const MCString& str) {
     std::string utf8;

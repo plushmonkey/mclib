@@ -13,9 +13,12 @@ KeepAlivePacket::KeepAlivePacket() {
 }
 
 bool KeepAlivePacket::Deserialize(DataBuffer& data, std::size_t packetLength) {
-    if (data.GetSize() != 5) return false;
+    VarInt aliveId;
 
-    data >> m_Id;
+    data >> aliveId;
+
+    m_AliveId = aliveId.GetLong();
+
     return true;
 }
 
@@ -40,6 +43,31 @@ bool JoinGamePacket::Deserialize(DataBuffer& data, std::size_t packetLength) {
 }
 
 void JoinGamePacket::Dispatch(PacketHandler* handler) {
+    handler->HandlePacket(this);
+}
+
+ChatPacket::ChatPacket() {
+    m_Id = 0x02;
+    m_ProtocolState = Minecraft::ProtocolState::Play;
+}
+
+bool ChatPacket::Deserialize(DataBuffer& data, std::size_t packetLength) {
+    MCString chatData;
+    u8 position;
+
+    data >> chatData;
+    data >> position;
+
+    m_Position = (ChatPosition)position;
+
+    Json::Reader reader;
+
+    reader.parse(chatData.GetUTF8(), m_ChatData);
+
+    return true;
+}
+
+void ChatPacket::Dispatch(PacketHandler* handler) {
     handler->HandlePacket(this);
 }
 
@@ -113,6 +141,26 @@ bool SpawnMobPacket::Deserialize(DataBuffer& data, std::size_t packetLength) {
 }
 
 void SpawnMobPacket::Dispatch(PacketHandler* handler) {
+    handler->HandlePacket(this);
+}
+
+EntityMetadataPacket::EntityMetadataPacket() {
+    m_Id = 0x1C;
+    m_ProtocolState = Minecraft::ProtocolState::Play;
+}
+
+bool EntityMetadataPacket::Deserialize(DataBuffer& data, std::size_t packetLength) {
+    VarInt eid;
+    
+    data >> eid;
+    data >> m_Metadata;
+
+    m_EntityId = eid.GetInt();
+
+    return true;
+}
+
+void EntityMetadataPacket::Dispatch(PacketHandler* handler) {
     handler->HandlePacket(this);
 }
 
@@ -586,6 +634,54 @@ DataBuffer EncryptionResponsePacket::Serialize() const {
     buffer << m_SharedSecret;
     buffer << verifyLength;
     buffer << m_VerifyToken;
+    return buffer;
+}
+
+// Play packets
+
+KeepAlivePacket::KeepAlivePacket(s64 id) : m_KeepAliveId(id) {
+    m_Id = 0x00;
+}
+
+DataBuffer KeepAlivePacket::Serialize() const {
+    DataBuffer buffer;
+    VarInt aliveId(m_KeepAliveId);
+
+    buffer << m_Id;
+    buffer << aliveId;
+
+    return buffer;
+}
+
+PlayerPositionAndLookPacket::PlayerPositionAndLookPacket(double x, double y, double z, float yaw, float pitch, bool onGround)
+    : m_X(x), m_Y(y), m_Z(z), m_Yaw(yaw), m_Pitch(pitch), m_OnGround(onGround)
+{
+    m_Id = 0x06;
+}
+
+DataBuffer PlayerPositionAndLookPacket::Serialize() const {
+    DataBuffer buffer;
+
+    buffer << m_Id;
+    buffer << m_X << m_Y << m_Z;
+    buffer << m_Yaw << m_Pitch;
+    buffer << m_OnGround;
+
+    return buffer;
+}
+
+ClientStatusPacket::ClientStatusPacket(Action action) {
+    m_Id = 0x16;
+    m_Action = action;
+}
+
+DataBuffer ClientStatusPacket::Serialize() const {
+    VarInt action(m_Action);
+    DataBuffer buffer;
+
+    buffer << m_Id;
+    buffer << action;
+
     return buffer;
 }
 

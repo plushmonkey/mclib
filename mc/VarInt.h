@@ -24,6 +24,8 @@ public:
     s32 GetInt() const { return (s32)m_Value; }
     s64 GetLong() const { return m_Value; }
 
+    // Returns how many bytes this will take up in a buffer
+    std::size_t GetSerializedLength() const;
 
     friend DataBuffer& operator<<(DataBuffer& out, const VarInt& pos);
     friend DataBuffer& operator>>(DataBuffer& in, VarInt& pos);

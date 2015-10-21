@@ -6,6 +6,7 @@
 #include "../Position.h"
 #include "../Protocol.h"
 #include <map>
+#include <json/json.h>
 
 namespace Minecraft {
 namespace Packets {
@@ -14,7 +15,7 @@ class PacketHandler;
 
 class Packet {
 private:
-    Packet& operator=(const Packet&);
+   // Packet& operator=(const Packet&);
 
 protected:
     VarInt m_Id;
@@ -109,16 +110,15 @@ public:
 
 class KeepAlivePacket : public InboundPacket { // 0x00
 private:
-    VarInt m_AliveId;
+    s64 m_AliveId;
 
 public:
     KeepAlivePacket();
     bool Deserialize(DataBuffer& data, std::size_t packetLength);
     void Dispatch(PacketHandler* handler);
 
-    VarInt GetAliveId() const { return m_AliveId; }
+    s64 GetAliveId() const { return m_AliveId; }
 };
-
 
 class JoinGamePacket : public InboundPacket { // 0x01
 private:
@@ -142,6 +142,23 @@ public:
     u8 GetMaxPlayers() const { return m_MaxPlayers; }
     std::wstring GetLevelType() const { return m_LevelType.GetUTF16(); }
     bool GetReducedDebug() const { return m_ReducedDebug; }
+};
+
+class ChatPacket : public InboundPacket { // 0x02
+public:
+    enum ChatPosition { ChatBox, SystemMessage, Hotbar };
+
+private:
+    Json::Value m_ChatData;
+    ChatPosition m_Position;
+
+public:
+    ChatPacket();
+    bool Deserialize(DataBuffer& data, std::size_t packetLength);
+    void Dispatch(PacketHandler* handler);
+
+    ChatPosition GetChatPosition() const { return m_Position; }
+    const Json::Value& GetChatData() const { return m_ChatData; }
 };
 
 class SpawnPositionPacket : public InboundPacket { // 0x05
@@ -190,7 +207,7 @@ public:
 
 class SpawnMobPacket : public InboundPacket { // 0x0F
 private:
-    s32 m_EntityId;
+    EntityId m_EntityId;
     u8 m_Type;
     s32 m_X;
     s32 m_Y;
@@ -208,6 +225,31 @@ public:
     bool Deserialize(DataBuffer& data, std::size_t packetLength);
     void Dispatch(PacketHandler* handler);
 
+    EntityId GetEntityId() const { return m_EntityId; }
+    u8 GetType() const { return m_Type; }
+    s32 GetX() const { return m_X; }
+    s32 GetY() const { return m_Y; }
+    s32 GetZ() const { return m_Z; }
+    u8 GetYaw() const { return m_Yaw; }
+    u8 GetPitch() const { return m_Pitch; }
+    u8 GetHeadPitch() const { return m_HeadPitch; }
+    s16 GetVelocityX() const { return m_VelocityX; }
+    s16 GetVelocityY() const { return m_VelocityY; }
+    s16 GetVelocityZ() const { return m_VelocityZ; }
+    const EntityMetadata& GetMetadata() const { return m_Metadata; }
+};
+
+class EntityMetadataPacket : public InboundPacket { // 0x1C
+private:
+    EntityId m_EntityId;
+    EntityMetadata m_Metadata;
+
+public:
+    EntityMetadataPacket();
+    bool Deserialize(DataBuffer& data, std::size_t packetLength);
+    void Dispatch(PacketHandler* handler);
+
+    EntityId GetEntityId() const { return m_EntityId; }
     const EntityMetadata& GetMetadata() const { return m_Metadata; }
 };
 
@@ -455,6 +497,58 @@ public:
     std::string GetSharedSecret() const { return m_SharedSecret; }
     std::string GetVerifyToken() const { return m_VerifyToken; }
 };
+
+// Play packets
+
+class KeepAlivePacket : public OutboundPacket { // 0x00
+private:
+    s64 m_KeepAliveId;
+
+public:
+    KeepAlivePacket(s64 id);
+    DataBuffer Serialize() const;
+
+    s64 GetKeepAliveId() const { return m_KeepAliveId; }
+};
+
+class PlayerPositionAndLookPacket : public OutboundPacket { // 0x06
+private:
+    double m_X;
+    // Foot position
+    double m_Y;
+    double m_Z;
+    float m_Yaw;
+    float m_Pitch;
+
+    bool m_OnGround;
+
+public:
+    PlayerPositionAndLookPacket(double x, double y, double z, float yaw, float pitch, bool onGround);
+    DataBuffer Serialize() const;
+    
+    double GetX() const { return m_X; }
+    double GetY() const { return m_Y; }
+    double GetZ() const { return m_Z; }
+    float GetYaw() const { return m_Yaw; }
+    float GetPitch() const { return m_Pitch; }
+    bool IsOnGround() const { return m_OnGround; }
+};
+
+class ClientStatusPacket : public OutboundPacket { // 0x16
+public:
+    enum Action { PerformRespawn, RequestStats, TakingInventoryAchievement };
+
+private:
+    Action m_Action;
+
+public:
+    ClientStatusPacket(Action action);
+    DataBuffer Serialize() const;
+
+    Action GetAction() const { return m_Action; }
+};
+
+
 
 } // ns Outbound
 

@@ -27,10 +27,12 @@ public:
     // Play protocol state
     virtual void HandlePacket(Inbound::KeepAlivePacket* packet) { } // 0x00
     virtual void HandlePacket(Inbound::JoinGamePacket* packet) { } // 0x01
+    virtual void HandlePacket(Inbound::ChatPacket* packet) { } // 0x02
     virtual void HandlePacket(Inbound::SpawnPositionPacket* packet) { } // 0x05
     virtual void HandlePacket(Inbound::PlayerPositionAndLookPacket* packet) { } // 0x08
     virtual void HandlePacket(Inbound::HeldItemChangePacket* packet) { } // 0x09
-    virtual void HandlePacket(Inbound::SpawnMobPacket* packet) { } // 0x2F
+    virtual void HandlePacket(Inbound::SpawnMobPacket* packet) { } // 0x0F
+    virtual void HandlePacket(Inbound::EntityMetadataPacket* packet) { } // 0x1C
     virtual void HandlePacket(Inbound::MapChunkBulkPacket* packet) { } // 0x2F
     virtual void HandlePacket(Inbound::SetSlotPacket* packet) { } // 0x2F
     virtual void HandlePacket(Inbound::WindowItemsPacket* packet) { } // 0x30

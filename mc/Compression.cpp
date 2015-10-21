@@ -5,7 +5,13 @@
 namespace Minecraft {
 
 DataBuffer CompressionNone::Compress(DataBuffer& buffer) {
-    return buffer;
+    DataBuffer packet;
+
+    VarInt length((s32)buffer.GetSize());
+    packet << length.GetInt();
+    packet << buffer;
+
+    return packet;
 }
 
 DataBuffer CompressionNone::Decompress(DataBuffer& buffer, std::size_t packetLength) {
@@ -30,7 +36,30 @@ unsigned long deflate(const std::string& source, std::string& dest) {
 }
 
 DataBuffer CompressionZ::Compress(DataBuffer& buffer) {
-    return buffer;
+    std::string compressedData;
+    DataBuffer packet;
+
+    if (buffer.GetSize() < m_CompressionThreshold) {
+        // Don't compress since it's a small packet
+        VarInt dataLength(0);
+        VarInt packetLength((s32)(buffer.GetSize() + dataLength.GetSerializedLength()));
+
+        packet << packetLength;
+        packet << dataLength;
+        packet << buffer;
+        return packet;
+    }
+
+
+    deflate(buffer.ToString(), compressedData);
+
+    VarInt dataLength((s32)buffer.GetSize());
+    VarInt packetLength((s32)(compressedData.length() + dataLength.GetSerializedLength()));
+
+    packet << packetLength;
+    packet << dataLength;
+    packet << compressedData;
+    return packet;
 }
 
 DataBuffer CompressionZ::Decompress(DataBuffer& buffer, std::size_t packetLength) {

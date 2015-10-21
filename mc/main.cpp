@@ -6,7 +6,6 @@
 #include <array>
 #include <vector>
 #include <json/json.h>
-#include <openssl/sha.h>
 #include "HTTPClient.h"
 #include "Hash.h"
 #include "Yggdrasil.h"
@@ -21,7 +20,11 @@
 #include "Compression.h"
 #include <memory>
 
-std::string PlayerName = "plushmonkey";
+#include <windows.h> // timeGetTime
+
+#pragma comment(lib, "winmm.lib")
+
+std::string PlayerName = "testplayer";
 std::string PlayerPassword = "";
 
 class Connection : public Minecraft::Packets::PacketHandler {
@@ -34,6 +37,7 @@ private:
     Minecraft::Yggdrasil m_Yggdrasil;
     std::string m_Server;
     u16 m_Port;
+    Minecraft::Packets::Inbound::PlayerPositionAndLookPacket* m_LastPosition;
 
 public:
     Connection(const std::string& server, u16 port)
@@ -50,10 +54,13 @@ public:
         m_Dispatcher.RegisterHandler(Minecraft::ProtocolState::Login, 0x02, this);
         m_Dispatcher.RegisterHandler(Minecraft::ProtocolState::Login, 0x03, this);
 
+        m_Dispatcher.RegisterHandler(Minecraft::ProtocolState::Play, 0x00, this);
         m_Dispatcher.RegisterHandler(Minecraft::ProtocolState::Play, 0x01, this);
+        m_Dispatcher.RegisterHandler(Minecraft::ProtocolState::Play, 0x02, this);
         m_Dispatcher.RegisterHandler(Minecraft::ProtocolState::Play, 0x05, this);
         m_Dispatcher.RegisterHandler(Minecraft::ProtocolState::Play, 0x08, this);
         m_Dispatcher.RegisterHandler(Minecraft::ProtocolState::Play, 0x0F, this);
+        m_Dispatcher.RegisterHandler(Minecraft::ProtocolState::Play, 0x1C, this);
         m_Dispatcher.RegisterHandler(Minecraft::ProtocolState::Play, 0x26, this);
         m_Dispatcher.RegisterHandler(Minecraft::ProtocolState::Play, 0x2F, this);
         m_Dispatcher.RegisterHandler(Minecraft::ProtocolState::Play, 0x30, this);
@@ -63,6 +70,23 @@ public:
         m_Dispatcher.RegisterHandler(Minecraft::ProtocolState::Play, 0x3F, this);
         m_Dispatcher.RegisterHandler(Minecraft::ProtocolState::Play, 0x41, this);
         m_Dispatcher.RegisterHandler(Minecraft::ProtocolState::Play, 0x44, this);
+
+        m_LastPosition = nullptr;
+    }
+
+    void HandlePacket(Minecraft::Packets::Inbound::ChatPacket* packet) {
+        const Json::Value& root = packet->GetChatData();
+
+        Json::StyledWriter writer;
+        std::string out = writer.write(root);
+
+        std::cout << out << std::endl;
+    }
+
+    void HandlePacket(Minecraft::Packets::Inbound::EntityMetadataPacket* packet) {
+        const auto& metadata = packet->GetMetadata();
+
+        std::cout << "Received entity metadata" << std::endl;
     }
 
     void HandlePacket(Minecraft::Packets::Inbound::SpawnMobPacket* packet) {
@@ -111,10 +135,16 @@ public:
             {
                 std::cout << "World border radius: " << packet->GetRadius() << std::endl;
                 std::cout << "World border center: " << packet->GetX() << ", " << packet->GetZ() << std::endl;
-                std::cout << "World border warning time: " << packet->GetWarningTime() << " seconds , blocks: " << packet->GetWarningBlocks() << " meters" << std::endl;
+                std::cout << "World border warning time: " << packet->GetWarningTime() << " seconds, blocks: " << packet->GetWarningBlocks() << " meters" << std::endl;
             }
             break;
         }
+    }
+
+    void HandlePacket(Minecraft::Packets::Inbound::KeepAlivePacket* packet) {
+        std::cout << "Received keep alive\n";
+        Minecraft::Packets::Outbound::KeepAlivePacket response(packet->GetAliveId());
+        Send(&response);
     }
 
     void HandlePacket(Minecraft::Packets::Inbound::PlayerPositionAndLookPacket* packet) {
@@ -124,6 +154,27 @@ public:
         Minecraft::Position pos(x, y , z);
 
         std::cout << "Pos: " << pos << std::endl;
+
+        // I guess the client has to figure this out from chunk data?
+        bool onGround = true;
+
+        using namespace Minecraft::Packets;
+
+        if (m_LastPosition) {
+            delete m_LastPosition;
+        } else {
+            // Used to verify position
+            Outbound::PlayerPositionAndLookPacket response(packet->GetX(), packet->GetY(), packet->GetZ(),
+                packet->GetYaw(), packet->GetPitch(), onGround);
+
+            Send(&response);
+
+            Outbound::ClientStatusPacket status(Outbound::ClientStatusPacket::Action::PerformRespawn);
+            Send(&status);
+        }
+
+        m_LastPosition = new Inbound::PlayerPositionAndLookPacket();
+        *m_LastPosition = *packet;
     }
 
 
@@ -226,7 +277,7 @@ public:
 
     void HandlePacket(Minecraft::Packets::Inbound::SetCompressionPacket* packet) {
         delete m_Compressor;
-        m_Compressor = new Minecraft::CompressionZ();
+        m_Compressor = new Minecraft::CompressionZ(packet->GetMaxPacketSize());
     }
 
     void HandlePacket(Minecraft::Packets::Inbound::JoinGamePacket* packet) {
@@ -271,6 +322,20 @@ public:
         return Minecraft::Packets::PacketFactory::CreatePacket(m_ProtocolState, decompressed, length.GetInt());
     }
 
+    void UpdatePosition() {
+        if (!m_LastPosition) return;
+        static DWORD lastSend = 0;
+        
+        if (timeGetTime() - lastSend > 100) {
+            bool onGround = true;
+
+            Minecraft::Packets::Outbound::PlayerPositionAndLookPacket response(m_LastPosition->GetX(), m_LastPosition->GetY(), m_LastPosition->GetZ(),
+                m_LastPosition->GetYaw(), m_LastPosition->GetPitch(), onGround);
+
+            Send(&response);
+        }
+    }
+
     void Run() {
         if (!Connect()) {
             std::cerr << "Couldn't connect\n";
@@ -292,12 +357,22 @@ public:
 
             if (m_Socket->GetStatus() != Network::Socket::Connected) break;
 
+            UpdatePosition();
+
             toHandle << m_Encrypter->Decrypt(buffer);
 
-            Minecraft::Packets::Packet* packet = CreatePacket(toHandle);
+            Minecraft::Packets::Packet* packet = nullptr;
+            
+            try {
+                packet = CreatePacket(toHandle);
+            } catch (const std::exception&) {
+                // temporary
+            }
 
-            while (packet) {
-                m_Dispatcher.Dispatch(packet);
+            // todo: cleanup this loop once protocol is done
+            while (true) {
+                if (packet)
+                    m_Dispatcher.Dispatch(packet);
 
                 if (toHandle.IsFinished()) {
                     toHandle = Minecraft::DataBuffer();
@@ -306,19 +381,19 @@ public:
 
                 toHandle = Minecraft::DataBuffer(toHandle, toHandle.GetReadOffset());
 
-                packet = CreatePacket(toHandle);
+                try {
+                    packet = CreatePacket(toHandle);
+                    if (!packet) break;
+                } catch (const std::exception&) {
+                    // temporary
+                }
             }
         }
     }
 
     void Send(Minecraft::Packets::Packet* packet) {
         Minecraft::DataBuffer packetBuffer = packet->Serialize();
-        Minecraft::DataBuffer buffer;
-        Minecraft::VarInt packetSize = (s32)packetBuffer.GetSize();
-        buffer << packetSize;
-        buffer << packetBuffer;
-
-        // todo: compression
+        Minecraft::DataBuffer buffer = m_Compressor->Compress(packetBuffer);
 
         m_Socket->Send(m_Encrypter->Encrypt(buffer));
     }

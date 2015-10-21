@@ -24,6 +24,12 @@ VarInt::VarInt(s64 val) : m_Value(val)
 
 }
 
+std::size_t VarInt::GetSerializedLength() const {
+    DataBuffer buffer;
+    buffer << *this;
+    return buffer.GetSize();
+}
+
 DataBuffer& operator<<(DataBuffer& out, const VarInt& var) {
     u64 uval = u64(var.m_Value < 0 ? ~(var.m_Value << 1) : var.m_Value);
 
