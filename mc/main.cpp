@@ -19,6 +19,7 @@
 #include "Protocol.h"
 #include "Compression.h"
 #include <memory>
+#include <regex>
 
 #include <windows.h> // timeGetTime
 
@@ -58,9 +59,14 @@ public:
         m_Dispatcher.RegisterHandler(Minecraft::ProtocolState::Play, 0x01, this);
         m_Dispatcher.RegisterHandler(Minecraft::ProtocolState::Play, 0x02, this);
         m_Dispatcher.RegisterHandler(Minecraft::ProtocolState::Play, 0x05, this);
+        m_Dispatcher.RegisterHandler(Minecraft::ProtocolState::Play, 0x06, this);
         m_Dispatcher.RegisterHandler(Minecraft::ProtocolState::Play, 0x08, this);
+        m_Dispatcher.RegisterHandler(Minecraft::ProtocolState::Play, 0x0C, this);
         m_Dispatcher.RegisterHandler(Minecraft::ProtocolState::Play, 0x0F, this);
+        m_Dispatcher.RegisterHandler(Minecraft::ProtocolState::Play, 0x15, this);
         m_Dispatcher.RegisterHandler(Minecraft::ProtocolState::Play, 0x1C, this);
+        m_Dispatcher.RegisterHandler(Minecraft::ProtocolState::Play, 0x1F, this);
+        m_Dispatcher.RegisterHandler(Minecraft::ProtocolState::Play, 0x20, this);
         m_Dispatcher.RegisterHandler(Minecraft::ProtocolState::Play, 0x26, this);
         m_Dispatcher.RegisterHandler(Minecraft::ProtocolState::Play, 0x2F, this);
         m_Dispatcher.RegisterHandler(Minecraft::ProtocolState::Play, 0x30, this);
@@ -74,25 +80,87 @@ public:
         m_LastPosition = nullptr;
     }
 
+    void HandlePacket(Minecraft::Packets::Inbound::EntityPropertiesPacket* packet) {
+        std::cout << "Received entity properties: " << std::endl;
+        const auto& properties = packet->GetProperties();
+        for (const auto& kv : properties) {
+            std::wstring key = kv.first;
+            const auto& property = kv.second;
+            std::wcout << key << " : " << property.value << std::endl;
+            for (const auto& modifier : property.modifiers) 
+                std::cout << "Modifier: " << modifier.uuid << " " << modifier.amount << " " << (int)modifier.operation << std::endl;
+        }
+    }
+
+    void HandlePacket(Minecraft::Packets::Inbound::EntityRelativeMovePacket* packet) {
+        if (packet->GetDeltaX() != 0 || packet->GetDeltaY() != 0 || packet->GetDeltaZ() != 0) {
+            std::cout << "Entity " << packet->GetEntityId() << " relative move: (";
+            std::cout << packet->GetDeltaX() << ", " << packet->GetDeltaY() << ", " << packet->GetDeltaZ() << ")" << std::endl;
+        }
+    }
+
+    void HandlePacket(Minecraft::Packets::Inbound::SpawnPlayerPacket* packet) {
+        float x, y, z;
+        x = packet->GetX();
+        y = packet->GetY();
+        z = packet->GetZ();
+        std::cout << "Spawn player " << packet->GetUUID() << " at (" << x << ", " << y << ", " << z << ")" << std::endl;
+    }
+
+    void HandlePacket(Minecraft::Packets::Inbound::UpdateHealthPacket* packet) {
+        std::cout << "Set health. health: " << packet->GetHealth() << std::endl;
+    }
+
+    void HandlePacket(Minecraft::Packets::Inbound::SetExperiencePacket* packet) {
+        std::cout << "Set experience. Level: " << packet->GetLevel() << std::endl;
+    }
+
     void HandlePacket(Minecraft::Packets::Inbound::ChatPacket* packet) {
         const Json::Value& root = packet->GetChatData();
 
         Json::StyledWriter writer;
         std::string out = writer.write(root);
-
         std::cout << out << std::endl;
+
+        if (!root["text"].isString()) return;
+
+        std::string text = root["text"].asString();
+        if (!root["extra"].isNull()) {
+            for (Json::ValueConstIterator iter = root["extra"].begin(); iter != root["extra"].end(); ++iter) {
+                if (!iter->isString()) continue;
+
+                text += iter->asString();
+            }
+        }
+
+        std::regex regex(R"::(<(.*?)> (.+)$)::");
+
+        std::sregex_iterator iter(text.begin(), text.end(), regex);
+        std::sregex_iterator end;
+        if (iter != end) {
+            std::smatch match = *iter;
+
+            std::string sender = match[1];
+            std::string message = match[2];
+
+            if (sender.compare(PlayerName) == 0)
+                return;
+
+            Minecraft::Packets::Outbound::ChatPacket chatResponse(message);
+            Send(&chatResponse);
+        }
     }
 
     void HandlePacket(Minecraft::Packets::Inbound::EntityMetadataPacket* packet) {
         const auto& metadata = packet->GetMetadata();
 
-        std::cout << "Received entity metadata" << std::endl;
+        //std::cout << "Received entity metadata" << std::endl;
     }
 
     void HandlePacket(Minecraft::Packets::Inbound::SpawnMobPacket* packet) {
         const auto& metadata = packet->GetMetadata();
         
-        std::cout << "Received SpawnMobPacket" << std::endl;
+        //std::cout << "Received SpawnMobPacket" << std::endl;
     }
 
     void HandlePacket(Minecraft::Packets::Inbound::MapChunkBulkPacket* packet) {
@@ -142,7 +210,6 @@ public:
     }
 
     void HandlePacket(Minecraft::Packets::Inbound::KeepAlivePacket* packet) {
-        std::cout << "Received keep alive\n";
         Minecraft::Packets::Outbound::KeepAlivePacket response(packet->GetAliveId());
         Send(&response);
     }
@@ -325,7 +392,7 @@ public:
         if (!m_LastPosition) return;
         static DWORD lastSend = 0;
         
-        if (timeGetTime() - lastSend > 100) {
+        if (timeGetTime() - lastSend >= 50) {
             bool onGround = true;
 
             Minecraft::Packets::Outbound::PlayerPositionAndLookPacket response(m_LastPosition->GetX(), m_LastPosition->GetY(), m_LastPosition->GetZ(),
@@ -369,7 +436,8 @@ public:
                         m_Dispatcher.Dispatch(packet);
                     else
                         break;
-                } catch (const std::exception&) {
+                } catch (const std::exception& e) {
+                    std::cerr << e.what() << std::endl;
                     // Temporary until protocol is finished
                 }
             } while (!toHandle.IsFinished() && toHandle.GetSize() > 0);

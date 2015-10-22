@@ -14,9 +14,6 @@ namespace Packets {
 class PacketHandler;
 
 class Packet {
-private:
-   // Packet& operator=(const Packet&);
-
 protected:
     VarInt m_Id;
     Minecraft::ProtocolState m_ProtocolState;
@@ -173,6 +170,22 @@ public:
     Position GetLocation() const { return m_Location; }
 };
 
+class UpdateHealthPacket : public InboundPacket { // 0x06
+private:
+    float m_Health;
+    s32 m_Food;
+    float m_Saturation;
+
+public:
+    UpdateHealthPacket();
+    bool Deserialize(DataBuffer& data, std::size_t packetLength);
+    void Dispatch(PacketHandler* handler);
+
+    float GetHealth() const { return m_Health; }
+    s32 GetFood() const { return m_Food; }
+    float GetSaturation() const { return m_Saturation; }
+};
+
 class PlayerPositionAndLookPacket : public InboundPacket { // 0x08
 private:
     double m_X, m_Y, m_Z;
@@ -205,13 +218,41 @@ public:
     u8 GetSlot() const { return m_Slot; }
 };
 
+class SpawnPlayerPacket : public InboundPacket { // 0x0C
+private:
+    EntityId m_EntityId;
+    UUID m_UUID;
+    float m_X;
+    float m_Y;
+    float m_Z;
+    u8 m_Yaw;
+    u8 m_Pitch;
+    s16 m_CurrentItem;
+    EntityMetadata m_Metadata;
+
+public:
+    SpawnPlayerPacket();
+    bool Deserialize(DataBuffer& data, std::size_t packetLength);
+    void Dispatch(PacketHandler* handler);
+
+    EntityId GetEntityId() const { return m_EntityId; }
+    UUID GetUUID() const { return m_UUID; }
+    float GetX() const { return m_X; }
+    float GetY() const { return m_Y; }
+    float GetZ() const { return m_Z; }
+    u8 GetYaw() const { return m_Yaw; }
+    u8 GetPitch() const { return m_Pitch; }
+    s16 GetCurrentItem() const { return m_CurrentItem; }
+    const EntityMetadata& GetMetadata() const { return m_Metadata; }
+};
+
 class SpawnMobPacket : public InboundPacket { // 0x0F
 private:
     EntityId m_EntityId;
     u8 m_Type;
-    s32 m_X;
-    s32 m_Y;
-    s32 m_Z;
+    float m_X;
+    float m_Y;
+    float m_Z;
     u8 m_Yaw;
     u8 m_Pitch;
     u8 m_HeadPitch;
@@ -227,9 +268,9 @@ public:
 
     EntityId GetEntityId() const { return m_EntityId; }
     u8 GetType() const { return m_Type; }
-    s32 GetX() const { return m_X; }
-    s32 GetY() const { return m_Y; }
-    s32 GetZ() const { return m_Z; }
+    float GetX() const { return m_X; }
+    float GetY() const { return m_Y; }
+    float GetZ() const { return m_Z; }
     u8 GetYaw() const { return m_Yaw; }
     u8 GetPitch() const { return m_Pitch; }
     u8 GetHeadPitch() const { return m_HeadPitch; }
@@ -237,6 +278,52 @@ public:
     s16 GetVelocityY() const { return m_VelocityY; }
     s16 GetVelocityZ() const { return m_VelocityZ; }
     const EntityMetadata& GetMetadata() const { return m_Metadata; }
+};
+
+class EntityPacket : public InboundPacket { // 0x14
+private:
+    EntityId m_EntityId;
+
+public:
+    EntityPacket();
+    bool Deserialize(DataBuffer& data, std::size_t packetLength);
+    void Dispatch(PacketHandler* handler);
+
+    EntityId GetEntityId() const { return m_EntityId; }
+};
+
+class EntityRelativeMovePacket : public InboundPacket { // 0x15
+private:
+    EntityId m_EntityId;
+    float m_DeltaX;
+    float m_DeltaY;
+    float m_DeltaZ;
+    bool m_OnGround;
+
+public:
+    EntityRelativeMovePacket();
+    bool Deserialize(DataBuffer& data, std::size_t packetLength);
+    void Dispatch(PacketHandler* handler);
+
+    EntityId GetEntityId() const { return m_EntityId; }
+    float GetDeltaX() const { return m_DeltaX; }
+    float GetDeltaY() const { return m_DeltaY; }
+    float GetDeltaZ() const { return m_DeltaZ; }
+    float IsOnGround() const { return m_OnGround; }
+};
+
+class EntityHeadLookPacket : public InboundPacket { // 0x19
+private:
+    EntityId m_EntityId;
+    u8 m_Yaw;
+
+public:
+    EntityHeadLookPacket();
+    bool Deserialize(DataBuffer& data, std::size_t packetLength);
+    void Dispatch(PacketHandler* handler);
+
+    EntityId GetEntityId() const { return m_EntityId; }
+    u8 GetYaw() const { return m_Yaw; }
 };
 
 class EntityMetadataPacket : public InboundPacket { // 0x1C
@@ -253,14 +340,76 @@ public:
     const EntityMetadata& GetMetadata() const { return m_Metadata; }
 };
 
+class SetExperiencePacket : public InboundPacket { // 0x1F
+private:
+    float m_ExperienceBar;
+    s32 m_Level;
+    s32 m_TotalExperience;
+
+public:
+    SetExperiencePacket();
+    bool Deserialize(DataBuffer& data, std::size_t packetLength);
+    void Dispatch(PacketHandler* handler);
+
+    float GetExperienceBar() const { return m_ExperienceBar; }
+    s32 GetLevel() const { return m_Level; }
+    s32 GetTotalExperience() const { return m_TotalExperience; }
+};
+
+class EntityPropertiesPacket : public InboundPacket { // 0x20
+public:
+    struct Property {
+        struct Modifier {
+            UUID uuid;
+            double amount;
+            u8 operation;
+        };
+
+        double value;
+        std::vector<Modifier> modifiers;
+    };
+
+private:
+    EntityId m_EntityId;
+    std::map<std::wstring, Property> m_Properties;
+
+public:
+    EntityPropertiesPacket();
+    bool Deserialize(DataBuffer& data, std::size_t packetLength);
+    void Dispatch(PacketHandler* handler);
+
+    EntityId GetEntityId() const { return m_EntityId; }
+    const std::map<std::wstring, Property>& GetProperties() const { return m_Properties; }
+};
+
 class MapChunkBulkPacket : public InboundPacket { // 0x26
 private:
     bool m_SkyLight;
-
+    // todo: parse chunk data
 public:
     MapChunkBulkPacket();
     bool Deserialize(DataBuffer& data, std::size_t packetLength);
     void Dispatch(PacketHandler* handler);
+};
+
+class ChangeGameStatePacket : public InboundPacket { // 0x2B
+public:
+    enum Reason {
+        InvalidBed = 0, EndRaining, BeginRaining, ChangeGameMode, EnterCredits, 
+        DemoMessage, ArrowHit, FadeValue, FadeTime, PlayMobAppearance = 10
+    };
+
+private:
+    Reason m_Reason;
+    float m_Value;
+
+public:
+    ChangeGameStatePacket();
+    bool Deserialize(DataBuffer& data, std::size_t packetLength);
+    void Dispatch(PacketHandler* handler);
+
+    Reason GetReason() const { return m_Reason; }
+    float GetValue() const { return m_Value; }
 };
 
 class SetSlotPacket : public InboundPacket { // 0x2F
@@ -509,6 +658,18 @@ public:
     DataBuffer Serialize() const;
 
     s64 GetKeepAliveId() const { return m_KeepAliveId; }
+};
+
+class ChatPacket : public OutboundPacket { // 0x00
+private:
+    std::wstring m_Message;
+
+public:
+    ChatPacket(const std::wstring& message);
+    ChatPacket(const std::string& message);
+    DataBuffer Serialize() const;
+
+    const std::wstring& GetChatMessage() const { return m_Message; }
 };
 
 class PlayerPositionAndLookPacket : public OutboundPacket { // 0x06

@@ -29,10 +29,18 @@ public:
     virtual void HandlePacket(Inbound::JoinGamePacket* packet) { } // 0x01
     virtual void HandlePacket(Inbound::ChatPacket* packet) { } // 0x02
     virtual void HandlePacket(Inbound::SpawnPositionPacket* packet) { } // 0x05
+    virtual void HandlePacket(Inbound::UpdateHealthPacket* packet) { } // 0x05
     virtual void HandlePacket(Inbound::PlayerPositionAndLookPacket* packet) { } // 0x08
     virtual void HandlePacket(Inbound::HeldItemChangePacket* packet) { } // 0x09
+    virtual void HandlePacket(Inbound::SpawnPlayerPacket* packet) { } // 0x0C
     virtual void HandlePacket(Inbound::SpawnMobPacket* packet) { } // 0x0F
+    virtual void HandlePacket(Inbound::EntityPacket* packet) { } // 0x14
+    virtual void HandlePacket(Inbound::EntityRelativeMovePacket* packet) { } // 0x15
+    virtual void HandlePacket(Inbound::EntityHeadLookPacket* packet) { } // 0x19
     virtual void HandlePacket(Inbound::EntityMetadataPacket* packet) { } // 0x1C
+    virtual void HandlePacket(Inbound::SetExperiencePacket* packet) { } // 0x1F
+    virtual void HandlePacket(Inbound::EntityPropertiesPacket* packet) { } // 0x20
+    virtual void HandlePacket(Inbound::ChangeGameStatePacket* packet) { } // 0x2B
     virtual void HandlePacket(Inbound::MapChunkBulkPacket* packet) { } // 0x2F
     virtual void HandlePacket(Inbound::SetSlotPacket* packet) { } // 0x2F
     virtual void HandlePacket(Inbound::WindowItemsPacket* packet) { } // 0x30

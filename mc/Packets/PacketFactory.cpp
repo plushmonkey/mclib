@@ -69,20 +69,44 @@ Packet* PlayPacketFactory::CreatePacket(DataBuffer& data, std::size_t length) {
     case 0x05:
         packet = new Inbound::SpawnPositionPacket();
         break;
+    case 0x06:
+        packet = new Inbound::UpdateHealthPacket();
+        break;
     case 0x08:
         packet = new Inbound::PlayerPositionAndLookPacket();
         break;
     case 0x09:
         packet = new Inbound::HeldItemChangePacket();
         break;
+    case 0x0C:
+        packet = new Inbound::SpawnPlayerPacket();
+        break;
     case 0x0F:
         packet = new Inbound::SpawnMobPacket();
+        break;
+    case 0x14:
+        packet = new Inbound::EntityPacket();
+        break;
+    case 0x15:
+        packet = new Inbound::EntityRelativeMovePacket();
+        break;
+    case 0x19:
+        packet = new Inbound::EntityHeadLookPacket();
         break;
     case 0x1C:
         packet = new Inbound::EntityMetadataPacket();
         break;
+    case 0x1F:
+        packet = new Inbound::SetExperiencePacket();
+        break;
+    case 0x20:
+        packet = new Inbound::EntityPropertiesPacket();
+        break;
     case 0x26:
         packet = new Inbound::MapChunkBulkPacket();
+        break;
+    case 0x2B:
+        packet = new Inbound::ChangeGameStatePacket();
         break;
     case 0x2F:
         packet = new Inbound::SetSlotPacket();

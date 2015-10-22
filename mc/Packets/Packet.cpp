@@ -1,6 +1,39 @@
 #include "Packet.h"
 #include "PacketHandler.h"
 
+namespace {
+
+template <typename T>
+class FixedPointNumber {
+private:
+    T m_IntRep;
+
+public:
+    FixedPointNumber() : m_IntRep(0) { }
+    FixedPointNumber(T intRep) : m_IntRep(intRep) { }
+    
+    float GetFloat() const { 
+        float val = (m_IntRep / 32.0f);
+        if (m_IntRep < 0)
+            val -= ((m_IntRep & 31) / 31.0f);
+        else
+            val += ((m_IntRep & 31) / 31.0f);
+        return val;
+    }
+
+    friend Minecraft::DataBuffer& operator>>(Minecraft::DataBuffer& in, FixedPointNumber<T>& fpn);
+};
+
+Minecraft::DataBuffer& operator>>(Minecraft::DataBuffer& in, FixedPointNumber<s8>& fpn) {
+    return in >> fpn.m_IntRep;
+}
+
+Minecraft::DataBuffer& operator>>(Minecraft::DataBuffer& in, FixedPointNumber<s32>& fpn) {
+    return in >> fpn.m_IntRep;
+}
+
+}
+
 namespace Minecraft {
 namespace Packets {
 
@@ -85,6 +118,22 @@ void SpawnPositionPacket::Dispatch(PacketHandler* handler) {
     handler->HandlePacket(this);
 }
 
+UpdateHealthPacket::UpdateHealthPacket() {
+    m_Id = 0x06;
+    m_ProtocolState = Minecraft::ProtocolState::Play;
+}
+
+bool UpdateHealthPacket::Deserialize(DataBuffer& data, std::size_t packetLength) {
+    VarInt food;
+    data >> m_Health >> food >> m_Saturation;
+    m_Food = food.GetInt();
+    return true;
+}
+
+void UpdateHealthPacket::Dispatch(PacketHandler* handler) {
+    handler->HandlePacket(this);
+}
+
 PlayerPositionAndLookPacket::PlayerPositionAndLookPacket() {
     m_Id = 0x08;
     m_ProtocolState = Minecraft::ProtocolState::Play;
@@ -115,6 +164,35 @@ void HeldItemChangePacket::Dispatch(PacketHandler* handler) {
     handler->HandlePacket(this);
 }
 
+SpawnPlayerPacket::SpawnPlayerPacket() {
+    m_Id = 0x0C;
+    m_ProtocolState = Minecraft::ProtocolState::Play;
+}
+
+bool SpawnPlayerPacket::Deserialize(DataBuffer& data, std::size_t packetLength) {
+    VarInt eid;
+
+    data >> eid;
+    data >> m_UUID;
+
+    FixedPointNumber<s32> x, y, z;
+    data >> x >> y >> z;
+
+    m_X = x.GetFloat();
+    m_Y = y.GetFloat();
+    m_Z = z.GetFloat();
+
+    data >> m_Yaw;
+    data >> m_Pitch;
+    data >> m_CurrentItem;
+    data >> m_Metadata;
+    return true;
+}
+
+void SpawnPlayerPacket::Dispatch(PacketHandler* handler) {
+    handler->HandlePacket(this);
+}
+
 SpawnMobPacket::SpawnMobPacket() {
     m_Id = 0x0F;
     m_ProtocolState = Minecraft::ProtocolState::Play;
@@ -126,9 +204,14 @@ bool SpawnMobPacket::Deserialize(DataBuffer& data, std::size_t packetLength) {
     data >> entityId;
     m_EntityId = entityId.GetInt();
     data >> m_Type;
-    data >> m_X;
-    data >> m_Y;
-    data >> m_Z;
+
+    FixedPointNumber<s32> x, y, z;
+    data >> x >> y >> z;
+
+    m_X = x.GetFloat();
+    m_Y = y.GetFloat();
+    m_Z = z.GetFloat();
+    
     data >> m_Yaw;
     data >> m_Pitch;
     data >> m_HeadPitch;
@@ -141,6 +224,65 @@ bool SpawnMobPacket::Deserialize(DataBuffer& data, std::size_t packetLength) {
 }
 
 void SpawnMobPacket::Dispatch(PacketHandler* handler) {
+    handler->HandlePacket(this);
+}
+
+EntityPacket::EntityPacket() {
+    m_Id = 0x14;
+    m_ProtocolState = Minecraft::ProtocolState::Play;
+}
+
+bool EntityPacket::Deserialize(DataBuffer& data, std::size_t packetLength) {
+    VarInt eid;
+    data >> eid;
+    m_EntityId = eid.GetInt();
+    return true;
+}
+
+void EntityPacket::Dispatch(PacketHandler* handler) {
+    handler->HandlePacket(this);
+}
+
+EntityRelativeMovePacket::EntityRelativeMovePacket() {
+    m_Id = 0x15;
+    m_ProtocolState = Minecraft::ProtocolState::Play;
+}
+
+bool EntityRelativeMovePacket::Deserialize(DataBuffer& data, std::size_t packetLength) {
+    VarInt eid;
+    FixedPointNumber<s8> dx, dy, dz;
+
+    data >> eid;
+    data >> dx >> dy >> dz;
+    data >> m_OnGround;
+
+    m_DeltaX = dx.GetFloat();
+    m_DeltaY = dy.GetFloat();
+    m_DeltaZ = dz.GetFloat();
+
+    m_EntityId = eid.GetInt();
+
+    return true;
+}
+
+void EntityRelativeMovePacket::Dispatch(PacketHandler* handler) {
+    handler->HandlePacket(this);
+}
+
+EntityHeadLookPacket::EntityHeadLookPacket() {
+    m_Id = 0x19;
+    m_ProtocolState = Minecraft::ProtocolState::Play;
+}
+
+bool EntityHeadLookPacket::Deserialize(DataBuffer& data, std::size_t packetLength) {
+    VarInt eid;
+    data >> eid;
+    data >> m_Yaw;
+    m_EntityId = eid.GetInt();
+    return true;
+}
+
+void EntityHeadLookPacket::Dispatch(PacketHandler* handler) {
     handler->HandlePacket(this);
 }
 
@@ -161,6 +303,65 @@ bool EntityMetadataPacket::Deserialize(DataBuffer& data, std::size_t packetLengt
 }
 
 void EntityMetadataPacket::Dispatch(PacketHandler* handler) {
+    handler->HandlePacket(this);
+}
+
+SetExperiencePacket::SetExperiencePacket() {
+    m_Id = 0x1F;
+    m_ProtocolState = Minecraft::ProtocolState::Play;
+}
+
+bool SetExperiencePacket::Deserialize(DataBuffer& data, std::size_t packetLength) {
+    VarInt level, total;
+    data >> m_ExperienceBar >> level >> total;
+    m_Level = level.GetInt();
+    m_TotalExperience = level.GetInt();
+    return true;
+}
+
+void SetExperiencePacket::Dispatch(PacketHandler* handler) {
+    handler->HandlePacket(this);
+}
+
+EntityPropertiesPacket::EntityPropertiesPacket() {
+    m_Id = 0x20;
+    m_ProtocolState = Minecraft::ProtocolState::Play;
+}
+
+bool EntityPropertiesPacket::Deserialize(DataBuffer& data, std::size_t packetLength) {
+    VarInt eid;
+
+    data >> eid;
+    m_EntityId = eid.GetInt();
+
+    s32 propertyCount;
+    data >> propertyCount;
+
+    for (s32 i = 0; i < propertyCount; ++i) {
+        Property property;
+        MCString key;
+
+        data >> key;
+        data >> property.value;
+
+        VarInt modifierCount;
+        data >> modifierCount;
+
+        for (s32 j = 0; j < modifierCount.GetInt(); ++j) {
+            Property::Modifier modifier;
+            data >> modifier.uuid;
+            data >> modifier.amount;
+            data >> modifier.operation;
+
+            property.modifiers.push_back(modifier);
+        }
+
+        m_Properties[key.GetUTF16()] = property;
+    }
+    return true;
+}
+
+void EntityPropertiesPacket::Dispatch(PacketHandler* handler) {
     handler->HandlePacket(this);
 }
 
@@ -201,6 +402,25 @@ void MapChunkBulkPacket::Dispatch(PacketHandler* handler) {
     handler->HandlePacket(this);
 }
 
+ChangeGameStatePacket::ChangeGameStatePacket() {
+    m_Id = 0x2B;
+    m_ProtocolState = Minecraft::ProtocolState::Play;
+}
+
+bool ChangeGameStatePacket::Deserialize(DataBuffer& data, std::size_t packetLength) {
+    u8 reason;
+    data >> reason;
+
+    m_Reason = (Reason)reason;
+
+    data >> m_Value;
+
+    return true;
+}
+
+void ChangeGameStatePacket::Dispatch(PacketHandler* handler) {
+    handler->HandlePacket(this);
+}
 
 SetSlotPacket::SetSlotPacket() {
     m_Id = 0x2F;
@@ -649,6 +869,24 @@ DataBuffer KeepAlivePacket::Serialize() const {
 
     buffer << m_Id;
     buffer << aliveId;
+
+    return buffer;
+}
+
+ChatPacket::ChatPacket(const std::wstring& message) : m_Message(message) {
+    m_Id = 0x01;
+}
+
+ChatPacket::ChatPacket(const std::string& message) : m_Message(message.begin(), message.end()) {
+    m_Id = 0x01;
+}
+
+DataBuffer ChatPacket::Serialize() const {
+    MCString out(m_Message);
+    DataBuffer buffer;
+
+    buffer << m_Id;
+    buffer << out;
 
     return buffer;
 }
