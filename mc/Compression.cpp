@@ -8,7 +8,7 @@ DataBuffer CompressionNone::Compress(DataBuffer& buffer) {
     DataBuffer packet;
 
     VarInt length((s32)buffer.GetSize());
-    packet << length.GetInt();
+    packet << length;
     packet << buffer;
 
     return packet;

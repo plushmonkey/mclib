@@ -5,99 +5,37 @@
 #include "DataBuffer.h"
 #include "Slot.h"
 
-#include <array>
 #include <string>
 
 namespace Minecraft {
 
-
-typedef s32 EntityId;
-
-class EntityMetadata {
-public:
-    class Type {
-    public:
-        virtual ~Type() { }
-    };
-
-    struct ByteType : public Type {
-        u8 value;
-    };
-    
-    struct ShortType : public Type {
-        s16 value;
-    };
-
-    struct IntType : public Type {
-        s32 value;
-    };
-
-    struct FloatType : public Type {
-        float value;
-    };
-
-    struct StringType : public Type {
-        std::wstring value;
-    };
-
-    struct SlotType : public Type {
-        Slot value;
-    };
-
-    struct IntVectorType : public Type {
-        struct {
-            s32 x;
-            s32 y;
-            s32 z;
-        } value;
-    };
-
-    struct FloatVectorType : public Type {
-        struct {
-            float pitch;
-            float yaw;
-            float roll;
-        } value;
-    };
-
+class Entity {
 private:
-    enum Types { Byte, Short, Int, Float, String, Slot, IntVector, FloatVector, None };
+    Vector3d m_Position;
 
-    enum { MetadataCount = 25 };
-    std::array<std::pair<Type*, Types>, MetadataCount> m_Metadata;
+    /**
+     * Velocity is in units of 1/8000 of a block per tick. (-1343 would move -1343/8000 = -0.167875 blocks per tick)
+     */
+    Vector3s m_Velocity;
+    EntityId m_EntityId;
+    EntityMetadata m_Metadata;
+    u8 m_Yaw, m_Pitch, m_HeadPitch;
+
 
 public:
-    EntityMetadata();
-    ~EntityMetadata();
+    Entity(EntityId id);
 
-    template <typename T>
-    T* GetIndex(std::size_t index) {
-        return dynamic_cast<T*>(m_Metadata[index]);
-    }
+    EntityId GetEntityId() const { return m_EntityId; }
+    const Vector3d& GetPosition() const { return m_Position; }
+    const Vector3s& GetVelocity() const { return m_Velocity; }
+    u8 GetYaw() const { return m_Yaw; }
+    u8 GetPitch() const { return m_Pitch; }
+    u8 GetHeadPitch() const { return m_HeadPitch; }
 
-    friend DataBuffer& operator<<(DataBuffer& out, const EntityMetadata& metadata);
-    friend DataBuffer& operator>>(DataBuffer& in, EntityMetadata& metadata);
+    const EntityMetadata& GetMetadata() const { return m_Metadata; }
+
+    void SetPosition(const Vector3d& pos) { m_Position = pos; }
 };
-
-DataBuffer& operator<<(DataBuffer& out, const EntityMetadata& metadata);
-DataBuffer& operator<<(DataBuffer& out, const EntityMetadata::ByteType& value);
-DataBuffer& operator<<(DataBuffer& out, const EntityMetadata::ShortType& value);
-DataBuffer& operator<<(DataBuffer& out, const EntityMetadata::IntType& value);
-DataBuffer& operator<<(DataBuffer& out, const EntityMetadata::FloatType& value);
-DataBuffer& operator<<(DataBuffer& out, const EntityMetadata::StringType& value);
-DataBuffer& operator<<(DataBuffer& out, const EntityMetadata::SlotType& value);
-DataBuffer& operator<<(DataBuffer& out, const EntityMetadata::IntVectorType& value);
-DataBuffer& operator<<(DataBuffer& out, const EntityMetadata::FloatVectorType& value);
-
-DataBuffer& operator>>(DataBuffer& in, EntityMetadata& metadata);
-DataBuffer& operator>>(DataBuffer& in, EntityMetadata::ByteType& value);
-DataBuffer& operator>>(DataBuffer& in, EntityMetadata::ShortType& value);
-DataBuffer& operator>>(DataBuffer& in, EntityMetadata::IntType& value);
-DataBuffer& operator>>(DataBuffer& in, EntityMetadata::FloatType& value);
-DataBuffer& operator>>(DataBuffer& in, EntityMetadata::StringType& value);
-DataBuffer& operator>>(DataBuffer& in, EntityMetadata::SlotType& value);
-DataBuffer& operator>>(DataBuffer& in, EntityMetadata::IntVectorType& value);
-DataBuffer& operator>>(DataBuffer& in, EntityMetadata::FloatVectorType& value);
 
 } // ns Minecraft
 

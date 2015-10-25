@@ -93,6 +93,7 @@
     <ClCompile Include="HTTPClient.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="MCString.cpp" />
+    <ClCompile Include="Metadata.cpp" />
     <ClCompile Include="NBT.cpp" />
     <ClCompile Include="Network\IPAddress.cpp" />
     <ClCompile Include="Network\Network.cpp" />
@@ -115,9 +116,11 @@
     <ClInclude Include="Compression.h" />
     <ClInclude Include="Encryption.h" />
     <ClInclude Include="Entity.h" />
+    <ClInclude Include="EntityManager.h" />
     <ClInclude Include="Hash.h" />
     <ClInclude Include="HTTPClient.h" />
     <ClInclude Include="MCString.h" />
+    <ClInclude Include="Metadata.h" />
     <ClInclude Include="NBT.h" />
     <ClInclude Include="Network\IPAddress.h" />
     <ClInclude Include="Network\Network.h" />
@@ -135,6 +138,7 @@
     <ClInclude Include="Types.h" />
     <ClInclude Include="UUID.h" />
     <ClInclude Include="VarInt.h" />
+    <ClInclude Include="Vector.h" />
     <ClInclude Include="Yggdrasil.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

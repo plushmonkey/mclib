@@ -11,6 +11,7 @@ namespace Packets {
 class PacketFactory {
 public:
     static Packet* CreatePacket(ProtocolState state, DataBuffer& data, std::size_t length);
+    static void FreePacket(Packet* packet);
 };
 
 } // ns Packets

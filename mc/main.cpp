@@ -21,9 +21,16 @@
 #include <memory>
 #include <regex>
 
+/** This is all junk code just to get things working */
+
 #include <windows.h> // timeGetTime
 
 #pragma comment(lib, "winmm.lib")
+
+// TODO: Switch to using vectors in packets instead of individual variables
+// TODO: Create player manager
+// TODO: Create entity system and entity manager
+// TODO: Parse chunk data and create block / chunk data structures
 
 std::string PlayerName = "testplayer";
 std::string PlayerPassword = "";
@@ -122,6 +129,7 @@ public:
         std::string out = writer.write(root);
         std::cout << out << std::endl;
 
+        return;
         if (!root["text"].isString()) return;
 
         std::string text = root["text"].asString();
@@ -399,6 +407,8 @@ public:
                 m_LastPosition->GetYaw(), m_LastPosition->GetPitch(), onGround);
 
             Send(&response);
+
+            lastSend = timeGetTime();
         }
     }
 
@@ -432,12 +442,14 @@ public:
             do {
                 try {
                     packet = CreatePacket(toHandle);
-                    if (packet)
+                    if (packet) {
                         m_Dispatcher.Dispatch(packet);
-                    else
+                        Minecraft::Packets::PacketFactory::FreePacket(packet);
+                    } else {
                         break;
+                    }
                 } catch (const std::exception& e) {
-                    std::cerr << e.what() << std::endl;
+                    //std::cerr << e.what() << std::endl;
                     // Temporary until protocol is finished
                 }
             } while (!toHandle.IsFinished() && toHandle.GetSize() > 0);
@@ -458,11 +470,9 @@ public:
 
 };
 
-
-#include "Entity.h"
-
 int main(void) {
     Connection conn("192.168.2.5", 25565);
+    //Connection conn("play.mysticempire.net", 25565);
     
     conn.Run();
 

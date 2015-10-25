@@ -4,6 +4,7 @@
 #include "Types.h"
 #include <string>
 #include <vector>
+#include <memory>
 
 namespace Minecraft {
 
@@ -32,6 +33,8 @@ public:
     friend TagList;
     friend TagCompound;
 };
+
+typedef std::shared_ptr<Tag> TagPtr;
 
 class TagString : public Tag {
 private:
@@ -86,7 +89,7 @@ public:
 
 class TagList : public Tag {
 private:
-    std::vector<Tag*> m_Tags;
+    std::vector<TagPtr> m_Tags;
     TagType m_ListType;
 
     void Write(DataBuffer& buffer) const;
@@ -95,29 +98,32 @@ private:
 public:
     TagList() : Tag(L"") { }
     TagList(std::wstring name, TagType listType);
+    ~TagList();
 
     TagType GetType() const;
     TagType GetListType() const { return m_ListType; }
-    std::vector<Tag*> GetList() const { return m_Tags; }
+    std::vector<TagPtr> GetList() const { return m_Tags; }
 
-    void AddItem(Tag* item);
+    void AddItem(TagPtr item);
     friend DataBuffer& operator<<(DataBuffer& out, const Tag& tag);
 };
 
 class TagCompound : public Tag {
 private:
-    std::vector<Tag*> m_Tags;
+    std::vector<TagPtr> m_Tags;
     TagType m_ListType;
 
     void Write(DataBuffer& buffer) const;
     void Read(DataBuffer& buffer);
 public:
     TagCompound() : Tag(L"") { }
+    ~TagCompound();
+
     TagType GetType() const;
     TagType GetListType() const { return m_ListType; }
-    std::vector<Tag*> GetList() const { return m_Tags; }
+    std::vector<TagPtr> GetList() const { return m_Tags; }
 
-    void AddItem(Tag* item);
+    void AddItem(TagPtr item);
     friend DataBuffer& operator<<(DataBuffer& out, const Tag& tag);
 };
 

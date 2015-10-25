@@ -145,14 +145,18 @@ Packet* PlayPacketFactory::CreatePacket(DataBuffer& data, std::size_t length) {
 Packet* PacketFactory::CreatePacket(ProtocolState state, DataBuffer& data, std::size_t length) {
     switch (state) {
     case Handshake:
-        throw new std::runtime_error("Packet received during handshake (wrong protocol state).");
+        throw std::runtime_error("Packet received during handshake (wrong protocol state).");
     case Play:
         return PlayPacketFactory::CreatePacket(data, length);
     case Login:
         return LoginPacketFactory::CreatePacket(data, length);
     default:
-        throw new std::runtime_error("Protocol isn't in a valid state.");
+        throw std::runtime_error("Protocol isn't in a valid state.");
     }
+}
+
+void PacketFactory::FreePacket(Packet* packet) {
+    delete packet;
 }
 
 } // ns Packets

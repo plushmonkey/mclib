@@ -138,7 +138,7 @@ void TagList::Write(DataBuffer& buffer) const {
     buffer << type;
     buffer << size;
 
-    for (Tag* tag : m_Tags)
+    for (TagPtr tag : m_Tags)
         tag->Write(buffer);
 }
 
@@ -150,30 +150,30 @@ void TagList::Read(DataBuffer& buffer) {
     buffer >> size;
 
     for (s32 i = 0; i < size; ++i) {
-        Tag* tag = nullptr;
+        TagPtr tag;
 
         if (type == 1)
-            tag = new TagByte;
+            tag = std::make_shared<TagByte>();
         else if (type == 2)
-            tag = new TagShort;
+            tag = std::make_shared<TagShort>();
         else if (type == 3)
-            tag = new TagInt;
+            tag = std::make_shared<TagInt>();
         else if (type == 4)
-            tag = new TagLong;
+            tag = std::make_shared<TagLong>();
         else if (type == 5)
-            tag = new TagFloat;
+            tag = std::make_shared<TagFloat>();
         else if (type == 6)
-            tag = new TagDouble;
+            tag = std::make_shared<TagDouble>();
         else if (type == 7)
-            tag = new TagByteArray;
+            tag = std::make_shared<TagByteArray>();
         else if (type == 8)
-            tag = new TagString;
+            tag = std::make_shared<TagString>();
         else if (type == 9)
-            tag = new TagList;
+            tag = std::make_shared<TagList>();
         else if (type == 10)
-            tag = new TagCompound;
+            tag = std::make_shared<TagCompound>();
         else if (type == 11)
-            tag = new TagIntArray;
+            tag = std::make_shared<TagIntArray>();
 
         if (tag) {
             tag->Read(buffer);
@@ -188,8 +188,12 @@ TagType TagList::GetType() const {
     return TagType::List;
 }
 
-void TagList::AddItem(Tag* item) {
+void TagList::AddItem(TagPtr item) {
     m_Tags.push_back(item);
+}
+
+TagList::~TagList() {
+
 }
 
 
@@ -198,7 +202,7 @@ void TagCompound::Write(DataBuffer& buffer) const {
 
     buffer << size;
 
-    for (Tag* tag : m_Tags)
+    for (TagPtr tag : m_Tags)
         buffer << *tag;
 }
 
@@ -213,35 +217,35 @@ void TagCompound::Read(DataBuffer& buffer) {
 
         ((Tag&)name).Read(buffer);
 
-        Tag* tag = nullptr;
-        
+        TagPtr tag;
+
         if (type == 1)
-            tag = new TagByte;
+            tag = std::make_shared<TagByte>();
         else if (type == 2)
-            tag = new TagShort;
+            tag = std::make_shared<TagShort>();
         else if (type == 3)
-            tag = new TagInt;
+            tag = std::make_shared<TagInt>();
         else if (type == 4)
-            tag = new TagLong;
+            tag = std::make_shared<TagLong>();
         else if (type == 5)
-            tag = new TagFloat;
+            tag = std::make_shared<TagFloat>();
         else if (type == 6)
-            tag = new TagDouble;
+            tag = std::make_shared<TagDouble>();
         else if (type == 7)
-            tag = new TagByteArray;
+            tag = std::make_shared<TagByteArray>();
         else if (type == 8)
-            tag = new TagString;
+            tag = std::make_shared<TagString>();
         else if (type == 9)
-            tag = new TagList;
+            tag = std::make_shared<TagList>();
         else if (type == 10)
-            tag = new TagCompound;
+            tag = std::make_shared<TagCompound>();
         else if (type == 11)
-            tag = new TagIntArray;
+            tag = std::make_shared<TagIntArray>();
 
         if (tag) {
+            m_Tags.push_back(tag);
             tag->Read(buffer);
             tag->SetName(name.GetValue());
-            m_Tags.push_back(tag);
         } else {
             throw std::runtime_error("Error with TagCompound::Read");
         }
@@ -252,8 +256,12 @@ TagType TagCompound::GetType() const {
     return TagType::List;
 }
 
-void TagCompound::AddItem(Tag* item) {
+void TagCompound::AddItem(TagPtr item) {
     m_Tags.push_back(item);
+}
+
+TagCompound::~TagCompound() {
+    
 }
 
 TagType TagByte::GetType() const {
