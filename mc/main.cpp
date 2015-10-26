@@ -30,7 +30,7 @@
 // TODO: Switch to using vectors in packets instead of individual variables
 // TODO: Create player manager
 // TODO: Create entity system and entity manager
-// TODO: Parse chunk data and create block / chunk data structures
+// TODO: Create world structure from chunk columns
 
 std::string PlayerName = "testplayer";
 std::string PlayerPassword = "";
@@ -173,6 +173,25 @@ public:
 
     void HandlePacket(Minecraft::Packets::Inbound::MapChunkBulkPacket* packet) {
         std::cout << "Received MapChunkBulkPacket" << std::endl;
+
+        s32 x = (s32)m_LastPosition->GetX();
+        s32 y = (s32)m_LastPosition->GetY();
+        s32 z = (s32)m_LastPosition->GetZ();
+
+        std::pair<s32, s32> key(x / 16, z / 16);
+
+        auto& chunkMap = packet->GetChunkColumns();
+        if (chunkMap.find(key) != chunkMap.end()) {
+            Minecraft::BlockPtr block = chunkMap.at(key)->GetBlock(Vector3i(x % 16, y - 1, z % 16));
+
+            if (block) {
+                s16 type = block->type;
+
+                std::cout << "Standing on block type " << type << std::endl;
+            } else {
+                std::cout << "Couldn't find block" << std::endl;
+            }
+        }
     }
 
     void HandlePacket(Minecraft::Packets::Inbound::SetSlotPacket* packet) {

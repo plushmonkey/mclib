@@ -10,10 +10,6 @@ Position::Position(s32 x, s32 y, s32 z)
     
 }
 
-Position::Position(s64 encoded) {
-
-}
-
 s64 Position::Encode64() const {
     return ((m_X & 0x3FFFFFF) << 38) | ((m_Y & 0xFFF) << 26) | (m_Z & 0x3FFFFFF);
 }

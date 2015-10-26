@@ -5,6 +5,7 @@
 #include "../MCString.h"
 #include "../Position.h"
 #include "../Protocol.h"
+#include "../Chunk.h"
 #include <map>
 #include <json/json.h>
 
@@ -16,13 +17,13 @@ class PacketHandler;
 class Packet {
 protected:
     VarInt m_Id;
-    Minecraft::ProtocolState m_ProtocolState;
+    ProtocolState m_ProtocolState;
 
 public:
-    Packet() : m_Id(0xFF) { }
+    Packet() : m_Id(0xFF), m_ProtocolState(ProtocolState::Play) { }
     virtual ~Packet() { }
 
-    Minecraft::ProtocolState GetProtocolState() const { return m_ProtocolState; }
+    ProtocolState GetProtocolState() const { return m_ProtocolState; }
     VarInt GetId() const { return m_Id; }
     virtual DataBuffer Serialize() const = 0;
     virtual bool Deserialize(DataBuffer& data, std::size_t packetLength) = 0;
@@ -385,11 +386,16 @@ public:
 class MapChunkBulkPacket : public InboundPacket { // 0x26
 private:
     bool m_SkyLight;
+
+    std::map<std::pair<s32, s32>, ChunkColumnPtr> m_ChunkColumns;
+
     // todo: parse chunk data
 public:
     MapChunkBulkPacket();
     bool Deserialize(DataBuffer& data, std::size_t packetLength);
     void Dispatch(PacketHandler* handler);
+
+    const std::map<std::pair<s32, s32>, ChunkColumnPtr>& GetChunkColumns() const { return m_ChunkColumns; }
 };
 
 class ChangeGameStatePacket : public InboundPacket { // 0x2B

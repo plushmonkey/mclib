@@ -85,6 +85,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Chunk.cpp" />
     <ClCompile Include="DataBuffer.cpp" />
     <ClCompile Include="Compression.cpp" />
     <ClCompile Include="Encryption.cpp" />
@@ -111,6 +112,7 @@
     <ClCompile Include="Yggdrasil.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Chunk.h" />
     <ClInclude Include="Common.h" />
     <ClInclude Include="DataBuffer.h" />
     <ClInclude Include="Compression.h" />

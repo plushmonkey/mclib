@@ -62,7 +62,7 @@ private:
         curl_slist* header_list = nullptr;
         CURLcode res;
 
-        if (headers.size() > 0) {
+        if (!headers.empty()) {
             for (auto kv : headers) {
                 std::string header = kv.first + ": " + kv.second;
                 header_list = curl_slist_append(header_list, header.c_str());

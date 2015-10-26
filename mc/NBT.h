@@ -96,7 +96,7 @@ private:
     void Read(DataBuffer& buffer);
 
 public:
-    TagList() : Tag(L"") { }
+    TagList() : Tag(L""), m_ListType(TagType::End) { }
     TagList(std::wstring name, TagType listType);
     ~TagList();
 
@@ -116,7 +116,7 @@ private:
     void Write(DataBuffer& buffer) const;
     void Read(DataBuffer& buffer);
 public:
-    TagCompound() : Tag(L"") { }
+    TagCompound() : Tag(L""), m_ListType(TagType::End) { }
     ~TagCompound();
 
     TagType GetType() const;
@@ -135,7 +135,7 @@ private:
     void Read(DataBuffer& buffer);
 
 public:
-    TagByte() : Tag(L"") { }
+    TagByte() : Tag(L""), m_Value(0) { }
     TagByte(std::wstring name, u8 value) : Tag(name), m_Value(value) { }
     TagType GetType() const;
 
@@ -151,7 +151,7 @@ private:
     void Read(DataBuffer& buffer);
 
 public:
-    TagShort() : Tag(L"") { }
+    TagShort() : Tag(L""), m_Value(0) { }
     TagShort(std::wstring name, s16 value) : Tag(name), m_Value(value) { }
     TagType GetType() const;
 
@@ -167,7 +167,7 @@ private:
     void Read(DataBuffer& buffer);
 
 public:
-    TagInt() : Tag(L"") { }
+    TagInt() : Tag(L""), m_Value(0) { }
     TagInt(std::wstring name, s32 value) : Tag(name), m_Value(value) { }
     TagType GetType() const;
 
@@ -183,7 +183,7 @@ private:
     void Read(DataBuffer& buffer);
 
 public:
-    TagLong() : Tag(L"") { }
+    TagLong() : Tag(L""), m_Value(0) { }
     TagLong(std::wstring name, s64 value) : Tag(name), m_Value(value) { }
     TagType GetType() const;
 
@@ -199,7 +199,7 @@ private:
     void Read(DataBuffer& buffer);
 
 public:
-    TagFloat() : Tag(L"") { }
+    TagFloat() : Tag(L""), m_Value(0.0f) { }
     TagFloat(std::wstring name, float value) : Tag(name), m_Value(value) { }
     TagType GetType() const;
 
@@ -215,7 +215,7 @@ private:
     void Read(DataBuffer& buffer);
 
 public:
-    TagDouble() : Tag(L"") { }
+    TagDouble() : Tag(L""), m_Value(0.0) { }
     TagDouble(std::wstring name, double value) : Tag(name), m_Value(value) { }
     TagType GetType() const;
 

@@ -19,8 +19,9 @@ public:
     {
     }
 
-    YggdrasilException(const std::string& error, const std::string& errorMessage) {
-        m_ErrorMessage = error + ": " + errorMessage;
+    YggdrasilException(const std::string& error, const std::string& errorMessage)
+        : m_ErrorMessage(error + ": " + errorMessage)
+    {
     }
 
     virtual const char* what() const {

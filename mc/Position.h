@@ -17,7 +17,6 @@ private:
 public:
     Position() : m_X(0), m_Y(0), m_Z(0) { }
     Position(s32 x, s32 y, s32 z);
-    Position(s64 encoded);
     s64 Encode64() const;
 
     s64 GetX() const { return m_X; }

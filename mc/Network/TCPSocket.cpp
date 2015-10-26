@@ -14,7 +14,7 @@
 namespace Network {
 
 TCPSocket::TCPSocket()
-    : Socket(Socket::TCP)
+    : Socket(Socket::TCP), m_Port(0)
 {
     m_Handle = INVALID_SOCKET;
 }

@@ -28,13 +28,12 @@ namespace Network {
 IPAddresses Dns::Resolve(const std::string& host) {
     IPAddresses list;
     addrinfo hints = { 0 }, *addresses;
-    int result;
 
     hints.ai_family = AF_UNSPEC;
     hints.ai_socktype = SOCK_STREAM;
     hints.ai_protocol = IPPROTO_TCP;
 
-    result = getaddrinfo(host.c_str(), NULL, &hints, &addresses);
+    getaddrinfo(host.c_str(), NULL, &hints, &addresses);
 
     for (addrinfo *p = addresses; p != NULL; p = p->ai_next) {
         wchar_t straddr[35];

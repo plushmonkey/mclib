@@ -14,7 +14,7 @@
 namespace Network {
 
 UDPSocket::UDPSocket()
-    : Socket(Socket::UDP)
+    : Socket(Socket::UDP), m_Port(0)
 {
     m_Handle = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
 }

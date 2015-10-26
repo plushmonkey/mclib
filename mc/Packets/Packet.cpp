@@ -375,24 +375,27 @@ bool MapChunkBulkPacket::Deserialize(DataBuffer& data, std::size_t packetLength)
     VarInt count;
     data >> count;
 
-    struct ChunkMeta {
-        s32 x;
-        s32 z;
-        u16 bitmask;
-    };
+
+    std::vector<ChunkColumnMetadata> metalist;
 
     // Array of meta
     for (s32 i = 0; i < count.GetInt(); ++i) {
-        ChunkMeta meta;
+        ChunkColumnMetadata meta;
         data >> meta.x;
         data >> meta.z;
-        data >> meta.bitmask;
-
+        data >> meta.sectionmask;
+        meta.continuous = true;
+        meta.skylight = m_SkyLight;
+        metalist.push_back(meta);
     }
 
-    // Array of chunk
+    // Array of chunk columns
     for (s32 i = 0; i < count.GetInt(); ++i) {
-        
+        std::pair<s32, s32> key(metalist[i].x, metalist[i].z);
+
+        m_ChunkColumns[key] = std::make_shared<ChunkColumn>(metalist[i]);
+
+        data >> *m_ChunkColumns[key];
     }
 
     return true;
@@ -806,13 +809,10 @@ void SetCompressionPacket::Dispatch(PacketHandler* handler) {
 namespace Outbound {
 
 // Handshake packets
-HandshakePacket::HandshakePacket(s32 protocol, std::string server, u16 port, s32 state) {
+HandshakePacket::HandshakePacket(s32 protocol, std::string server, u16 port, s32 state) 
+    : m_ProtocolVersion(protocol), m_Server(server), m_Port(port), m_NewState(state)
+{
     m_Id = 0x00;
-
-    m_ProtocolVersion = protocol;
-    m_Server = server;
-    m_Port = port;
-    m_NewState = state;
 }
 
 DataBuffer HandshakePacket::Serialize() const {
@@ -837,10 +837,10 @@ DataBuffer LoginStartPacket::Serialize() const {
     return buffer;
 }
 
-EncryptionResponsePacket::EncryptionResponsePacket(const std::string& sharedSecret, const std::string& verifyToken) {
+EncryptionResponsePacket::EncryptionResponsePacket(const std::string& sharedSecret, const std::string& verifyToken)
+    : m_SharedSecret(sharedSecret), m_VerifyToken(verifyToken)
+{
     m_Id = 0x01;
-    m_SharedSecret = sharedSecret;
-    m_VerifyToken = verifyToken;
 }
 
 DataBuffer EncryptionResponsePacket::Serialize() const {

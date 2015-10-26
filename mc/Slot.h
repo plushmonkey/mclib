@@ -17,7 +17,7 @@ private:
 
 
 public:
-    Slot() { }
+    Slot() : m_ItemId(-1), m_ItemCount(0), m_ItemDamage(0) { }
 
     s16 GetItemId() const { return m_ItemId; }
     u8 GetItemCount() const { return m_ItemCount; }
