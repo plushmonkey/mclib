@@ -24,14 +24,14 @@ public:
     s16 type;
     s16 meta;
 };
-typedef std::shared_ptr<Block> BlockPtr;
+typedef Block* BlockPtr;
 
 /**
  * A 16x16x16 area. A ChunkColumn is made up of 16 of these
  */
 class Chunk {
 private:
-    std::array<BlockPtr, 16*16*16> m_Blocks;
+    std::array<Block, 16*16*16> m_Blocks;
 
 public:
     Chunk();

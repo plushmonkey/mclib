@@ -20,13 +20,11 @@ void Chunk::Load(DataBuffer& in, ChunkColumnMetadata* meta, s32 chunkIndex) {
 
                 std::size_t index = y * 16 * 16 + z * 16 + x;
 
-                m_Blocks[index] = std::make_shared<Block>();
-
-                m_Blocks[index]->meta = data & 15;
-                m_Blocks[index]->type = data >> 4;
-                m_Blocks[index]->position.x = meta->x + x;
-                m_Blocks[index]->position.y = (index * 16) + y;
-                m_Blocks[index]->position.z = meta->z + z;
+                m_Blocks[index].meta = data & 15;
+                m_Blocks[index].type = data >> 4;
+                m_Blocks[index].position.x = meta->x + x;
+                m_Blocks[index].position.y = (chunkIndex * 16) + y;
+                m_Blocks[index].position.z = meta->z + z;
             }
         }
     }
@@ -34,7 +32,7 @@ void Chunk::Load(DataBuffer& in, ChunkColumnMetadata* meta, s32 chunkIndex) {
 
 BlockPtr Chunk::GetBlock(Vector3i chunkPosition) {
     std::size_t index = chunkPosition.y * 16 * 16 + chunkPosition.z * 16 + chunkPosition.x;
-    return m_Blocks[index];
+    return &m_Blocks[index];
 }
 
 ChunkColumn::ChunkColumn(ChunkColumnMetadata metadata)
@@ -46,6 +44,8 @@ ChunkColumn::ChunkColumn(ChunkColumnMetadata metadata)
 BlockPtr ChunkColumn::GetBlock(Vector3i position) {
     s32 chunkIndex = position.y / 16;
     Vector3i relativePosition(position.x, position.y % 16, position.z);
+
+    if (!m_Chunks[chunkIndex]) return nullptr;
 
     return m_Chunks[chunkIndex]->GetBlock(relativePosition);
 }

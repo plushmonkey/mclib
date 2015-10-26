@@ -180,7 +180,7 @@ public:
 
         std::pair<s32, s32> key(x / 16, z / 16);
 
-        auto& chunkMap = packet->GetChunkColumns();
+        const auto& chunkMap = packet->GetChunkColumns();
         if (chunkMap.find(key) != chunkMap.end()) {
             Minecraft::BlockPtr block = chunkMap.at(key)->GetBlock(Vector3i(x % 16, y - 1, z % 16));
 
@@ -388,13 +388,21 @@ public:
     }
 
     bool Connect() {
-        auto addrs = Network::Dns::Resolve(m_Server);
+        if (isdigit(m_Server.at(0))) {
+            Network::IPAddress addr(m_Server);
 
-        if (addrs.size() == 0) return false;
-        
-        for (auto addr : addrs) {
-            if (m_Socket->Connect(addr, m_Port))
-                return true;            
+            return m_Socket->Connect(addr, m_Port);
+        } else {
+            std::cout << "Resolving server dns\n";
+            auto addrs = Network::Dns::Resolve(m_Server);
+            std::cout << "Finished resolving: " << addrs.size() << std::endl;
+            if (addrs.size() == 0) return false;
+
+            for (auto addr : addrs) {
+                std::cout << "Trying to connect to " << addr << std::endl;
+                if (m_Socket->Connect(addr, m_Port))
+                    return true;
+            }
         }
 
         return false;
