@@ -34,8 +34,7 @@ void World::HandlePacket(Packets::Inbound::MultiBlockChangePacket* packet) {
         BlockPtr block = chunk->GetBlock(relative);
 
         if (!block) continue;
-        block->meta = change.blockData & 15;
-        block->type = change.blockData >> 4;
+        block->data = change.blockData;
     }
 }
 
@@ -49,8 +48,7 @@ void World::HandlePacket(Packets::Inbound::BlockChangePacket* packet) {
     if (!block) return;
 
     s16 blockData = packet->GetBlockData();
-    block->meta = blockData & 15;
-    block->type = blockData >> 4;
+    block->data = blockData;
 }
 
 ChunkColumnPtr World::GetChunk(Vector3i pos) const {

@@ -20,9 +20,15 @@ struct ChunkColumnMetadata {
 // todo:
 class Block {
 public:
-    Vector3i position;
-    s16 type;
-    s16 meta;
+   // Vector3i position;
+    s16 data;
+
+    s16 GetType() const {
+        return data >> 4;
+    }
+    s16 GetMeta() const {
+        return data & 15;
+    }
 };
 typedef Block* BlockPtr;
 

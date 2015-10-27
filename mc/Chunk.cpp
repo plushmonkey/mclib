@@ -20,11 +20,7 @@ void Chunk::Load(DataBuffer& in, ChunkColumnMetadata* meta, s32 chunkIndex) {
 
                 std::size_t index = y * 16 * 16 + z * 16 + x;
 
-                m_Blocks[index].meta = data & 15;
-                m_Blocks[index].type = data >> 4;
-                m_Blocks[index].position.x = meta->x + x;
-                m_Blocks[index].position.y = (chunkIndex * 16) + y;
-                m_Blocks[index].position.z = meta->z + z;
+                m_Blocks[index].data = data;
             }
         }
     }

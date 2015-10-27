@@ -415,12 +415,12 @@ public:
 
             Minecraft::BlockPtr above = m_World.GetBlock(m_Position);
 
-            if (above && above->type != 0) {
+            if (above && above->GetType() != 0) {
                 m_Position.y++;
             } else {
                 Minecraft::BlockPtr below = m_World.GetBlock(m_Position - Vector3d(0, 1.0, 0));
                 if (below) {
-                    if (below->type == 0) {
+                    if (below->GetType() == 0) {
                         m_Position.y--;
                         onGround = false;
                     }
@@ -430,7 +430,7 @@ public:
             if (timeGetTime() - lastPosOutput >= 2000) {
                 Minecraft::BlockPtr below = m_World.GetBlock(m_Position - Vector3d(0, 1.0, 0));
                 if (below)
-                    std::cout << "Standing on " << below->type << std::endl;
+                    std::cout << "Standing on " << below->GetType() << std::endl;
 
                 lastPosOutput = timeGetTime();
             }
