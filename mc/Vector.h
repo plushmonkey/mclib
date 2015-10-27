@@ -33,11 +33,8 @@ public:
         return !(*this == rhs);
     }
 
-    Vector3& operator-() {
-        x = -x;
-        y = -y;
-        z = -z;
-        return *this;
+    Vector3 operator-() {
+        return Vector3(-x, -y, -z);
     }
 
     inline Vector3& operator+=(VecType v) {
@@ -68,41 +65,32 @@ public:
         return *this;
     }
 
-    inline Vector3& operator+(const Vector3& v) {
-        x += v.x;
-        y += v.y;
-        z += v.z;
-        return *this;
+    inline Vector3 operator+(const Vector3& v) {
+        return Vector3(x + v.x, y + v.y, z + v.z);
     }
 
-    inline Vector3& operator-(const Vector3& v) {
-        x -= v.x;
-        y -= v.y;
-        z -= v.z;
-        return *this;
+    inline Vector3 operator-(const Vector3& v) {
+        return Vector3(x - v.x, y - v.y, z - v.z);
     }
 
-    inline Vector3& operator/(const Vector3& v) {
-        x /= v.x;
-        y /= v.y;
-        z /= v.z;
-        return *this;
+    inline Vector3 operator/(const Vector3& v) {
+        return Vector3(x / v.x, y / v.y, z / v.z);
     }
 
-    inline Vector3& operator+(VecType v) {
-        return *this += v;
+    inline Vector3 operator+(VecType v) {
+        return Vector3(x + v, y + v, z + v);
     }
 
-    inline Vector3& operator-(VecType v) {
-        return *this -= v;
+    inline Vector3 operator-(VecType v) {
+        return Vector3(x - v, y - v, z - v);
     }
 
-    inline Vector3& operator*(VecType v) {
-        return *this *= v;
+    inline Vector3 operator*(VecType v) {
+        return Vector3(x * v, y * v, z * v);
     }
 
-    inline Vector3& operator/(VecType v) {
-        return *this /= v;
+    inline Vector3 operator/(VecType v) {
+        return Vector3(x / v, y / v, z / v);
     }
 
     inline double operator*(const Vector3& rhs) {
@@ -169,7 +157,7 @@ inline Vector3<T> operator-(const Vector3<T>& v1, const Vector3<T>& v2) {
     return Vector3<T>(v1.x - v2.x, v1.y - v2.y, v1.z - v2.z);
 }
 
-typedef Vector3<int32_t> Vector3i;
+typedef Vector3<int64_t> Vector3i;
 typedef Vector3<int16_t> Vector3s;
 typedef Vector3<float> Vector3f;
 typedef Vector3<double> Vector3d;

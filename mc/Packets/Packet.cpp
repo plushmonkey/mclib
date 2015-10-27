@@ -104,6 +104,29 @@ void ChatPacket::Dispatch(PacketHandler* handler) {
     handler->HandlePacket(this);
 }
 
+EntityEquipmentPacket::EntityEquipmentPacket() {
+    m_Id = 0x04;
+    m_ProtocolState = Minecraft::ProtocolState::Play;
+}
+
+bool EntityEquipmentPacket::Deserialize(DataBuffer& data, std::size_t packetLength) {
+    VarInt eid;
+    s16 equipmentSlot;
+
+    data >> eid;
+    data >> equipmentSlot;
+    data >> m_Item;
+
+    m_EntityId = eid.GetInt();
+    m_EquipmentSlot = (EquipmentSlot)equipmentSlot;
+
+    return true;
+}
+
+void EntityEquipmentPacket::Dispatch(PacketHandler* handler) {
+    handler->HandlePacket(this);
+}
+
 SpawnPositionPacket::SpawnPositionPacket() {
     m_Id = 0x05;
     m_ProtocolState = Minecraft::ProtocolState::Play;
@@ -269,6 +292,29 @@ void EntityRelativeMovePacket::Dispatch(PacketHandler* handler) {
     handler->HandlePacket(this);
 }
 
+EntityLookAndRelativeMovePacket::EntityLookAndRelativeMovePacket() {
+    m_Id = 0x17;
+    m_ProtocolState = Minecraft::ProtocolState::Play;
+}
+
+bool EntityLookAndRelativeMovePacket::Deserialize(DataBuffer& data, std::size_t packetLength) {
+    VarInt eid;
+    FixedPointNumber<s8> dx, dy, dz;
+
+    data >> eid >> dx >> dy >> dz;
+    data >> m_Yaw >> m_Pitch;
+    data >> m_OnGround;
+
+    m_EntityId = eid.GetInt();
+    m_DeltaPos = Vector3f(dx.GetFloat(), dy.GetFloat(), dz.GetFloat());
+
+    return true;
+}
+
+void EntityLookAndRelativeMovePacket::Dispatch(PacketHandler* handler) {
+    handler->HandlePacket(this);
+}
+
 EntityHeadLookPacket::EntityHeadLookPacket() {
     m_Id = 0x19;
     m_ProtocolState = Minecraft::ProtocolState::Play;
@@ -362,6 +408,58 @@ bool EntityPropertiesPacket::Deserialize(DataBuffer& data, std::size_t packetLen
 }
 
 void EntityPropertiesPacket::Dispatch(PacketHandler* handler) {
+    handler->HandlePacket(this);
+}
+
+MultiBlockChangePacket::MultiBlockChangePacket() {
+    m_Id = 0x22;
+    m_ProtocolState = Minecraft::ProtocolState::Play;
+}
+
+bool MultiBlockChangePacket::Deserialize(DataBuffer& data, std::size_t packetLength) {
+    data >> m_ChunkX >> m_ChunkZ;
+    VarInt count;
+    data >> count;
+
+    for (s32 i = 0; i < count.GetInt(); ++i) {
+        u8 horizontal;
+        u8 y;
+        VarInt blockID;
+
+        data >> horizontal >> y >> blockID;
+
+        BlockChange change;
+        change.x = horizontal >> 4;
+        change.z = horizontal & 15;
+        change.y = y;
+        change.blockData = blockID.GetShort();
+
+        m_BlockChanges.push_back(change);
+    }
+    return true;
+}
+
+void MultiBlockChangePacket::Dispatch(PacketHandler* handler) {
+    handler->HandlePacket(this);
+}
+
+BlockChangePacket::BlockChangePacket() {
+    m_Id = 0x23;
+    m_ProtocolState = Minecraft::ProtocolState::Play;
+}
+
+bool BlockChangePacket::Deserialize(DataBuffer& data, std::size_t packetLength) {
+    Position location;
+    VarInt blockData;
+
+    data >> location >> blockData;
+
+    m_Position = Vector3i(location.GetX(), location.GetY(), location.GetZ());
+    m_BlockData = blockData.GetShort();
+
+    return true;
+}
+void BlockChangePacket::Dispatch(PacketHandler* handler) {
     handler->HandlePacket(this);
 }
 
@@ -463,6 +561,29 @@ bool WindowItemsPacket::Deserialize(DataBuffer& data, std::size_t packetLength) 
 }
 
 void WindowItemsPacket::Dispatch(PacketHandler* handler) {
+    handler->HandlePacket(this);
+}
+
+UpdateBlockEntityPacket::UpdateBlockEntityPacket() {
+    m_Id = 0x35;
+    m_ProtocolState = Minecraft::ProtocolState::Play;
+}
+
+bool UpdateBlockEntityPacket::Deserialize(DataBuffer& data, std::size_t packetLength) {
+    Position pos;
+    u8 action;
+
+    data >> pos;
+    data >> action;
+    data >> m_NBT;
+
+    m_Position = Vector3i(pos.GetX(), pos.GetY(), pos.GetZ());
+    m_Action = (Action)action;
+
+    return true;
+}
+
+void UpdateBlockEntityPacket::Dispatch(PacketHandler* handler) {
     handler->HandlePacket(this);
 }
 

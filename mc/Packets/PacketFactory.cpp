@@ -66,6 +66,9 @@ Packet* PlayPacketFactory::CreatePacket(DataBuffer& data, std::size_t length) {
     case 0x03:
         //packet = new Inbound::TimeUpdatePacket();
         break;
+    case 0x04:
+        packet = new Inbound::EntityEquipmentPacket();
+        break;
     case 0x05:
         packet = new Inbound::SpawnPositionPacket();
         break;
@@ -90,6 +93,9 @@ Packet* PlayPacketFactory::CreatePacket(DataBuffer& data, std::size_t length) {
     case 0x15:
         packet = new Inbound::EntityRelativeMovePacket();
         break;
+    case 0x17:
+        packet = new Inbound::EntityLookAndRelativeMovePacket();
+        break;
     case 0x19:
         packet = new Inbound::EntityHeadLookPacket();
         break;
@@ -102,6 +108,12 @@ Packet* PlayPacketFactory::CreatePacket(DataBuffer& data, std::size_t length) {
     case 0x20:
         packet = new Inbound::EntityPropertiesPacket();
         break;
+    case 0x22:
+        packet = new Inbound::MultiBlockChangePacket();
+        break;
+    case 0x23:
+        packet = new Inbound::BlockChangePacket();
+        break;
     case 0x26:
         packet = new Inbound::MapChunkBulkPacket();
         break;
@@ -113,6 +125,9 @@ Packet* PlayPacketFactory::CreatePacket(DataBuffer& data, std::size_t length) {
         break;
     case 0x30:
         packet = new Inbound::WindowItemsPacket();
+        break;
+    case 0x35:
+        packet = new Inbound::UpdateBlockEntityPacket();
         break;
     case 0x37:
         packet = new Inbound::StatisticsPacket();

@@ -18,6 +18,7 @@
 #include "Packets/PacketFactory.h"
 #include "Protocol.h"
 #include "Compression.h"
+#include "World.h"
 #include <memory>
 #include <regex>
 
@@ -30,7 +31,6 @@
 // TODO: Switch to using vectors in packets instead of individual variables
 // TODO: Create player manager
 // TODO: Create entity system and entity manager
-// TODO: Create world structure from chunk columns
 
 std::string PlayerName = "testplayer";
 std::string PlayerPassword = "";
@@ -45,7 +45,10 @@ private:
     Minecraft::Yggdrasil m_Yggdrasil;
     std::string m_Server;
     u16 m_Port;
-    Minecraft::Packets::Inbound::PlayerPositionAndLookPacket* m_LastPosition;
+    Vector3d m_Position;
+    float m_Yaw;
+    float m_Pitch;
+    Minecraft::World m_World;
 
 public:
     Connection(const std::string& server, u16 port)
@@ -55,7 +58,9 @@ public:
           m_Encrypter(new Minecraft::EncryptionStrategyNone()), 
           m_Compressor(new Minecraft::CompressionNone()),
           m_Socket(new Network::TCPSocket()), 
-          Minecraft::Packets::PacketHandler(&m_Dispatcher)
+          Minecraft::Packets::PacketHandler(&m_Dispatcher),
+          m_World(m_Dispatcher),
+          m_Position(0, 0, 0)
     {
         m_Dispatcher.RegisterHandler(Minecraft::ProtocolState::Login, 0x00, this);
         m_Dispatcher.RegisterHandler(Minecraft::ProtocolState::Login, 0x01, this);
@@ -83,8 +88,6 @@ public:
         m_Dispatcher.RegisterHandler(Minecraft::ProtocolState::Play, 0x3F, this);
         m_Dispatcher.RegisterHandler(Minecraft::ProtocolState::Play, 0x41, this);
         m_Dispatcher.RegisterHandler(Minecraft::ProtocolState::Play, 0x44, this);
-
-        m_LastPosition = nullptr;
     }
 
     void HandlePacket(Minecraft::Packets::Inbound::EntityPropertiesPacket* packet) {
@@ -101,8 +104,8 @@ public:
 
     void HandlePacket(Minecraft::Packets::Inbound::EntityRelativeMovePacket* packet) {
         if (packet->GetDeltaX() != 0 || packet->GetDeltaY() != 0 || packet->GetDeltaZ() != 0) {
-            std::cout << "Entity " << packet->GetEntityId() << " relative move: (";
-            std::cout << packet->GetDeltaX() << ", " << packet->GetDeltaY() << ", " << packet->GetDeltaZ() << ")" << std::endl;
+            //std::cout << "Entity " << packet->GetEntityId() << " relative move: (";
+            //std::cout << packet->GetDeltaX() << ", " << packet->GetDeltaY() << ", " << packet->GetDeltaZ() << ")" << std::endl;
         }
     }
 
@@ -172,26 +175,7 @@ public:
     }
 
     void HandlePacket(Minecraft::Packets::Inbound::MapChunkBulkPacket* packet) {
-        std::cout << "Received MapChunkBulkPacket" << std::endl;
-
-        s32 x = (s32)m_LastPosition->GetX();
-        s32 y = (s32)m_LastPosition->GetY();
-        s32 z = (s32)m_LastPosition->GetZ();
-
-        std::pair<s32, s32> key(x / 16, z / 16);
-
-        const auto& chunkMap = packet->GetChunkColumns();
-        if (chunkMap.find(key) != chunkMap.end()) {
-            Minecraft::BlockPtr block = chunkMap.at(key)->GetBlock(Vector3i(x % 16, y - 1, z % 16));
-
-            if (block) {
-                s16 type = block->type;
-
-                std::cout << "Standing on block type " << type << std::endl;
-            } else {
-                std::cout << "Couldn't find block" << std::endl;
-            }
-        }
+        //std::cout << "Received MapChunkBulkPacket" << std::endl;
     }
 
     void HandlePacket(Minecraft::Packets::Inbound::SetSlotPacket* packet) {
@@ -254,9 +238,6 @@ public:
 
         using namespace Minecraft::Packets;
 
-        if (m_LastPosition)
-            delete m_LastPosition;
-
         // Used to verify position
         Outbound::PlayerPositionAndLookPacket response(packet->GetX(), packet->GetY(), packet->GetZ(),
             packet->GetYaw(), packet->GetPitch(), onGround);
@@ -266,8 +247,9 @@ public:
         Outbound::ClientStatusPacket status(Outbound::ClientStatusPacket::Action::PerformRespawn);
         Send(&status);
 
-        m_LastPosition = new Inbound::PlayerPositionAndLookPacket();
-        *m_LastPosition = *packet;
+        m_Position = Vector3d(packet->GetX(), packet->GetY(), packet->GetZ());
+        m_Yaw = packet->GetYaw();
+        m_Pitch = packet->GetPitch();
     }
 
 
@@ -424,14 +406,37 @@ public:
     }
 
     void UpdatePosition() {
-        if (!m_LastPosition) return;
+        if (m_Position == Vector3d(0, 0, 0)) return;
         static DWORD lastSend = 0;
+        static DWORD lastPosOutput = 0;
         
         if (timeGetTime() - lastSend >= 50) {
             bool onGround = true;
 
-            Minecraft::Packets::Outbound::PlayerPositionAndLookPacket response(m_LastPosition->GetX(), m_LastPosition->GetY(), m_LastPosition->GetZ(),
-                m_LastPosition->GetYaw(), m_LastPosition->GetPitch(), onGround);
+            Minecraft::BlockPtr above = m_World.GetBlock(m_Position);
+
+            if (above && above->type != 0) {
+                m_Position.y++;
+            } else {
+                Minecraft::BlockPtr below = m_World.GetBlock(m_Position - Vector3d(0, 1.0, 0));
+                if (below) {
+                    if (below->type == 0) {
+                        m_Position.y--;
+                        onGround = false;
+                    }
+                }
+            }
+
+            if (timeGetTime() - lastPosOutput >= 2000) {
+                Minecraft::BlockPtr below = m_World.GetBlock(m_Position - Vector3d(0, 1.0, 0));
+                if (below)
+                    std::cout << "Standing on " << below->type << std::endl;
+
+                lastPosOutput = timeGetTime();
+            }
+
+            Minecraft::Packets::Outbound::PlayerPositionAndLookPacket response(m_Position.x, m_Position.y, m_Position.z,
+                m_Yaw, m_Pitch, onGround);
 
             Send(&response);
 

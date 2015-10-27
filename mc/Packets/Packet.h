@@ -159,6 +159,25 @@ public:
     const Json::Value& GetChatData() const { return m_ChatData; }
 };
 
+class EntityEquipmentPacket : public InboundPacket { // 0x04
+public:
+    enum EquipmentSlot { Held, Boots, Leggings, Chestplate, Helmet };
+
+private:
+    EntityId m_EntityId;
+    EquipmentSlot m_EquipmentSlot;
+    Slot m_Item;
+
+public:
+    EntityEquipmentPacket();
+    bool Deserialize(DataBuffer& data, std::size_t packetLength);
+    void Dispatch(PacketHandler* handler);
+
+    EntityId GetEntityId() const { return m_EntityId; }
+    EquipmentSlot GetEquipmentSlot() const { return m_EquipmentSlot; }
+    Slot GetItem() const { return m_Item; }
+};
+
 class SpawnPositionPacket : public InboundPacket { // 0x05
 private:
     Position m_Location;
@@ -313,6 +332,26 @@ public:
     float IsOnGround() const { return m_OnGround; }
 };
 
+class EntityLookAndRelativeMovePacket : public InboundPacket { // 0x17
+private:
+    EntityId m_EntityId;
+    Vector3f m_DeltaPos;
+    u8 m_Yaw;
+    u8 m_Pitch;
+    bool m_OnGround;
+
+public:
+    EntityLookAndRelativeMovePacket();
+    bool Deserialize(DataBuffer& data, std::size_t packetLength);
+    void Dispatch(PacketHandler* handler);
+
+    EntityId GetEntityId() const { return m_EntityId; }
+    Vector3f GetDeltaPosition() const { return m_DeltaPos; }
+    u8 GetYaw() const { return m_Yaw; }
+    u8 GetPitch() const { return m_Pitch; }
+    float IsOnGround() const { return m_OnGround; }
+};
+
 class EntityHeadLookPacket : public InboundPacket { // 0x19
 private:
     EntityId m_EntityId;
@@ -381,6 +420,48 @@ public:
 
     EntityId GetEntityId() const { return m_EntityId; }
     const std::map<std::wstring, Property>& GetProperties() const { return m_Properties; }
+};
+
+class MultiBlockChangePacket : public InboundPacket { // 0x22
+public:
+    struct BlockChange {
+        // Relative to chunk
+        s16 x;
+        // Relative to chunk
+        s16 y;
+        // Relative to chunk
+        s16 z;
+        s16 blockData;
+    };
+
+private:
+    s32 m_ChunkX;
+    s32 m_ChunkZ;
+
+    std::vector<BlockChange> m_BlockChanges;
+
+public:
+    MultiBlockChangePacket();
+    bool Deserialize(DataBuffer& data, std::size_t packetLength);
+    void Dispatch(PacketHandler* handler);
+
+    s32 GetChunkX() const { return m_ChunkX; }
+    s32 GetChunkZ() const { return m_ChunkZ; }
+    const std::vector<BlockChange>& GetBlockChanges() const { return m_BlockChanges; }
+};
+
+class BlockChangePacket : public InboundPacket { // 0x23
+private:
+    s16 m_BlockData;
+    Vector3i m_Position;
+
+public:
+    BlockChangePacket();
+    bool Deserialize(DataBuffer& data, std::size_t packetLength);
+    void Dispatch(PacketHandler* handler);
+
+    s16 GetBlockData() const { return m_BlockData; }
+    Vector3i GetPosition() const { return m_Position; }
 };
 
 class MapChunkBulkPacket : public InboundPacket { // 0x26
@@ -459,6 +540,31 @@ public:
     const std::vector<Slot>& GetSlots() const { return m_Slots; }
 };
 
+class UpdateBlockEntityPacket : public InboundPacket { // 0x37
+public:
+    enum Action { 
+        SpawnPotentials, 
+        CommandBlockText,
+        BeaconPowers,
+        MobHead,
+        FlowerPot,
+        BannerData
+    };
+
+private:
+    Vector3i m_Position;
+    Action m_Action;
+    NBT::NBT m_NBT;
+
+public:
+    UpdateBlockEntityPacket();
+    bool Deserialize(DataBuffer& data, std::size_t packetLength);
+    void Dispatch(PacketHandler* handler);
+
+    Vector3i GetPosition() const { return m_Position; }
+    Action GetAction() const { return m_Action; }
+    const NBT::NBT& GetNBT() const { return m_NBT; }
+};
 
 class StatisticsPacket : public InboundPacket { // 0x37
 public:
