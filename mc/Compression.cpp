@@ -71,7 +71,7 @@ DataBuffer CompressionZ::Decompress(DataBuffer& buffer, std::size_t packetLength
 
     std::size_t compressedLength = packetLength - (buffer.GetReadOffset() - startRead);
 
-    if (uncompressedLength.GetLong() == 0) {
+    if (uncompressedLength.GetInt() == 0) {
         // Uncompressed
         DataBuffer ret;
         buffer.ReadSome(ret, compressedLength);
