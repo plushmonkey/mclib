@@ -1,9 +1,9 @@
 #ifndef ENTITY_H_
 #define ENTITY_H_
 
-#include "Types.h"
-#include "DataBuffer.h"
-#include "Slot.h"
+#include "../Types.h"
+#include "../DataBuffer.h"
+#include "../Slot.h"
 
 #include <string>
 
@@ -21,9 +21,8 @@ private:
     EntityMetadata m_Metadata;
     u8 m_Yaw, m_Pitch, m_HeadPitch;
 
-
 public:
-    Entity(EntityId id);
+    Entity(EntityId id) : m_EntityId(id) { }
 
     EntityId GetEntityId() const { return m_EntityId; }
     const Vector3d& GetPosition() const { return m_Position; }

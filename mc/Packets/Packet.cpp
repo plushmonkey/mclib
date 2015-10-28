@@ -42,7 +42,6 @@ namespace Inbound {
 // Play packets
 KeepAlivePacket::KeepAlivePacket() {
     m_Id = 0x00;
-    m_ProtocolState = Minecraft::ProtocolState::Play;
 }
 
 bool KeepAlivePacket::Deserialize(DataBuffer& data, std::size_t packetLength) {
@@ -61,7 +60,6 @@ void KeepAlivePacket::Dispatch(PacketHandler* handler) {
 
 JoinGamePacket::JoinGamePacket() {
     m_Id = 0x01;
-    m_ProtocolState = Minecraft::ProtocolState::Play;
 }
 
 bool JoinGamePacket::Deserialize(DataBuffer& data, std::size_t packetLength) {
@@ -81,7 +79,6 @@ void JoinGamePacket::Dispatch(PacketHandler* handler) {
 
 ChatPacket::ChatPacket() {
     m_Id = 0x02;
-    m_ProtocolState = Minecraft::ProtocolState::Play;
 }
 
 bool ChatPacket::Deserialize(DataBuffer& data, std::size_t packetLength) {
@@ -106,7 +103,6 @@ void ChatPacket::Dispatch(PacketHandler* handler) {
 
 EntityEquipmentPacket::EntityEquipmentPacket() {
     m_Id = 0x04;
-    m_ProtocolState = Minecraft::ProtocolState::Play;
 }
 
 bool EntityEquipmentPacket::Deserialize(DataBuffer& data, std::size_t packetLength) {
@@ -129,7 +125,6 @@ void EntityEquipmentPacket::Dispatch(PacketHandler* handler) {
 
 SpawnPositionPacket::SpawnPositionPacket() {
     m_Id = 0x05;
-    m_ProtocolState = Minecraft::ProtocolState::Play;
 }
 
 bool SpawnPositionPacket::Deserialize(DataBuffer& data, std::size_t packetLength) {
@@ -143,7 +138,6 @@ void SpawnPositionPacket::Dispatch(PacketHandler* handler) {
 
 UpdateHealthPacket::UpdateHealthPacket() {
     m_Id = 0x06;
-    m_ProtocolState = Minecraft::ProtocolState::Play;
 }
 
 bool UpdateHealthPacket::Deserialize(DataBuffer& data, std::size_t packetLength) {
@@ -159,7 +153,6 @@ void UpdateHealthPacket::Dispatch(PacketHandler* handler) {
 
 PlayerPositionAndLookPacket::PlayerPositionAndLookPacket() {
     m_Id = 0x08;
-    m_ProtocolState = Minecraft::ProtocolState::Play;
 }
 
 bool PlayerPositionAndLookPacket::Deserialize(DataBuffer& data, std::size_t packetLength) {
@@ -175,7 +168,6 @@ void PlayerPositionAndLookPacket::Dispatch(PacketHandler* handler) {
 
 HeldItemChangePacket::HeldItemChangePacket() {
     m_Id = 0x09;
-    m_ProtocolState = Minecraft::ProtocolState::Play;
 }
 
 bool HeldItemChangePacket::Deserialize(DataBuffer& data, std::size_t packetLength) {
@@ -189,7 +181,6 @@ void HeldItemChangePacket::Dispatch(PacketHandler* handler) {
 
 SpawnPlayerPacket::SpawnPlayerPacket() {
     m_Id = 0x0C;
-    m_ProtocolState = Minecraft::ProtocolState::Play;
 }
 
 bool SpawnPlayerPacket::Deserialize(DataBuffer& data, std::size_t packetLength) {
@@ -218,7 +209,6 @@ void SpawnPlayerPacket::Dispatch(PacketHandler* handler) {
 
 SpawnMobPacket::SpawnMobPacket() {
     m_Id = 0x0F;
-    m_ProtocolState = Minecraft::ProtocolState::Play;
 }
 
 bool SpawnMobPacket::Deserialize(DataBuffer& data, std::size_t packetLength) {
@@ -252,7 +242,6 @@ void SpawnMobPacket::Dispatch(PacketHandler* handler) {
 
 EntityPacket::EntityPacket() {
     m_Id = 0x14;
-    m_ProtocolState = Minecraft::ProtocolState::Play;
 }
 
 bool EntityPacket::Deserialize(DataBuffer& data, std::size_t packetLength) {
@@ -268,7 +257,6 @@ void EntityPacket::Dispatch(PacketHandler* handler) {
 
 EntityRelativeMovePacket::EntityRelativeMovePacket() {
     m_Id = 0x15;
-    m_ProtocolState = Minecraft::ProtocolState::Play;
 }
 
 bool EntityRelativeMovePacket::Deserialize(DataBuffer& data, std::size_t packetLength) {
@@ -294,7 +282,6 @@ void EntityRelativeMovePacket::Dispatch(PacketHandler* handler) {
 
 EntityLookAndRelativeMovePacket::EntityLookAndRelativeMovePacket() {
     m_Id = 0x17;
-    m_ProtocolState = Minecraft::ProtocolState::Play;
 }
 
 bool EntityLookAndRelativeMovePacket::Deserialize(DataBuffer& data, std::size_t packetLength) {
@@ -317,7 +304,6 @@ void EntityLookAndRelativeMovePacket::Dispatch(PacketHandler* handler) {
 
 EntityHeadLookPacket::EntityHeadLookPacket() {
     m_Id = 0x19;
-    m_ProtocolState = Minecraft::ProtocolState::Play;
 }
 
 bool EntityHeadLookPacket::Deserialize(DataBuffer& data, std::size_t packetLength) {
@@ -334,7 +320,6 @@ void EntityHeadLookPacket::Dispatch(PacketHandler* handler) {
 
 EntityMetadataPacket::EntityMetadataPacket() {
     m_Id = 0x1C;
-    m_ProtocolState = Minecraft::ProtocolState::Play;
 }
 
 bool EntityMetadataPacket::Deserialize(DataBuffer& data, std::size_t packetLength) {
@@ -354,7 +339,6 @@ void EntityMetadataPacket::Dispatch(PacketHandler* handler) {
 
 SetExperiencePacket::SetExperiencePacket() {
     m_Id = 0x1F;
-    m_ProtocolState = Minecraft::ProtocolState::Play;
 }
 
 bool SetExperiencePacket::Deserialize(DataBuffer& data, std::size_t packetLength) {
@@ -371,7 +355,6 @@ void SetExperiencePacket::Dispatch(PacketHandler* handler) {
 
 EntityPropertiesPacket::EntityPropertiesPacket() {
     m_Id = 0x20;
-    m_ProtocolState = Minecraft::ProtocolState::Play;
 }
 
 bool EntityPropertiesPacket::Deserialize(DataBuffer& data, std::size_t packetLength) {
@@ -413,7 +396,6 @@ void EntityPropertiesPacket::Dispatch(PacketHandler* handler) {
 
 MultiBlockChangePacket::MultiBlockChangePacket() {
     m_Id = 0x22;
-    m_ProtocolState = Minecraft::ProtocolState::Play;
 }
 
 bool MultiBlockChangePacket::Deserialize(DataBuffer& data, std::size_t packetLength) {
@@ -445,7 +427,6 @@ void MultiBlockChangePacket::Dispatch(PacketHandler* handler) {
 
 BlockChangePacket::BlockChangePacket() {
     m_Id = 0x23;
-    m_ProtocolState = Minecraft::ProtocolState::Play;
 }
 
 bool BlockChangePacket::Deserialize(DataBuffer& data, std::size_t packetLength) {
@@ -465,7 +446,6 @@ void BlockChangePacket::Dispatch(PacketHandler* handler) {
 
 MapChunkBulkPacket::MapChunkBulkPacket() {
     m_Id = 0x26;
-    m_ProtocolState = Minecraft::ProtocolState::Play;
 }
 
 bool MapChunkBulkPacket::Deserialize(DataBuffer& data, std::size_t packetLength) {
@@ -505,7 +485,6 @@ void MapChunkBulkPacket::Dispatch(PacketHandler* handler) {
 
 ChangeGameStatePacket::ChangeGameStatePacket() {
     m_Id = 0x2B;
-    m_ProtocolState = Minecraft::ProtocolState::Play;
 }
 
 bool ChangeGameStatePacket::Deserialize(DataBuffer& data, std::size_t packetLength) {
@@ -525,7 +504,6 @@ void ChangeGameStatePacket::Dispatch(PacketHandler* handler) {
 
 SetSlotPacket::SetSlotPacket() {
     m_Id = 0x2F;
-    m_ProtocolState = Minecraft::ProtocolState::Play;
 }
 
 bool SetSlotPacket::Deserialize(DataBuffer& data, std::size_t packetLength) {
@@ -542,7 +520,6 @@ void SetSlotPacket::Dispatch(PacketHandler* handler) {
 
 WindowItemsPacket::WindowItemsPacket() {
     m_Id = 0x30;
-    m_ProtocolState = Minecraft::ProtocolState::Play;
 }
 
 bool WindowItemsPacket::Deserialize(DataBuffer& data, std::size_t packetLength) {
@@ -566,7 +543,6 @@ void WindowItemsPacket::Dispatch(PacketHandler* handler) {
 
 UpdateBlockEntityPacket::UpdateBlockEntityPacket() {
     m_Id = 0x35;
-    m_ProtocolState = Minecraft::ProtocolState::Play;
 }
 
 bool UpdateBlockEntityPacket::Deserialize(DataBuffer& data, std::size_t packetLength) {
@@ -589,7 +565,6 @@ void UpdateBlockEntityPacket::Dispatch(PacketHandler* handler) {
 
 StatisticsPacket::StatisticsPacket() {
     m_Id = 0x37;
-    m_ProtocolState = Minecraft::ProtocolState::Play;
 }
 
 bool StatisticsPacket::Deserialize(DataBuffer& data, std::size_t packetLength) {
@@ -615,7 +590,6 @@ void StatisticsPacket::Dispatch(PacketHandler* handler) {
 
 PlayerListItemPacket::PlayerListItemPacket() {
     m_Id = 0x38;
-    m_ProtocolState = Minecraft::ProtocolState::Play;
 }
 
 bool PlayerListItemPacket::Deserialize(DataBuffer& data, std::size_t packetLength) {
@@ -734,7 +708,6 @@ void PlayerListItemPacket::Dispatch(PacketHandler* handler) {
 
 PlayerAbilitiesPacket::PlayerAbilitiesPacket() {
     m_Id = 0x39;
-    m_ProtocolState = Minecraft::ProtocolState::Play;
 }
 
 bool PlayerAbilitiesPacket::Deserialize(DataBuffer& data, std::size_t packetLength) {
@@ -751,7 +724,6 @@ void PlayerAbilitiesPacket::Dispatch(PacketHandler* handler) {
 
 PluginMessagePacket::PluginMessagePacket() {
     m_Id = 0x3F;
-    m_ProtocolState = Minecraft::ProtocolState::Play;
 }
 
 bool PluginMessagePacket::Deserialize(DataBuffer& data, std::size_t packetLength) {
@@ -770,7 +742,6 @@ void PluginMessagePacket::Dispatch(PacketHandler* handler) {
 
 ServerDifficultyPacket::ServerDifficultyPacket() {
     m_Id = 0x41;
-    m_ProtocolState = Minecraft::ProtocolState::Play;
 }
 
 bool ServerDifficultyPacket::Deserialize(DataBuffer& data, std::size_t packetLength) {
@@ -784,7 +755,6 @@ void ServerDifficultyPacket::Dispatch(PacketHandler* handler) {
 
 WorldBorderPacket::WorldBorderPacket() {
     m_Id = 0x44;
-    m_ProtocolState = Minecraft::ProtocolState::Play;
 }
 
 bool WorldBorderPacket::Deserialize(DataBuffer& data, std::size_t packetLength) {
@@ -859,7 +829,7 @@ void WorldBorderPacket::Dispatch(PacketHandler* handler) {
 // Login packets
 DisconnectPacket::DisconnectPacket() {
     m_Id = 0x00;
-    m_ProtocolState = Minecraft::ProtocolState::Login;
+    m_ProtocolState = Minecraft::Protocol::State::Login;
 }
 
 bool DisconnectPacket::Deserialize(DataBuffer& data, std::size_t packetLength) {
@@ -873,7 +843,7 @@ void DisconnectPacket::Dispatch(PacketHandler* handler) {
 
 EncryptionRequestPacket::EncryptionRequestPacket() {
     m_Id = 0x01;
-    m_ProtocolState = Minecraft::ProtocolState::Login;
+    m_ProtocolState = Minecraft::Protocol::State::Login;
 }
 
 bool EncryptionRequestPacket::Deserialize(DataBuffer& data, std::size_t packetLength) {
@@ -897,7 +867,7 @@ void EncryptionRequestPacket::Dispatch(PacketHandler* handler) {
 
 LoginSuccessPacket::LoginSuccessPacket() {
     m_Id = 0x01;
-    m_ProtocolState = Minecraft::ProtocolState::Login;
+    m_ProtocolState = Minecraft::Protocol::State::Login;
 }
 
 bool LoginSuccessPacket::Deserialize(DataBuffer& data, std::size_t packetLength) {
@@ -912,7 +882,7 @@ void LoginSuccessPacket::Dispatch(PacketHandler* handler) {
 
 SetCompressionPacket::SetCompressionPacket() {
     m_Id = 0x03;
-    m_ProtocolState = Minecraft::ProtocolState::Login;
+    m_ProtocolState = Minecraft::Protocol::State::Login;
 }
 
 bool SetCompressionPacket::Deserialize(DataBuffer& data, std::size_t packetLength) {
@@ -930,8 +900,8 @@ void SetCompressionPacket::Dispatch(PacketHandler* handler) {
 namespace Outbound {
 
 // Handshake packets
-HandshakePacket::HandshakePacket(s32 protocol, std::string server, u16 port, s32 state) 
-    : m_ProtocolVersion(protocol), m_Server(server), m_Port(port), m_NewState(state)
+HandshakePacket::HandshakePacket(s32 protocol, std::string server, u16 port, Protocol::State state) 
+    : m_ProtocolVersion(protocol), m_Server(server), m_Port(port), m_NewState((s32)state)
 {
     m_Id = 0x00;
 }

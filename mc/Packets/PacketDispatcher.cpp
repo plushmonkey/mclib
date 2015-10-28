@@ -8,14 +8,14 @@
 namespace Minecraft {
 namespace Packets {
 
-void PacketDispatcher::RegisterHandler(Minecraft::ProtocolState protocolState, PacketId id, PacketHandler* handler) {
+void PacketDispatcher::RegisterHandler(Minecraft::Protocol::State protocolState, PacketId id, PacketHandler* handler) {
     PacketType type(protocolState, id);
     std::vector<PacketHandler*>::iterator found = std::find(m_Handlers[type].begin(), m_Handlers[type].end(), handler);
     if (found == m_Handlers[type].end())
         m_Handlers[type].push_back(handler);
 }
 
-void PacketDispatcher::UnregisterHandler(Minecraft::ProtocolState protocolState, PacketId id, PacketHandler* handler) {
+void PacketDispatcher::UnregisterHandler(Minecraft::Protocol::State protocolState, PacketId id, PacketHandler* handler) {
     PacketType type(protocolState, id);
     std::vector<PacketHandler*>::iterator found = std::find(m_Handlers[type].begin(), m_Handlers[type].end(), handler);
     if (found != m_Handlers[type].end())

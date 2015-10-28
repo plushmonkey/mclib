@@ -9,7 +9,14 @@
 template <typename VecType>
 class Vector3 {
 public:
-    VecType x, y, z;
+    union {
+        struct {
+            VecType x, y, z;
+        };
+        struct {
+            VecType pitch, yaw, roll;
+        };
+    };
 
     Vector3() : x(0), y(0), z(0) { }
     Vector3(VecType x, VecType y) : x(x), y(y), z(0) { }

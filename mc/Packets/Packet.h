@@ -17,13 +17,13 @@ class PacketHandler;
 class Packet {
 protected:
     VarInt m_Id;
-    ProtocolState m_ProtocolState;
+    Protocol::State m_ProtocolState;
 
 public:
-    Packet() : m_Id(0xFF), m_ProtocolState(ProtocolState::Play) { }
+    Packet() : m_Id(0xFF), m_ProtocolState(Protocol::State::Play) { }
     virtual ~Packet() { }
 
-    ProtocolState GetProtocolState() const { return m_ProtocolState; }
+    Protocol::State GetProtocolState() const { return m_ProtocolState; }
     VarInt GetId() const { return m_Id; }
     virtual DataBuffer Serialize() const = 0;
     virtual bool Deserialize(DataBuffer& data, std::size_t packetLength) = 0;
@@ -731,7 +731,7 @@ private:
     VarInt m_NewState;
 
 public:
-    HandshakePacket(s32 protocol, std::string server, u16 port, s32 state);
+    HandshakePacket(s32 protocol, std::string server, u16 port, Protocol::State state);
     DataBuffer Serialize() const;
 };
 

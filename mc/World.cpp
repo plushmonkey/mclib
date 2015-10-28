@@ -5,9 +5,9 @@ namespace Minecraft {
 World::World(Packets::PacketDispatcher& dispatcher) 
     : Packets::PacketHandler(&dispatcher)
 {
-    dispatcher.RegisterHandler(Minecraft::ProtocolState::Play, 0x22, this);
-    dispatcher.RegisterHandler(Minecraft::ProtocolState::Play, 0x23, this);
-    dispatcher.RegisterHandler(Minecraft::ProtocolState::Play, 0x26, this);
+    dispatcher.RegisterHandler(Minecraft::Protocol::State::Play, 0x22, this);
+    dispatcher.RegisterHandler(Minecraft::Protocol::State::Play, 0x23, this);
+    dispatcher.RegisterHandler(Minecraft::Protocol::State::Play, 0x26, this);
 }
 
 void World::HandlePacket(Packets::Inbound::MapChunkBulkPacket* packet) {

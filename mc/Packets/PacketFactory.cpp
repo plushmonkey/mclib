@@ -24,16 +24,16 @@ Packet* LoginPacketFactory::CreatePacket(DataBuffer& data, std::size_t length) {
     InboundPacket* packet = nullptr;
 
     switch (id) {
-    case 0x00:
+    case Protocol::Login::Disconnect:
         packet = new Inbound::DisconnectPacket();
         break;
-    case 0x01:
+    case Protocol::Login::EncryptionRequest:
         packet = new Inbound::EncryptionRequestPacket();
         break;
-    case 0x02:
+    case Protocol::Login::LoginSuccess:
         packet = new Inbound::LoginSuccessPacket();
         break;
-    case 0x03:
+    case Protocol::Login::SetCompression:
         packet = new Inbound::SetCompressionPacket();
         break;
     default:
@@ -54,97 +54,97 @@ Packet* PlayPacketFactory::CreatePacket(DataBuffer& data, std::size_t length) {
     InboundPacket* packet = nullptr;
 
     switch (id) {
-    case 0x00:
+    case Protocol::Play::KeepAlive:
         packet = new Inbound::KeepAlivePacket();
         break;
-    case 0x01:
+    case Protocol::Play::JoinGame:
         packet = new Inbound::JoinGamePacket();
         break;
-    case 0x02:
+    case Protocol::Play::Chat:
         packet = new Inbound::ChatPacket();
         break;
-    case 0x03:
+    case Protocol::Play::TimeUpdate:
         //packet = new Inbound::TimeUpdatePacket();
         break;
-    case 0x04:
+    case Protocol::Play::EntityEquipment:
         packet = new Inbound::EntityEquipmentPacket();
         break;
-    case 0x05:
+    case Protocol::Play::SpawnPosition:
         packet = new Inbound::SpawnPositionPacket();
         break;
-    case 0x06:
+    case Protocol::Play::UpdateHealth:
         packet = new Inbound::UpdateHealthPacket();
         break;
-    case 0x08:
+    case Protocol::Play::PlayerPositionAndLook:
         packet = new Inbound::PlayerPositionAndLookPacket();
         break;
-    case 0x09:
+    case Protocol::Play::HeldItemChange:
         packet = new Inbound::HeldItemChangePacket();
         break;
-    case 0x0C:
+    case Protocol::Play::SpawnPlayer:
         packet = new Inbound::SpawnPlayerPacket();
         break;
-    case 0x0F:
+    case Protocol::Play::SpawnMob:
         packet = new Inbound::SpawnMobPacket();
         break;
-    case 0x14:
+    case Protocol::Play::Entity:
         packet = new Inbound::EntityPacket();
         break;
-    case 0x15:
+    case Protocol::Play::EntityRelativeMove:
         packet = new Inbound::EntityRelativeMovePacket();
         break;
-    case 0x17:
+    case Protocol::Play::EntityLookAndRelativeMove:
         packet = new Inbound::EntityLookAndRelativeMovePacket();
         break;
-    case 0x19:
+    case Protocol::Play::EntityHeadLook:
         packet = new Inbound::EntityHeadLookPacket();
         break;
-    case 0x1C:
+    case Protocol::Play::EntityMetadata:
         packet = new Inbound::EntityMetadataPacket();
         break;
-    case 0x1F:
+    case Protocol::Play::SetExperience:
         packet = new Inbound::SetExperiencePacket();
         break;
-    case 0x20:
+    case Protocol::Play::EntityProperties:
         packet = new Inbound::EntityPropertiesPacket();
         break;
-    case 0x22:
+    case Protocol::Play::MultiBlockChange:
         packet = new Inbound::MultiBlockChangePacket();
         break;
-    case 0x23:
+    case Protocol::Play::BlockChange:
         packet = new Inbound::BlockChangePacket();
         break;
-    case 0x26:
+    case Protocol::Play::MapChunkBulk:
         packet = new Inbound::MapChunkBulkPacket();
         break;
-    case 0x2B:
+    case Protocol::Play::ChangeGameState:
         packet = new Inbound::ChangeGameStatePacket();
         break;
-    case 0x2F:
+    case Protocol::Play::SetSlot:
         packet = new Inbound::SetSlotPacket();
         break;
-    case 0x30:
+    case Protocol::Play::WindowItems:
         packet = new Inbound::WindowItemsPacket();
         break;
-    case 0x35:
+    case Protocol::Play::UpdateBlockEntity:
         packet = new Inbound::UpdateBlockEntityPacket();
         break;
-    case 0x37:
+    case Protocol::Play::Statistics:
         packet = new Inbound::StatisticsPacket();
         break;
-    case 0x38:
+    case Protocol::Play::PlayerListItem:
         packet = new Inbound::PlayerListItemPacket();
         break;
-    case 0x39:
+    case Protocol::Play::PlayerAbilities:
         packet = new Inbound::PlayerAbilitiesPacket();
         break;
-    case 0x3F:
+    case Protocol::Play::PluginMessage:
         packet = new Inbound::PluginMessagePacket();
         break;
-    case 0x41:
+    case Protocol::Play::ServerDifficulty:
         packet = new Inbound::ServerDifficultyPacket();
         break;
-    case 0x44:
+    case Protocol::Play::WorldBorder:
         packet = new Inbound::WorldBorderPacket();
         break;
     default:
@@ -157,13 +157,13 @@ Packet* PlayPacketFactory::CreatePacket(DataBuffer& data, std::size_t length) {
     return packet;
 }
 
-Packet* PacketFactory::CreatePacket(ProtocolState state, DataBuffer& data, std::size_t length) {
+Packet* PacketFactory::CreatePacket(Protocol::State state, DataBuffer& data, std::size_t length) {
     switch (state) {
-    case Handshake:
+    case Protocol::State::Handshake:
         throw std::runtime_error("Packet received during handshake (wrong protocol state).");
-    case Play:
+    case Protocol::State::Play:
         return PlayPacketFactory::CreatePacket(data, length);
-    case Login:
+    case Protocol::State::Login:
         return LoginPacketFactory::CreatePacket(data, length);
     default:
         throw std::runtime_error("Protocol isn't in a valid state.");

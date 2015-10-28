@@ -40,7 +40,7 @@ private:
     Minecraft::Packets::PacketDispatcher m_Dispatcher;
     Minecraft::EncryptionStrategy* m_Encrypter;
     Minecraft::CompressionStrategy* m_Compressor;
-    Minecraft::ProtocolState m_ProtocolState;
+    Minecraft::Protocol::State m_ProtocolState;
     std::shared_ptr<Network::Socket> m_Socket;
     Minecraft::Yggdrasil m_Yggdrasil;
     std::string m_Server;
@@ -62,36 +62,38 @@ public:
           m_World(m_Dispatcher),
           m_Position(0, 0, 0)
     {
-        m_Dispatcher.RegisterHandler(Minecraft::ProtocolState::Login, 0x00, this);
-        m_Dispatcher.RegisterHandler(Minecraft::ProtocolState::Login, 0x01, this);
-        m_Dispatcher.RegisterHandler(Minecraft::ProtocolState::Login, 0x02, this);
-        m_Dispatcher.RegisterHandler(Minecraft::ProtocolState::Login, 0x03, this);
+        using namespace Minecraft;
 
-        m_Dispatcher.RegisterHandler(Minecraft::ProtocolState::Play, 0x00, this);
-        m_Dispatcher.RegisterHandler(Minecraft::ProtocolState::Play, 0x01, this);
-        m_Dispatcher.RegisterHandler(Minecraft::ProtocolState::Play, 0x02, this);
-        m_Dispatcher.RegisterHandler(Minecraft::ProtocolState::Play, 0x05, this);
-        m_Dispatcher.RegisterHandler(Minecraft::ProtocolState::Play, 0x06, this);
-        m_Dispatcher.RegisterHandler(Minecraft::ProtocolState::Play, 0x08, this);
-        m_Dispatcher.RegisterHandler(Minecraft::ProtocolState::Play, 0x0C, this);
-        m_Dispatcher.RegisterHandler(Minecraft::ProtocolState::Play, 0x0F, this);
-        m_Dispatcher.RegisterHandler(Minecraft::ProtocolState::Play, 0x15, this);
-        m_Dispatcher.RegisterHandler(Minecraft::ProtocolState::Play, 0x1C, this);
-        m_Dispatcher.RegisterHandler(Minecraft::ProtocolState::Play, 0x1F, this);
-        m_Dispatcher.RegisterHandler(Minecraft::ProtocolState::Play, 0x20, this);
-        m_Dispatcher.RegisterHandler(Minecraft::ProtocolState::Play, 0x26, this);
-        m_Dispatcher.RegisterHandler(Minecraft::ProtocolState::Play, 0x2F, this);
-        m_Dispatcher.RegisterHandler(Minecraft::ProtocolState::Play, 0x30, this);
-        m_Dispatcher.RegisterHandler(Minecraft::ProtocolState::Play, 0x37, this);
-        m_Dispatcher.RegisterHandler(Minecraft::ProtocolState::Play, 0x38, this);
-        m_Dispatcher.RegisterHandler(Minecraft::ProtocolState::Play, 0x39, this);
-        m_Dispatcher.RegisterHandler(Minecraft::ProtocolState::Play, 0x3F, this);
-        m_Dispatcher.RegisterHandler(Minecraft::ProtocolState::Play, 0x41, this);
-        m_Dispatcher.RegisterHandler(Minecraft::ProtocolState::Play, 0x44, this);
+        m_Dispatcher.RegisterHandler(Protocol::State::Login, Protocol::Login::Disconnect, this);
+        m_Dispatcher.RegisterHandler(Protocol::State::Login, Protocol::Login::EncryptionRequest, this);
+        m_Dispatcher.RegisterHandler(Protocol::State::Login, Protocol::Login::LoginSuccess, this);
+        m_Dispatcher.RegisterHandler(Protocol::State::Login, Protocol::Login::SetCompression, this);
+
+        m_Dispatcher.RegisterHandler(Protocol::State::Play, Protocol::Play::KeepAlive, this);
+        m_Dispatcher.RegisterHandler(Protocol::State::Play, Protocol::Play::JoinGame, this);
+        m_Dispatcher.RegisterHandler(Protocol::State::Play, Protocol::Play::Chat, this);
+        m_Dispatcher.RegisterHandler(Protocol::State::Play, Protocol::Play::SpawnPosition, this);
+        m_Dispatcher.RegisterHandler(Protocol::State::Play, Protocol::Play::UpdateHealth, this);
+        m_Dispatcher.RegisterHandler(Protocol::State::Play, Protocol::Play::PlayerPositionAndLook, this);
+        m_Dispatcher.RegisterHandler(Protocol::State::Play, Protocol::Play::SpawnPlayer, this);
+        m_Dispatcher.RegisterHandler(Protocol::State::Play, Protocol::Play::SpawnMob, this);
+        m_Dispatcher.RegisterHandler(Protocol::State::Play, Protocol::Play::EntityRelativeMove, this);
+        m_Dispatcher.RegisterHandler(Protocol::State::Play, Protocol::Play::EntityMetadata, this);
+        m_Dispatcher.RegisterHandler(Protocol::State::Play, Protocol::Play::SetExperience, this);
+        m_Dispatcher.RegisterHandler(Protocol::State::Play, Protocol::Play::EntityProperties, this);
+        m_Dispatcher.RegisterHandler(Protocol::State::Play, Protocol::Play::MapChunkBulk, this);
+        m_Dispatcher.RegisterHandler(Protocol::State::Play, Protocol::Play::SetSlot, this);
+        m_Dispatcher.RegisterHandler(Protocol::State::Play, Protocol::Play::WindowItems, this);
+        m_Dispatcher.RegisterHandler(Protocol::State::Play, Protocol::Play::Statistics, this);
+        m_Dispatcher.RegisterHandler(Protocol::State::Play, Protocol::Play::PlayerListItem, this);
+        m_Dispatcher.RegisterHandler(Protocol::State::Play, Protocol::Play::PlayerAbilities, this);
+        m_Dispatcher.RegisterHandler(Protocol::State::Play, Protocol::Play::PluginMessage, this);
+        m_Dispatcher.RegisterHandler(Protocol::State::Play, Protocol::Play::ServerDifficulty, this);
+        m_Dispatcher.RegisterHandler(Protocol::State::Play, Protocol::Play::WorldBorder, this);
     }
 
     void HandlePacket(Minecraft::Packets::Inbound::EntityPropertiesPacket* packet) {
-        std::cout << "Received entity properties: " << std::endl;
+      /*  std::cout << "Received entity properties: " << std::endl;
         const auto& properties = packet->GetProperties();
         for (const auto& kv : properties) {
             std::wstring key = kv.first;
@@ -99,7 +101,7 @@ public:
             std::wcout << key << " : " << property.value << std::endl;
             for (const auto& modifier : property.modifiers) 
                 std::cout << "Modifier: " << modifier.uuid << " " << modifier.amount << " " << (int)modifier.operation << std::endl;
-        }
+        }*/
     }
 
     void HandlePacket(Minecraft::Packets::Inbound::EntityRelativeMovePacket* packet) {
@@ -175,7 +177,7 @@ public:
     }
 
     void HandlePacket(Minecraft::Packets::Inbound::MapChunkBulkPacket* packet) {
-        //std::cout << "Received MapChunkBulkPacket" << std::endl;
+        std::cout << "Received MapChunkBulkPacket" << std::endl;
     }
 
     void HandlePacket(Minecraft::Packets::Inbound::SetSlotPacket* packet) {
@@ -347,7 +349,7 @@ public:
         std::cout << "Successfully logged in. Username: ";
         std::wcout << packet->GetUsername() << std::endl;
 
-        m_ProtocolState = Minecraft::ProtocolState::Play;
+        m_ProtocolState = Minecraft::Protocol::State::Play;
     }
 
     void HandlePacket(Minecraft::Packets::Inbound::SetCompressionPacket* packet) {
@@ -450,13 +452,13 @@ public:
             return;
         }
 
-        Minecraft::Packets::Outbound::HandshakePacket handshake(47, m_Server, m_Port, Minecraft::ProtocolState::Login);
+        Minecraft::Packets::Outbound::HandshakePacket handshake(47, m_Server, m_Port, Minecraft::Protocol::State::Login);
         Send(&handshake);
 
         Minecraft::Packets::Outbound::LoginStartPacket loginStart(PlayerName);
         Send(&loginStart);
 
-        m_ProtocolState = Minecraft::ProtocolState::Login;
+        m_ProtocolState = Minecraft::Protocol::State::Login;
 
         Minecraft::DataBuffer toHandle;
 
@@ -503,7 +505,7 @@ public:
 };
 
 int main(void) {
-    Connection conn("192.168.2.5", 25565);
+    Connection conn("192.168.2.3", 25565);
     //Connection conn("play.mysticempire.net", 25565);
     
     conn.Run();
