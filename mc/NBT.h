@@ -30,8 +30,8 @@ public:
     virtual TagType GetType() const = 0;
     friend DataBuffer& operator<<(DataBuffer& out, const Tag& tag);
     friend DataBuffer& operator>>(DataBuffer& in, Tag& tag);
-    friend TagList;
-    friend TagCompound;
+    friend class TagList;
+    friend class TagCompound;
 };
 
 typedef std::shared_ptr<Tag> TagPtr;

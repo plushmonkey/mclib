@@ -4,6 +4,7 @@
 #include "Common.h"
 #include <vector>
 #include <algorithm>
+#include <cstring>
 
 namespace Minecraft {
 

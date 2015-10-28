@@ -7,6 +7,24 @@
 #include <vector>
 #include <memory>
 
+#ifdef _WIN32
+#include <WS2tcpip.h>
+#include <WinSock2.h>
+#else
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
+#include <sys/types.h>
+#include <unistd.h>
+#include <netdb.h>
+
+#define closesocket close
+#endif
+
+#ifndef INVALID_SOCKET
+#define INVALID_SOCKET -1
+#endif
+
 namespace Network {
 
 class IPAddress;

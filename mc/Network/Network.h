@@ -5,7 +5,12 @@
 #include <WS2tcpip.h>
 #pragma comment(lib, "ws2_32.lib")
 #else
-#error TODO: Linux network stuff
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
+#include <sys/types.h>
+#include <unistd.h>
+#include <fcntl.h>
 #endif
 
 #include "Socket.h"

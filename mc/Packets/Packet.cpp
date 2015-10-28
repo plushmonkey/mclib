@@ -7,7 +7,7 @@ template <typename T>
 class FixedPointNumber {
 private:
     T m_IntRep;
-
+    
 public:
     FixedPointNumber() : m_IntRep(0) { }
     FixedPointNumber(T intRep) : m_IntRep(intRep) { }
@@ -21,7 +21,8 @@ public:
         return val;
     }
 
-    friend Minecraft::DataBuffer& operator>>(Minecraft::DataBuffer& in, FixedPointNumber<T>& fpn);
+    friend Minecraft::DataBuffer& operator>>(Minecraft::DataBuffer& in, FixedPointNumber<s8>& fpn);
+    friend Minecraft::DataBuffer& operator>>(Minecraft::DataBuffer& in, FixedPointNumber<s32>& fpn);
 };
 
 Minecraft::DataBuffer& operator>>(Minecraft::DataBuffer& in, FixedPointNumber<s8>& fpn) {

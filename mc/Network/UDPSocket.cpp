@@ -1,8 +1,6 @@
 #include "UDPSocket.h"
 
 #include "../DataBuffer.h"
-#include <WinSock2.h>
-#include <WS2tcpip.h>
 #include <iostream>
 
 #ifdef _WIN32
@@ -54,7 +52,7 @@ size_t UDPSocket::Send(const unsigned char* data, size_t size) {
 
 DataBuffer UDPSocket::Receive(std::size_t amount) {
     std::unique_ptr<char[]> buf(new char[amount]);
-    int slen = sizeof(sockaddr_in);
+    socklen_t slen = sizeof(sockaddr_in);
 
     int received = recvfrom(m_Handle, buf.get(), amount, 0,
         reinterpret_cast<sockaddr*>(&m_RemoteAddr), &slen);
@@ -65,7 +63,7 @@ DataBuffer UDPSocket::Receive(std::size_t amount) {
 #else
         int err = errno;
 #endif
-        if (err == WOULDBLOCK || err == WSAEMSGSIZE)
+        if (err == WOULDBLOCK)
             return DataBuffer(std::string(buf.get(), received));
 
         Disconnect();

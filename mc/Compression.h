@@ -9,6 +9,7 @@ class DataBuffer;
 
 class CompressionStrategy {
 public:
+    virtual ~CompressionStrategy() { }
     virtual DataBuffer Compress(DataBuffer& buffer) = 0;
     virtual DataBuffer Decompress(DataBuffer& buffer, std::size_t packetLength) = 0;
 };

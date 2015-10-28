@@ -74,9 +74,6 @@ BlockPtr World::GetBlock(Vector3d pos) const {
 }
 
 BlockPtr World::GetBlock(Vector3i pos) const {
-    s32 x = (s32)pos.x / 16;
-    s32 z = (s32)pos.z / 16;
-
     ChunkColumnPtr col = GetChunk(pos);
 
     if (!col) return nullptr;

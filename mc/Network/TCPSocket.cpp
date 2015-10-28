@@ -1,8 +1,6 @@
 #include "TCPSocket.h"
 
 #include "../DataBuffer.h"
-#include <WinSock2.h>
-#include <WS2tcpip.h>
 #include <iostream>
 
 #ifdef _WIN32
@@ -81,7 +79,7 @@ DataBuffer TCPSocket::Receive(std::size_t amount) {
 #else
         int err = errno;
 #endif
-        if (err == WOULDBLOCK || err == WSAEMSGSIZE)
+        if (err == WOULDBLOCK)
             return DataBuffer();
 
         Disconnect();

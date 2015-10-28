@@ -4,14 +4,10 @@
 #include "IPAddress.h"
 #include "../DataBuffer.h"
 
-#ifndef INVALID_HANDLE
-#define INVALID_HANDLE -1
-#endif
-
 namespace Network {
 
 Socket::Socket(Type type)
-    : m_Handle(INVALID_HANDLE),
+    : m_Handle(INVALID_SOCKET),
     m_Type(type),
     m_Blocking(false),
     m_Status(Disconnected)
@@ -76,7 +72,7 @@ std::size_t Socket::Send(DataBuffer& buffer) {
 }
 
 void Socket::Disconnect() {
-    if (m_Handle != INVALID_HANDLE)
+    if (m_Handle != INVALID_SOCKET)
         closesocket(m_Handle);
     m_Status = Disconnected;
 }

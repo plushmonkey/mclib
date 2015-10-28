@@ -36,10 +36,17 @@ IPAddresses Dns::Resolve(const std::string& host) {
     getaddrinfo(host.c_str(), NULL, &hints, &addresses);
 
     for (addrinfo *p = addresses; p != NULL; p = p->ai_next) {
+
+#ifdef _WIN32
         wchar_t straddr[35];
         DWORD len;
-
+        
         WSAAddressToString(p->ai_addr, p->ai_addrlen, NULL, straddr, &len);
+#else
+        char straddr[35];
+
+        inet_ntop(p->ai_family, &((sockaddr_in*)p->ai_addr)->sin_addr, straddr, sizeof(straddr));
+#endif
 
         list.push_back(IPAddress(straddr));
     }

@@ -6,7 +6,6 @@
 #include "IPAddress.h"
 
 #include <cstdint>
-#include <WinSock2.h>
 
 namespace Network {
 

@@ -21,12 +21,9 @@
 #include "World.h"
 #include <memory>
 #include <regex>
+#include <chrono>
 
 /** This is all junk code just to get things working */
-
-#include <windows.h> // timeGetTime
-
-#pragma comment(lib, "winmm.lib")
 
 // TODO: Switch to using vectors in packets instead of individual variables
 // TODO: Create player manager
@@ -142,9 +139,9 @@ public:
         std::string text = root["text"].asString();
         if (!root["extra"].isNull()) {
             for (Json::ValueConstIterator iter = root["extra"].begin(); iter != root["extra"].end(); ++iter) {
-                if (!iter->isString()) continue;
+                if (!(*iter).isString()) continue;
 
-                text += iter->asString();
+                text += (*iter).asString();
             }
         }
 
@@ -409,12 +406,16 @@ public:
         return Minecraft::Packets::PacketFactory::CreatePacket(m_ProtocolState, decompressed, length.GetInt());
     }
 
+    s64 GetTime() const {
+        return std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
+    }
+
     void UpdatePosition() {
         if (m_Position == Vector3d(0, 0, 0)) return;
-        static DWORD lastSend = 0;
-        static DWORD lastPosOutput = 0;
+        static s64 lastSend = 0;
+        static s64 lastPosOutput = 0;
         
-        if (timeGetTime() - lastSend >= 50) {
+        if (GetTime() - lastSend >= 50) {
             bool onGround = true;
 
             Minecraft::BlockPtr above = m_World.GetBlock(m_Position);
@@ -431,12 +432,12 @@ public:
                 }
             }
 
-            if (timeGetTime() - lastPosOutput >= 2000) {
+            if (GetTime() - lastPosOutput >= 2000) {
                 Minecraft::BlockPtr below = m_World.GetBlock(m_Position - Vector3d(0, 1.0, 0));
                 if (below)
                     std::cout << "Standing on " << below->GetType() << std::endl;
 
-                lastPosOutput = timeGetTime();
+                lastPosOutput = GetTime();
             }
 
             Minecraft::Packets::Outbound::PlayerPositionAndLookPacket response(m_Position.x, m_Position.y, m_Position.z,
@@ -444,7 +445,7 @@ public:
 
             Send(&response);
 
-            lastSend = timeGetTime();
+            lastSend = GetTime();
         }
     }
 
@@ -499,9 +500,10 @@ public:
 
     void Send(Minecraft::Packets::Packet* packet) {
         Minecraft::DataBuffer packetBuffer = packet->Serialize();
-        Minecraft::DataBuffer buffer = m_Compressor->Compress(packetBuffer);
+        Minecraft::DataBuffer compressed = m_Compressor->Compress(packetBuffer);
+        Minecraft::DataBuffer encrypted = m_Encrypter->Encrypt(compressed);
 
-        m_Socket->Send(m_Encrypter->Encrypt(buffer));
+        m_Socket->Send(encrypted);
     }
 };
 

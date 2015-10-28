@@ -1,6 +1,7 @@
 #ifndef YGGDRASIL_H_
 #define YGGDRASIL_H_
 
+#include "Types.h"
 #include "HTTPClient.h"
 #include <string>
 #include <exception>
@@ -24,7 +25,7 @@ public:
     {
     }
 
-    virtual const char* what() const {
+    virtual const char* what() const NOEXCEPT {
         return m_ErrorMessage.c_str();
     }
 };

@@ -1,6 +1,7 @@
 #include "Hash.h"
 #include <vector>
 #include <sstream>
+#include <limits>
 #include <iostream>
 #include <iomanip>
 #include <openssl/sha.h>

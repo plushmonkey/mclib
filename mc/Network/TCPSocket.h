@@ -6,7 +6,6 @@
 #include "IPAddress.h"
 
 #include <cstdint>
-#include <WinSock2.h>
 
 namespace Network {
 
@@ -15,7 +14,7 @@ private:
     IPAddress m_RemoteIP;
     uint16_t m_Port;
     sockaddr_in m_RemoteAddr;
-
+    
 public:
     TCPSocket();
 

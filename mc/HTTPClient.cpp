@@ -4,6 +4,7 @@
 
 #include <curl/curl.h>
 #include <iostream>
+#include <sstream>
 #include <string>
 
 std::size_t CurlWriteString(void* buffer, std::size_t size, std::size_t nmemb, void* result) {
@@ -77,7 +78,7 @@ private:
         curl_easy_setopt(m_Curl, CURLOPT_TIMEOUT_MS, m_Timeout);
         curl_easy_setopt(m_Curl, CURLOPT_WRITEDATA, &data);
         curl_easy_setopt(m_Curl, CURLOPT_HEADERDATA, &header);
-        curl_easy_setopt(m_Curl, CURLOPT_SSL_VERIFYPEER, FALSE);
+        curl_easy_setopt(m_Curl, CURLOPT_SSL_VERIFYPEER, 0);
         if (postData.length() > 0)
             curl_easy_setopt(m_Curl, CURLOPT_POSTFIELDS, postData.c_str());
         if (header_list)
@@ -124,12 +125,12 @@ public:
     HTTPResponse PostJSON(const std::string& url, const Json::Value& json, Headers headers) {
         headers["Content-Type"] = "application/json";
 
-        Json::StreamWriterBuilder builder;
-        builder.settings_["indentation"] = "";
+        Json::StyledStreamWriter writer("");
+        std::stringstream ss;
 
-        std::string postData = Json::writeString(builder, json);
+        writer.write(ss, json);
 
-        return DoRequest(url, postData, headers);
+        return DoRequest(url, ss.str(), headers);
     }
 };
 
