@@ -37,7 +37,6 @@ std::string PlayerPassword = "";
 
 class Connection : public Minecraft::Packets::PacketHandler {
 private:
-    Minecraft::Packets::PacketDispatcher m_Dispatcher;
     Minecraft::EncryptionStrategy* m_Encrypter;
     Minecraft::CompressionStrategy* m_Compressor;
     Minecraft::Protocol::State m_ProtocolState;
@@ -51,45 +50,48 @@ private:
     Minecraft::World m_World;
 
 public:
-    Connection(const std::string& server, u16 port)
-        : m_Dispatcher(), 
+    Connection(const std::string& server, u16 port, Minecraft::Packets::PacketDispatcher* dispatcher)
+        : Minecraft::Packets::PacketHandler(dispatcher), 
           m_Server(server), 
           m_Port(port), 
           m_Encrypter(new Minecraft::EncryptionStrategyNone()), 
           m_Compressor(new Minecraft::CompressionNone()),
           m_Socket(new Network::TCPSocket()), 
-          Minecraft::Packets::PacketHandler(&m_Dispatcher),
-          m_World(m_Dispatcher),
+          m_World(dispatcher),
           m_Position(0, 0, 0)
     {
         using namespace Minecraft;
 
-        m_Dispatcher.RegisterHandler(Protocol::State::Login, Protocol::Login::Disconnect, this);
-        m_Dispatcher.RegisterHandler(Protocol::State::Login, Protocol::Login::EncryptionRequest, this);
-        m_Dispatcher.RegisterHandler(Protocol::State::Login, Protocol::Login::LoginSuccess, this);
-        m_Dispatcher.RegisterHandler(Protocol::State::Login, Protocol::Login::SetCompression, this);
+        dispatcher->RegisterHandler(Protocol::State::Login, Protocol::Login::Disconnect, this);
+        dispatcher->RegisterHandler(Protocol::State::Login, Protocol::Login::EncryptionRequest, this);
+        dispatcher->RegisterHandler(Protocol::State::Login, Protocol::Login::LoginSuccess, this);
+        dispatcher->RegisterHandler(Protocol::State::Login, Protocol::Login::SetCompression, this);
 
-        m_Dispatcher.RegisterHandler(Protocol::State::Play, Protocol::Play::KeepAlive, this);
-        m_Dispatcher.RegisterHandler(Protocol::State::Play, Protocol::Play::JoinGame, this);
-        m_Dispatcher.RegisterHandler(Protocol::State::Play, Protocol::Play::Chat, this);
-        m_Dispatcher.RegisterHandler(Protocol::State::Play, Protocol::Play::SpawnPosition, this);
-        m_Dispatcher.RegisterHandler(Protocol::State::Play, Protocol::Play::UpdateHealth, this);
-        m_Dispatcher.RegisterHandler(Protocol::State::Play, Protocol::Play::PlayerPositionAndLook, this);
-        m_Dispatcher.RegisterHandler(Protocol::State::Play, Protocol::Play::SpawnPlayer, this);
-        m_Dispatcher.RegisterHandler(Protocol::State::Play, Protocol::Play::SpawnMob, this);
-        m_Dispatcher.RegisterHandler(Protocol::State::Play, Protocol::Play::EntityRelativeMove, this);
-        m_Dispatcher.RegisterHandler(Protocol::State::Play, Protocol::Play::EntityMetadata, this);
-        m_Dispatcher.RegisterHandler(Protocol::State::Play, Protocol::Play::SetExperience, this);
-        m_Dispatcher.RegisterHandler(Protocol::State::Play, Protocol::Play::EntityProperties, this);
-        m_Dispatcher.RegisterHandler(Protocol::State::Play, Protocol::Play::MapChunkBulk, this);
-        m_Dispatcher.RegisterHandler(Protocol::State::Play, Protocol::Play::SetSlot, this);
-        m_Dispatcher.RegisterHandler(Protocol::State::Play, Protocol::Play::WindowItems, this);
-        m_Dispatcher.RegisterHandler(Protocol::State::Play, Protocol::Play::Statistics, this);
-        m_Dispatcher.RegisterHandler(Protocol::State::Play, Protocol::Play::PlayerListItem, this);
-        m_Dispatcher.RegisterHandler(Protocol::State::Play, Protocol::Play::PlayerAbilities, this);
-        m_Dispatcher.RegisterHandler(Protocol::State::Play, Protocol::Play::PluginMessage, this);
-        m_Dispatcher.RegisterHandler(Protocol::State::Play, Protocol::Play::ServerDifficulty, this);
-        m_Dispatcher.RegisterHandler(Protocol::State::Play, Protocol::Play::WorldBorder, this);
+        dispatcher->RegisterHandler(Protocol::State::Play, Protocol::Play::KeepAlive, this);
+        dispatcher->RegisterHandler(Protocol::State::Play, Protocol::Play::JoinGame, this);
+        dispatcher->RegisterHandler(Protocol::State::Play, Protocol::Play::Chat, this);
+        dispatcher->RegisterHandler(Protocol::State::Play, Protocol::Play::SpawnPosition, this);
+        dispatcher->RegisterHandler(Protocol::State::Play, Protocol::Play::UpdateHealth, this);
+        dispatcher->RegisterHandler(Protocol::State::Play, Protocol::Play::PlayerPositionAndLook, this);
+        dispatcher->RegisterHandler(Protocol::State::Play, Protocol::Play::SpawnPlayer, this);
+        dispatcher->RegisterHandler(Protocol::State::Play, Protocol::Play::SpawnMob, this);
+        dispatcher->RegisterHandler(Protocol::State::Play, Protocol::Play::EntityRelativeMove, this);
+        dispatcher->RegisterHandler(Protocol::State::Play, Protocol::Play::EntityMetadata, this);
+        dispatcher->RegisterHandler(Protocol::State::Play, Protocol::Play::SetExperience, this);
+        dispatcher->RegisterHandler(Protocol::State::Play, Protocol::Play::EntityProperties, this);
+        dispatcher->RegisterHandler(Protocol::State::Play, Protocol::Play::MapChunkBulk, this);
+        dispatcher->RegisterHandler(Protocol::State::Play, Protocol::Play::SetSlot, this);
+        dispatcher->RegisterHandler(Protocol::State::Play, Protocol::Play::WindowItems, this);
+        dispatcher->RegisterHandler(Protocol::State::Play, Protocol::Play::Statistics, this);
+        dispatcher->RegisterHandler(Protocol::State::Play, Protocol::Play::PlayerListItem, this);
+        dispatcher->RegisterHandler(Protocol::State::Play, Protocol::Play::PlayerAbilities, this);
+        dispatcher->RegisterHandler(Protocol::State::Play, Protocol::Play::PluginMessage, this);
+        dispatcher->RegisterHandler(Protocol::State::Play, Protocol::Play::ServerDifficulty, this);
+        dispatcher->RegisterHandler(Protocol::State::Play, Protocol::Play::WorldBorder, this);
+    }
+
+    ~Connection() {
+        GetDispatcher()->UnregisterHandler(this);
     }
 
     void HandlePacket(Minecraft::Packets::Inbound::EntityPropertiesPacket* packet) {
@@ -477,7 +479,7 @@ public:
                 try {
                     packet = CreatePacket(toHandle);
                     if (packet) {
-                        m_Dispatcher.Dispatch(packet);
+                        this->GetDispatcher()->Dispatch(packet);
                         Minecraft::Packets::PacketFactory::FreePacket(packet);
                     } else {
                         break;
@@ -501,14 +503,30 @@ public:
 
         m_Socket->Send(m_Encrypter->Encrypt(buffer));
     }
+};
 
+class Client {
+private:
+    Minecraft::Packets::PacketDispatcher m_Dispatcher;
+    Connection m_Connection;
+
+public:
+    Client() 
+        : m_Dispatcher(),
+          m_Connection("192.168.2.3", 25565, &m_Dispatcher)
+    {
+
+    }
+
+    void Run() {
+        m_Connection.Run();
+    }
 };
 
 int main(void) {
-    Connection conn("192.168.2.3", 25565);
-    //Connection conn("play.mysticempire.net", 25565);
-    
-    conn.Run();
+    Client client;
+
+    client.Run();
 
     return 0;
 }

@@ -15,7 +15,8 @@ private:
     std::map<ChunkCoord, ChunkColumnPtr> m_Chunks;
 
 public:
-    World(Packets::PacketDispatcher& dispatcher);
+    World(Packets::PacketDispatcher* dispatcher);
+    ~World();
 
     void HandlePacket(Packets::Inbound::MapChunkBulkPacket* packet);
     void HandlePacket(Packets::Inbound::MultiBlockChangePacket* packet);

@@ -11,7 +11,7 @@ PacketDispatcher* PacketHandler::GetDispatcher() {
 }
 
 PacketHandler::~PacketHandler() {
-    GetDispatcher()->UnregisterHandler(this);
+    
 }
 
 } // ns packets
