@@ -34,7 +34,8 @@ BlockPtr Chunk::GetBlock(Vector3i chunkPosition) {
 ChunkColumn::ChunkColumn(ChunkColumnMetadata metadata)
     : m_Metadata(metadata)
 {
-
+    for (std::size_t i = 0; i < m_Chunks.size(); ++i)
+        m_Chunks[i] = nullptr;
 }
 
 BlockPtr ChunkColumn::GetBlock(Vector3i position) {
