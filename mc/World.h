@@ -18,6 +18,7 @@ public:
     World(Packets::PacketDispatcher* dispatcher);
     ~World();
 
+    void HandlePacket(Packets::Inbound::ChunkDataPacket* packet);
     void HandlePacket(Packets::Inbound::MapChunkBulkPacket* packet);
     void HandlePacket(Packets::Inbound::MultiBlockChangePacket* packet);
     void HandlePacket(Packets::Inbound::BlockChangePacket* packet);

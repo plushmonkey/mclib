@@ -64,7 +64,7 @@ Packet* PlayPacketFactory::CreatePacket(DataBuffer& data, std::size_t length) {
         packet = new Inbound::ChatPacket();
         break;
     case Protocol::Play::TimeUpdate:
-        //packet = new Inbound::TimeUpdatePacket();
+        packet = new Inbound::TimeUpdatePacket();
         break;
     case Protocol::Play::EntityEquipment:
         packet = new Inbound::EntityEquipmentPacket();
@@ -75,11 +75,17 @@ Packet* PlayPacketFactory::CreatePacket(DataBuffer& data, std::size_t length) {
     case Protocol::Play::UpdateHealth:
         packet = new Inbound::UpdateHealthPacket();
         break;
+    case Protocol::Play::Respawn:
+        packet = new Inbound::RespawnPacket();
+        break;
     case Protocol::Play::PlayerPositionAndLook:
         packet = new Inbound::PlayerPositionAndLookPacket();
         break;
     case Protocol::Play::HeldItemChange:
         packet = new Inbound::HeldItemChangePacket();
+        break;
+    case Protocol::Play::Animation:
+        packet = new Inbound::AnimationPacket();
         break;
     case Protocol::Play::SpawnPlayer:
         packet = new Inbound::SpawnPlayerPacket();
@@ -87,17 +93,32 @@ Packet* PlayPacketFactory::CreatePacket(DataBuffer& data, std::size_t length) {
     case Protocol::Play::SpawnMob:
         packet = new Inbound::SpawnMobPacket();
         break;
+    case Protocol::Play::EntityVelocity:
+        packet = new Inbound::EntityVelocityPacket();
+        break;
+    case Protocol::Play::DestroyEntities:
+        packet = new Inbound::DestroyEntitiesPacket();
+        break;
     case Protocol::Play::Entity:
         packet = new Inbound::EntityPacket();
         break;
     case Protocol::Play::EntityRelativeMove:
         packet = new Inbound::EntityRelativeMovePacket();
         break;
+    case Protocol::Play::EntityLook:
+        packet = new Inbound::EntityLookPacket();
+        break;
     case Protocol::Play::EntityLookAndRelativeMove:
         packet = new Inbound::EntityLookAndRelativeMovePacket();
         break;
+    case Protocol::Play::EntityTeleport:
+        packet = new Inbound::EntityTeleportPacket();
+        break;
     case Protocol::Play::EntityHeadLook:
         packet = new Inbound::EntityHeadLookPacket();
+        break;
+    case Protocol::Play::EntityStatus:
+        packet = new Inbound::EntityStatusPacket();
         break;
     case Protocol::Play::EntityMetadata:
         packet = new Inbound::EntityMetadataPacket();
@@ -108,6 +129,9 @@ Packet* PlayPacketFactory::CreatePacket(DataBuffer& data, std::size_t length) {
     case Protocol::Play::EntityProperties:
         packet = new Inbound::EntityPropertiesPacket();
         break;
+    case Protocol::Play::ChunkData:
+        packet = new Inbound::ChunkDataPacket();
+        break;
     case Protocol::Play::MultiBlockChange:
         packet = new Inbound::MultiBlockChangePacket();
         break;
@@ -116,6 +140,12 @@ Packet* PlayPacketFactory::CreatePacket(DataBuffer& data, std::size_t length) {
         break;
     case Protocol::Play::MapChunkBulk:
         packet = new Inbound::MapChunkBulkPacket();
+        break;
+    case Protocol::Play::Effect:
+        packet = new Inbound::EffectPacket();
+        break;
+    case Protocol::Play::SoundEffect:
+        packet = new Inbound::SoundEffectPacket();
         break;
     case Protocol::Play::ChangeGameState:
         packet = new Inbound::ChangeGameStatePacket();
@@ -141,8 +171,14 @@ Packet* PlayPacketFactory::CreatePacket(DataBuffer& data, std::size_t length) {
     case Protocol::Play::PluginMessage:
         packet = new Inbound::PluginMessagePacket();
         break;
+    case Protocol::Play::Disconnect:
+        packet = new Inbound::DisconnectPacket();
+        break;
     case Protocol::Play::ServerDifficulty:
         packet = new Inbound::ServerDifficultyPacket();
+        break;
+    case Protocol::Play::CombatEvent:
+        packet = new Inbound::CombatEventPacket();
         break;
     case Protocol::Play::WorldBorder:
         packet = new Inbound::WorldBorderPacket();

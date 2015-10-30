@@ -121,7 +121,7 @@ public:
 class JoinGamePacket : public InboundPacket { // 0x01
 private:
     s32 m_EntityId;
-    u8 m_GameMode;
+    u8 m_Gamemode;
     s8 m_Dimension;
     u8 m_Difficulty;
     u8 m_MaxPlayers;
@@ -134,7 +134,7 @@ public:
     void Dispatch(PacketHandler* handler);
 
     s32 GetEntityId() const { return m_EntityId; }
-    u8 GetGameMode() const { return m_GameMode; }
+    u8 GetGamemode() const { return m_Gamemode; }
     s8 GetDimension() const { return m_Dimension; }
     u8 GetDifficulty() const { return m_Difficulty; }
     u8 GetMaxPlayers() const { return m_MaxPlayers; }
@@ -157,6 +157,20 @@ public:
 
     ChatPosition GetChatPosition() const { return m_Position; }
     const Json::Value& GetChatData() const { return m_ChatData; }
+};
+
+class TimeUpdatePacket : public InboundPacket { // 0x03
+private:
+    s64 m_WorldAge;
+    s64 m_Time;
+
+public:
+    TimeUpdatePacket();
+    bool Deserialize(DataBuffer& data, std::size_t packetLength);
+    void Dispatch(PacketHandler* handler);
+
+    s64 GetWorldAge() const { return m_WorldAge; }
+    s64 GetTime() const { return m_Time; }
 };
 
 class EntityEquipmentPacket : public InboundPacket { // 0x04
@@ -206,6 +220,24 @@ public:
     float GetSaturation() const { return m_Saturation; }
 };
 
+class RespawnPacket : public InboundPacket { // 0x07
+private:
+    s32 m_Dimension;
+    u8 m_Difficulty;
+    u8 m_Gamemode;
+    std::wstring m_Level;
+
+public:
+    RespawnPacket();
+    bool Deserialize(DataBuffer& data, std::size_t packetLength);
+    void Dispatch(PacketHandler* handler);
+
+    s32 GetDimension() const { return m_Dimension; }
+    u8 GetDifficulty() const { return m_Difficulty; }
+    u8 GetGamemode() const { return m_Gamemode; }
+    const std::wstring& GetLevel() const { return m_Level; }
+};
+
 class PlayerPositionAndLookPacket : public InboundPacket { // 0x08
 private:
     double m_X, m_Y, m_Z;
@@ -236,6 +268,23 @@ public:
 
     // The new slot that the player selected (0-8)
     u8 GetSlot() const { return m_Slot; }
+};
+
+class AnimationPacket : public InboundPacket { // 0x0B
+public:
+    enum Animation { SwingArm, TakeDamage, LeaveBed, EatFood, CriticalEffect, MagicCriticalEffect };
+
+private:
+    EntityId m_EntityId;
+    Animation m_Animation;
+
+public:
+    AnimationPacket();
+    bool Deserialize(DataBuffer& data, std::size_t packetLength);
+    void Dispatch(PacketHandler* handler);
+
+    EntityId GetEntityId() const { return m_EntityId; }
+    Animation GetAnimation() const { return m_Animation; }
 };
 
 class SpawnPlayerPacket : public InboundPacket { // 0x0C
@@ -300,6 +349,35 @@ public:
     const EntityMetadata& GetMetadata() const { return m_Metadata; }
 };
 
+class EntityVelocityPacket : public InboundPacket { // 0x12
+private:
+    EntityId m_EntityId;
+    Vector3s m_Velocity;
+
+public:
+    EntityVelocityPacket();
+    bool Deserialize(DataBuffer& data, std::size_t packetLength);
+    void Dispatch(PacketHandler* handler);
+
+    EntityId GetEntityId() const { return m_EntityId; }
+
+    // Units of 1/8000 of a block per tick
+    Vector3s GetVelocity() const { return m_Velocity; }
+};
+
+
+class DestroyEntitiesPacket : public InboundPacket { // 0x13
+private:
+    std::vector<EntityId> m_EntityIds;
+
+public:
+    DestroyEntitiesPacket();
+    bool Deserialize(DataBuffer& data, std::size_t packetLength);
+    void Dispatch(PacketHandler* handler);
+
+    const std::vector<EntityId>& GetEntityIds() const { return m_EntityIds; }
+};
+
 class EntityPacket : public InboundPacket { // 0x14
 private:
     EntityId m_EntityId;
@@ -332,6 +410,24 @@ public:
     float IsOnGround() const { return m_OnGround; }
 };
 
+class EntityLookPacket : public InboundPacket { // 0x16
+private:
+    EntityId m_EntityId;
+    u8 m_Yaw;
+    u8 m_Pitch;
+    bool m_OnGround;
+
+public:
+    EntityLookPacket();
+    bool Deserialize(DataBuffer& data, std::size_t packetLength);
+    void Dispatch(PacketHandler* handler);
+
+    EntityId GetEntityId() const { return m_EntityId; }
+    u8 GetYaw() const { return m_Yaw; }
+    u8 GetPitch() const { return m_Pitch; }
+    float IsOnGround() const { return m_OnGround; }
+};
+
 class EntityLookAndRelativeMovePacket : public InboundPacket { // 0x17
 private:
     EntityId m_EntityId;
@@ -352,6 +448,26 @@ public:
     float IsOnGround() const { return m_OnGround; }
 };
 
+class EntityTeleportPacket : public InboundPacket { // 0x18
+private:
+    EntityId m_EntityId;
+    Vector3f m_Position;
+    u8 m_Yaw;
+    u8 m_Pitch;
+    bool m_OnGround;
+
+public:
+    EntityTeleportPacket();
+    bool Deserialize(DataBuffer& data, std::size_t packetLength);
+    void Dispatch(PacketHandler* handler);
+
+    EntityId GetEntityId() const { return m_EntityId; }
+    Vector3f GetPosition() const { return m_Position; }
+    u8 GetYaw() const { return m_Yaw; }
+    u8 GetPitch() const { return m_Pitch; }
+    float IsOnGround() const { return m_OnGround; }
+};
+
 class EntityHeadLookPacket : public InboundPacket { // 0x19
 private:
     EntityId m_EntityId;
@@ -364,6 +480,20 @@ public:
 
     EntityId GetEntityId() const { return m_EntityId; }
     u8 GetYaw() const { return m_Yaw; }
+};
+
+class EntityStatusPacket : public InboundPacket { // 0x1A
+private:
+    EntityId m_EntityId;
+    u8 m_Status;
+
+public:
+    EntityStatusPacket();
+    bool Deserialize(DataBuffer& data, std::size_t packetLength);
+    void Dispatch(PacketHandler* handler);
+
+    EntityId GetEntityId() const { return m_EntityId; }
+    u8 GetStatus() const { return m_Status; }
 };
 
 class EntityMetadataPacket : public InboundPacket { // 0x1C
@@ -422,6 +552,18 @@ public:
     const std::map<std::wstring, Property>& GetProperties() const { return m_Properties; }
 };
 
+class ChunkDataPacket : public InboundPacket { // 0x21
+private:
+    ChunkColumnPtr m_ChunkColumn;
+
+public:
+    ChunkDataPacket();
+    bool Deserialize(DataBuffer& data, std::size_t packetLength);
+    void Dispatch(PacketHandler* handler);
+
+    ChunkColumnPtr GetChunkColumn() const { return m_ChunkColumn; }
+};
+
 class MultiBlockChangePacket : public InboundPacket { // 0x22
 public:
     struct BlockChange {
@@ -470,13 +612,48 @@ private:
 
     std::map<std::pair<s32, s32>, ChunkColumnPtr> m_ChunkColumns;
 
-    // todo: parse chunk data
 public:
     MapChunkBulkPacket();
     bool Deserialize(DataBuffer& data, std::size_t packetLength);
     void Dispatch(PacketHandler* handler);
 
     const std::map<std::pair<s32, s32>, ChunkColumnPtr>& GetChunkColumns() const { return m_ChunkColumns; }
+};
+
+class EffectPacket : public InboundPacket { // 0x28
+private:
+    s32 m_EffectId;
+    Vector3i m_Position;
+    s32 m_Data;
+    bool m_DisableRelativeVolume;
+
+public:
+    EffectPacket();
+    bool Deserialize(DataBuffer& data, std::size_t packetLength);
+    void Dispatch(PacketHandler* handler);
+
+    s32 GetEffectId() const { return m_EffectId; }
+    Vector3i GetPosition() const { return m_Position; }
+    s32 GetData() const { return m_Data; }
+    bool GetDisableRelativeVolume() const { return m_DisableRelativeVolume; }
+};
+
+class SoundEffectPacket : public InboundPacket { // 0x29
+private:
+    std::wstring m_SoundName;
+    Vector3i m_Position;
+    float m_Volume;
+    u8 m_Pitch;
+
+public:
+    SoundEffectPacket();
+    bool Deserialize(DataBuffer& data, std::size_t packetLength);
+    void Dispatch(PacketHandler* handler);
+
+    const std::wstring& GetSoundName() const { return m_SoundName; }
+    Vector3i GetPosition() const { return m_Position; }
+    float GetVolume() const { return m_Volume; }
+    u8 GetPitch() const { return m_Pitch; }
 };
 
 class ChangeGameStatePacket : public InboundPacket { // 0x2B
@@ -639,6 +816,9 @@ public:
     std::string GetData() const { return m_Data; }
 };
 
+// Same as login disconnectpacket
+// class DisconnectPacket : public InboundPacket { // 0x40
+
 class ServerDifficultyPacket : public InboundPacket { // 0x41
 private:
     u8 m_Difficulty;
@@ -650,6 +830,30 @@ public:
 
     u8 GetDifficulty() const { return m_Difficulty; }
 };
+
+class CombatEventPacket : public InboundPacket { // 0x42
+public:
+    enum Event { EnterCombat, EndCombat, EntityDead };
+
+private:
+    Event m_Event;
+    s32 m_Duration; // EndCombat only
+    EntityId m_PlayerId; // EntityDead only
+    EntityId m_EntityId; // EndCombat and EntityDead only
+    std::wstring m_Message; // EntityDead only
+
+public:
+    CombatEventPacket();
+    bool Deserialize(DataBuffer& data, std::size_t packetLength);
+    void Dispatch(PacketHandler* handler);
+
+    Event GetEvent() const { return m_Event; }
+    s32 GetDuration() const { return m_Duration; }
+    EntityId GetPlayerId() const { return m_PlayerId; }
+    EntityId GetEntityId() const { return m_EntityId; }
+    const std::wstring& GetMessage() const { return m_Message; }
+};
+
 
 class WorldBorderPacket : public InboundPacket { // 0x44
 public:

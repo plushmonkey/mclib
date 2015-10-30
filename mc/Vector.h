@@ -58,6 +58,20 @@ public:
         return *this;
     }
 
+    inline Vector3& operator+=(const Vector3& v) {
+        x += v.x;
+        y += v.y;
+        z += v.z;
+        return *this;
+    }
+
+    inline Vector3& operator-=(const Vector3& v) {
+        x -= v.x;
+        y -= v.y;
+        z -= v.z;
+        return *this;
+    }
+
     inline Vector3& operator*=(VecType v) {
         x *= v;
         y *= v;
@@ -126,10 +140,9 @@ public:
     }
 
     inline Vector3& Cross(const Vector3& v2) {
-        *this = Vector3(y*v2.z - z*v2.y,
+        return Vector3(y*v2.z - z*v2.y,
                         z*v2.x - x*v2.z,
                         x*v2.y - y*v2.x);
-        return *this;
     }
 
     inline double Distance(const Vector3& other) {
@@ -147,6 +160,13 @@ inline Vector3<T> CrossProduct(const Vector3<T>& v1, const Vector3<T>& v2) {
     return Vector3<T>(v1.y*v2.z - v1.z*v2.y,
                    v1.z*v2.x - v1.x*v2.z,
                    v1.x*v2.y - v1.y*v2.x);
+}
+
+template <typename T>
+inline Vector3<T> Vector3Normalize(const Vector3<T>& v1) {
+    Vector3<T> copy = v1;
+    copy.Normalize();
+    return copy;
 }
 
 template <typename T>
@@ -168,5 +188,23 @@ typedef Vector3<int64_t> Vector3i;
 typedef Vector3<int16_t> Vector3s;
 typedef Vector3<float> Vector3f;
 typedef Vector3<double> Vector3d;
+
+inline Vector3d& operator+=(Vector3d& v1, const Vector3f& v2) {
+    v1.x += v2.x;
+    v1.y += v2.y;
+    v1.z += v2.z;
+    return v1;
+}
+
+inline Vector3d& operator-=(Vector3d& v1, const Vector3f& v2) {
+    v1.x -= v2.x;
+    v1.y -= v2.y;
+    v1.z -= v2.z;
+    return v1;
+}
+
+inline Vector3d ToVector3d(const Vector3f& v) {
+    return Vector3d(v.x, v.y, v.z);
+}
 
 #endif

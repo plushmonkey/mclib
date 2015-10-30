@@ -5,13 +5,28 @@ namespace Minecraft {
 World::World(Packets::PacketDispatcher* dispatcher) 
     : Packets::PacketHandler(dispatcher)
 {
-    dispatcher->RegisterHandler(Minecraft::Protocol::State::Play, 0x22, this);
-    dispatcher->RegisterHandler(Minecraft::Protocol::State::Play, 0x23, this);
-    dispatcher->RegisterHandler(Minecraft::Protocol::State::Play, 0x26, this);
+    dispatcher->RegisterHandler(Protocol::State::Play, Protocol::Play::MultiBlockChange, this);
+    dispatcher->RegisterHandler(Protocol::State::Play, Protocol::Play::BlockChange, this);
+    dispatcher->RegisterHandler(Protocol::State::Play, Protocol::Play::ChunkData, this);
+    dispatcher->RegisterHandler(Protocol::State::Play, Protocol::Play::MapChunkBulk, this);
 }
 
 World::~World() {
     GetDispatcher()->UnregisterHandler(this);
+}
+
+
+void World::HandlePacket(Packets::Inbound::ChunkDataPacket* packet) {
+    ChunkColumnPtr col = packet->GetChunkColumn();
+    const ChunkColumnMetadata& meta = col->GetMetadata();
+    ChunkCoord key(meta.x, meta.z);
+
+    // todo: probably need to handle non-continuous chunks
+
+    if (meta.continuous && meta.sectionmask == 0)
+        m_Chunks[key] = nullptr;
+    else
+        m_Chunks[key] = col;
 }
 
 void World::HandlePacket(Packets::Inbound::MapChunkBulkPacket* packet) {

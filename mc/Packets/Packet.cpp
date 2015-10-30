@@ -13,12 +13,7 @@ public:
     FixedPointNumber(T intRep) : m_IntRep(intRep) { }
     
     float GetFloat() const { 
-        float val = (m_IntRep / 32.0f);
-        if (m_IntRep < 0)
-            val -= ((m_IntRep & 31) / 31.0f);
-        else
-            val += ((m_IntRep & 31) / 31.0f);
-        return val;
+        return (float)(m_IntRep >> 5) + (m_IntRep & 31) / 32.0f;
     }
 
     friend Minecraft::DataBuffer& operator>>(Minecraft::DataBuffer& in, FixedPointNumber<s8>& fpn);
@@ -65,7 +60,7 @@ JoinGamePacket::JoinGamePacket() {
 
 bool JoinGamePacket::Deserialize(DataBuffer& data, std::size_t packetLength) {
     data >> m_EntityId;
-    data >> m_GameMode;
+    data >> m_Gamemode;
     data >> m_Dimension;
     data >> m_Difficulty;
     data >> m_MaxPlayers;
@@ -99,6 +94,20 @@ bool ChatPacket::Deserialize(DataBuffer& data, std::size_t packetLength) {
 }
 
 void ChatPacket::Dispatch(PacketHandler* handler) {
+    handler->HandlePacket(this);
+}
+
+TimeUpdatePacket::TimeUpdatePacket() {
+    m_Id = 0x03;
+}
+
+bool TimeUpdatePacket::Deserialize(DataBuffer& data, std::size_t packetLength) {
+    data >> m_WorldAge;
+    data >> m_Time;
+    return true;
+}
+
+void TimeUpdatePacket::Dispatch(PacketHandler* handler) {
     handler->HandlePacket(this);
 }
 
@@ -152,6 +161,27 @@ void UpdateHealthPacket::Dispatch(PacketHandler* handler) {
     handler->HandlePacket(this);
 }
 
+RespawnPacket::RespawnPacket() {
+    m_Id = 0x07;
+}
+
+bool RespawnPacket::Deserialize(DataBuffer& data, std::size_t packetLength) {
+    data >> m_Dimension;
+    data >> m_Difficulty;
+    data >> m_Gamemode;
+
+    MCString level;
+    data >> level;
+
+    m_Level = level.GetUTF16();
+
+    return true;
+}
+
+void RespawnPacket::Dispatch(PacketHandler* handler) {
+    handler->HandlePacket(this);
+}
+
 PlayerPositionAndLookPacket::PlayerPositionAndLookPacket() {
     m_Id = 0x08;
 }
@@ -180,6 +210,28 @@ void HeldItemChangePacket::Dispatch(PacketHandler* handler) {
     handler->HandlePacket(this);
 }
 
+AnimationPacket::AnimationPacket() {
+    m_Id = 0x0B;
+}
+
+bool AnimationPacket::Deserialize(DataBuffer& data, std::size_t packetLength) {
+    VarInt eid;
+
+    data >> eid;
+
+    m_EntityId = eid.GetInt();
+
+    u8 anim;
+    data >> anim;
+
+    m_Animation = (Animation)anim;
+    return true;
+}
+
+void AnimationPacket::Dispatch(PacketHandler* handler) {
+    handler->HandlePacket(this);
+}
+
 SpawnPlayerPacket::SpawnPlayerPacket() {
     m_Id = 0x0C;
 }
@@ -196,6 +248,7 @@ bool SpawnPlayerPacket::Deserialize(DataBuffer& data, std::size_t packetLength) 
     m_X = x.GetFloat();
     m_Y = y.GetFloat();
     m_Z = z.GetFloat();
+    m_EntityId = eid.GetInt();
 
     data >> m_Yaw;
     data >> m_Pitch;
@@ -241,6 +294,44 @@ void SpawnMobPacket::Dispatch(PacketHandler* handler) {
     handler->HandlePacket(this);
 }
 
+EntityVelocityPacket::EntityVelocityPacket() {
+    m_Id = 0x12;
+}
+bool EntityVelocityPacket::Deserialize(DataBuffer& data, std::size_t packetLength) {
+    VarInt eid;
+    data >> eid;
+    data >> m_Velocity.x;
+    data >> m_Velocity.y;
+    data >> m_Velocity.z;
+    m_EntityId = eid.GetInt();
+    return true;
+}
+
+void EntityVelocityPacket::Dispatch(PacketHandler* handler) {
+    handler->HandlePacket(this);
+}
+
+DestroyEntitiesPacket::DestroyEntitiesPacket() {
+    m_Id = 0x13;
+}
+bool DestroyEntitiesPacket::Deserialize(DataBuffer& data, std::size_t packetLength) {
+    VarInt count;
+
+    data >> count;
+
+    for (s32 i = 0; i < count.GetInt(); ++i) {
+        VarInt eid;
+
+        data >> eid;
+
+        m_EntityIds.push_back(eid.GetInt());
+    }
+    return true;
+}
+void DestroyEntitiesPacket::Dispatch(PacketHandler* handler) {
+    handler->HandlePacket(this);
+}
+
 EntityPacket::EntityPacket() {
     m_Id = 0x14;
 }
@@ -281,6 +372,26 @@ void EntityRelativeMovePacket::Dispatch(PacketHandler* handler) {
     handler->HandlePacket(this);
 }
 
+EntityLookPacket::EntityLookPacket() {
+    m_Id = 0x16;
+}
+
+bool EntityLookPacket::Deserialize(DataBuffer& data, std::size_t packetLength) {
+    VarInt eid;
+
+    data >> eid;
+
+    m_EntityId = eid.GetInt();
+
+    data >> m_Yaw >> m_Pitch;
+    data >> m_OnGround;
+    return true;
+}
+
+void EntityLookPacket::Dispatch(PacketHandler* handler) {
+    handler->HandlePacket(this);
+}
+
 EntityLookAndRelativeMovePacket::EntityLookAndRelativeMovePacket() {
     m_Id = 0x17;
 }
@@ -303,6 +414,34 @@ void EntityLookAndRelativeMovePacket::Dispatch(PacketHandler* handler) {
     handler->HandlePacket(this);
 }
 
+EntityTeleportPacket::EntityTeleportPacket() {
+    m_Id = 0x18;
+}
+
+bool EntityTeleportPacket::Deserialize(DataBuffer& data, std::size_t packetLength) {
+    VarInt eid;
+
+    data >> eid;
+
+    m_EntityId = eid.GetInt();
+
+    FixedPointNumber<s32> x, y, z;
+    data >> x >> y >> z;
+
+    m_Position.x = x.GetFloat();
+    m_Position.y = y.GetFloat();
+    m_Position.z = z.GetFloat();
+
+    data >> m_Yaw >> m_Pitch;
+    data >> m_OnGround;
+
+    return true;
+}
+
+void EntityTeleportPacket::Dispatch(PacketHandler* handler) {
+    handler->HandlePacket(this);
+}
+
 EntityHeadLookPacket::EntityHeadLookPacket() {
     m_Id = 0x19;
 }
@@ -316,6 +455,20 @@ bool EntityHeadLookPacket::Deserialize(DataBuffer& data, std::size_t packetLengt
 }
 
 void EntityHeadLookPacket::Dispatch(PacketHandler* handler) {
+    handler->HandlePacket(this);
+}
+
+EntityStatusPacket::EntityStatusPacket() {
+    m_Id = 0x1A;
+}
+
+bool EntityStatusPacket::Deserialize(DataBuffer& data, std::size_t packetLength) {
+    data >> m_EntityId; // Should this be VarInt?
+    data >> m_Status;
+    return true;
+}
+
+void EntityStatusPacket::Dispatch(PacketHandler* handler) {
     handler->HandlePacket(this);
 }
 
@@ -392,6 +545,32 @@ bool EntityPropertiesPacket::Deserialize(DataBuffer& data, std::size_t packetLen
 }
 
 void EntityPropertiesPacket::Dispatch(PacketHandler* handler) {
+    handler->HandlePacket(this);
+}
+
+ChunkDataPacket::ChunkDataPacket() {
+    m_Id = 0x21;
+}
+bool ChunkDataPacket::Deserialize(DataBuffer& data, std::size_t packetLength) {
+    ChunkColumnMetadata metadata;
+
+    data >> metadata.x;
+    data >> metadata.z;
+    data >> metadata.continuous;
+    data >> metadata.sectionmask;
+
+    VarInt size;
+
+    data >> size;
+
+    m_ChunkColumn = std::make_shared<ChunkColumn>(metadata);
+
+    data >> *m_ChunkColumn;
+
+    return true;
+}
+
+void ChunkDataPacket::Dispatch(PacketHandler* handler) {
     handler->HandlePacket(this);
 }
 
@@ -481,6 +660,56 @@ bool MapChunkBulkPacket::Deserialize(DataBuffer& data, std::size_t packetLength)
 }
 
 void MapChunkBulkPacket::Dispatch(PacketHandler* handler) {
+    handler->HandlePacket(this);
+}
+
+EffectPacket::EffectPacket() {
+    m_Id = 0x28;
+}
+
+bool EffectPacket::Deserialize(DataBuffer& data, std::size_t packetLength) {
+    data >> m_EffectId;
+    Position pos;
+    data >> pos;
+
+    m_Position.x = pos.GetX();
+    m_Position.y = pos.GetY();
+    m_Position.z = pos.GetZ();
+
+    data >> m_Data;
+    data >> m_DisableRelativeVolume;
+
+    return true;
+}
+
+void EffectPacket::Dispatch(PacketHandler* handler) {
+    handler->HandlePacket(this);
+}
+
+SoundEffectPacket::SoundEffectPacket() {
+    m_Id = 0x29;
+}
+
+bool SoundEffectPacket::Deserialize(DataBuffer& data, std::size_t packetLength) {
+    MCString name;
+
+    data >> name;
+
+    m_SoundName = name.GetUTF16();
+
+    data >> m_Position.x;
+    data >> m_Position.y;
+    data >> m_Position.z;
+
+    m_Position /= 8;
+
+    data >> m_Volume;
+    data >> m_Pitch;
+
+    return true;
+}
+
+void SoundEffectPacket::Dispatch(PacketHandler* handler) {
     handler->HandlePacket(this);
 }
 
@@ -751,6 +980,44 @@ bool ServerDifficultyPacket::Deserialize(DataBuffer& data, std::size_t packetLen
 }
 
 void ServerDifficultyPacket::Dispatch(PacketHandler* handler) {
+    handler->HandlePacket(this);
+}
+
+CombatEventPacket::CombatEventPacket() {
+    m_Id = 0x42;
+}
+
+bool CombatEventPacket::Deserialize(DataBuffer& data, std::size_t packetLength) {
+    VarInt event;
+
+    data >> event;
+
+    m_Event = (Event)event.GetInt();
+
+    if (m_Event == Event::EndCombat) {
+        VarInt duration;
+
+        data >> duration;
+
+        m_Duration = duration.GetInt();
+        data >> m_EntityId;
+    } else if (m_Event == Event::EntityDead) {
+        VarInt pid;
+        data >> pid;
+
+        m_PlayerId = pid.GetInt();
+        data >> m_EntityId;
+
+        MCString message;
+        data >> message;
+
+        m_Message = message.GetUTF16();
+    }
+
+    return true;
+}
+
+void CombatEventPacket::Dispatch(PacketHandler* handler) {
     handler->HandlePacket(this);
 }
 

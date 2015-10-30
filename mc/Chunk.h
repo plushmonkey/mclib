@@ -73,6 +73,7 @@ public:
      * Position is relative to this ChunkColumn position.
      */
     BlockPtr GetBlock(Vector3i position);
+    const ChunkColumnMetadata& GetMetadata() const { return m_Metadata; }
 
     friend DataBuffer& operator>>(DataBuffer& in, ChunkColumn& column);
 };

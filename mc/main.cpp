@@ -41,12 +41,13 @@ private:
     Minecraft::Yggdrasil m_Yggdrasil;
     std::string m_Server;
     u16 m_Port;
-    Vector3d m_Position;
-    float m_Yaw;
-    float m_Pitch;
     Minecraft::World m_World;
 
 public:
+    Vector3d m_Position;
+    float m_Yaw;
+    float m_Pitch;
+
     Connection(const std::string& server, u16 port, Minecraft::Packets::PacketDispatcher* dispatcher)
         : Minecraft::Packets::PacketHandler(dispatcher), 
           m_Server(server), 
@@ -83,6 +84,7 @@ public:
         dispatcher->RegisterHandler(Protocol::State::Play, Protocol::Play::PlayerListItem, this);
         dispatcher->RegisterHandler(Protocol::State::Play, Protocol::Play::PlayerAbilities, this);
         dispatcher->RegisterHandler(Protocol::State::Play, Protocol::Play::PluginMessage, this);
+        dispatcher->RegisterHandler(Protocol::State::Play, Protocol::Play::Disconnect, this);
         dispatcher->RegisterHandler(Protocol::State::Play, Protocol::Play::ServerDifficulty, this);
         dispatcher->RegisterHandler(Protocol::State::Play, Protocol::Play::WorldBorder, this);
     }
@@ -418,18 +420,36 @@ public:
         if (GetTime() - lastSend >= 50) {
             bool onGround = true;
 
-            Minecraft::BlockPtr above = m_World.GetBlock(m_Position);
+            const float CheckWidth = 0.4f;
 
-            if (above && above->GetType() != 0) {
-                m_Position.y++;
-            } else {
-                Minecraft::BlockPtr below = m_World.GetBlock(m_Position - Vector3d(0, 1.0, 0));
-                if (below) {
-                    if (below->GetType() == 0) {
-                        m_Position.y--;
-                        onGround = false;
-                    }
+            std::vector<Vector3d> belowchecks = {
+                Vector3d(m_Position.x + CheckWidth, m_Position.y - 1, m_Position.z),
+                Vector3d(m_Position.x - CheckWidth, m_Position.y - 1, m_Position.z),
+
+                Vector3d(m_Position.x, m_Position.y - 1, m_Position.z + CheckWidth),
+                Vector3d(m_Position.x, m_Position.y - 1, m_Position.z - CheckWidth),
+
+                Vector3d(m_Position.x + CheckWidth, m_Position.y - 1, m_Position.z + CheckWidth),
+                Vector3d(m_Position.x - CheckWidth, m_Position.y - 1, m_Position.z - CheckWidth),
+
+                Vector3d(m_Position.x + CheckWidth, m_Position.y - 1, m_Position.z - CheckWidth),
+                Vector3d(m_Position.x - CheckWidth, m_Position.y - 1, m_Position.z + CheckWidth),
+
+            };
+
+            bool fall = true;
+            for (u32 i = 0; i < belowchecks.size(); ++i) {
+                Minecraft::BlockPtr check = m_World.GetBlock(belowchecks[i]);
+
+                if (check && check->GetType() != 0) {
+                    fall = false;
+                    break;
                 }
+            }
+
+            if (fall) {
+                m_Position.y--;
+                onGround = false;
             }
 
             if (GetTime() - lastPosOutput >= 2000) {
@@ -486,7 +506,7 @@ public:
                         break;
                     }
                 } catch (const std::exception& e) {
-                    //std::cerr << e.what() << std::endl;
+                    std::cerr << e.what() << std::endl;
                     // Temporary until protocol is finished
                 }
             } while (!toHandle.IsFinished() && toHandle.GetSize() > 0);
@@ -507,15 +527,82 @@ public:
     }
 };
 
+class PlayerFollower : public Minecraft::Packets::PacketHandler {
+private:
+    Connection* m_Connection;
+    Minecraft::EntityId m_FollowingId;
+    Vector3d m_FollowingPos;
+
+public:
+    PlayerFollower(Minecraft::Packets::PacketDispatcher* dispatcher, Connection* connection)
+        : Minecraft::Packets::PacketHandler(dispatcher),
+          m_Connection(connection)
+    {
+        using namespace Minecraft;
+
+        dispatcher->RegisterHandler(Protocol::State::Play, Protocol::Play::SpawnPlayer, this);
+        dispatcher->RegisterHandler(Protocol::State::Play, Protocol::Play::EntityRelativeMove, this);
+        dispatcher->RegisterHandler(Protocol::State::Play, Protocol::Play::EntityLookAndRelativeMove, this);
+        dispatcher->RegisterHandler(Protocol::State::Play, Protocol::Play::EntityTeleport, this);
+    }
+
+    ~PlayerFollower() {
+        GetDispatcher()->UnregisterHandler(this);
+    }
+
+    void UpdateRotation() {
+        Vector3d toFollowing = m_FollowingPos - m_Connection->m_Position;
+
+        double dist = std::sqrt(toFollowing.x * toFollowing.x + toFollowing.z * toFollowing.z);
+        double pitch = -std::atan2(toFollowing.y, dist);
+        double yaw = -std::atan2(toFollowing.x, toFollowing.z);
+
+        m_Connection->m_Yaw = yaw * 180 / 3.14;
+        m_Connection->m_Pitch = pitch * 180 / 3.14;
+    }
+
+    void HandlePacket(Minecraft::Packets::Inbound::SpawnPlayerPacket* packet) {
+        m_FollowingId = packet->GetEntityId();
+        m_FollowingPos = Vector3d(packet->GetX(), packet->GetY(), packet->GetZ());
+
+        UpdateRotation();
+    }
+    void HandlePacket(Minecraft::Packets::Inbound::EntityRelativeMovePacket* packet) {
+        if (packet->GetEntityId() == m_FollowingId) {
+            Vector3d delta(packet->GetDeltaX(), packet->GetDeltaY(), packet->GetDeltaZ());
+            m_FollowingPos += delta;
+            UpdateRotation();
+        }
+    }
+
+    void HandlePacket(Minecraft::Packets::Inbound::EntityLookAndRelativeMovePacket* packet) {
+        if (packet->GetEntityId() == m_FollowingId) {
+            Vector3f delta = packet->GetDeltaPosition();
+            m_FollowingPos += delta;
+            UpdateRotation();
+        }
+    }
+
+    void HandlePacket(Minecraft::Packets::Inbound::EntityTeleportPacket* packet) {
+        if (packet->GetEntityId() == m_FollowingId) {
+            m_FollowingPos = ToVector3d(packet->GetPosition());
+            UpdateRotation();
+        }
+    }
+};
+
 class Client {
 private:
     Minecraft::Packets::PacketDispatcher m_Dispatcher;
     Connection m_Connection;
+    PlayerFollower m_Follower;
 
 public:
     Client() 
         : m_Dispatcher(),
-          m_Connection("192.168.2.3", 25565, &m_Dispatcher)
+          //m_Connection("play.mysticempire.net", 25565, &m_Dispatcher)
+          m_Connection("192.168.2.3", 25565, &m_Dispatcher),
+          m_Follower(&m_Dispatcher, &m_Connection)
     {
 
     }
