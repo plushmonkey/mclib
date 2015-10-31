@@ -65,11 +65,9 @@ DataBuffer CompressionZ::Compress(DataBuffer& buffer) {
 DataBuffer CompressionZ::Decompress(DataBuffer& buffer, std::size_t packetLength) {
     VarInt uncompressedLength;
 
-    std::size_t startRead = buffer.GetReadOffset();
-
     buffer >> uncompressedLength;
 
-    std::size_t compressedLength = packetLength - (buffer.GetReadOffset() - startRead);
+    std::size_t compressedLength = packetLength - uncompressedLength.GetSerializedLength();
 
     if (uncompressedLength.GetInt() == 0) {
         // Uncompressed

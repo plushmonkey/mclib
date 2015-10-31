@@ -23,6 +23,10 @@
 #include <regex>
 #include <chrono>
 
+#ifdef max
+#undef max
+#endif
+
 /** This is all junk code just to get things working */
 
 // TODO: Switch to using vectors in packets instead of individual variables
@@ -134,35 +138,6 @@ public:
         Json::StyledWriter writer;
         std::string out = writer.write(root);
         std::cout << out << std::endl;
-
-        return;
-        if (!root["text"].isString()) return;
-
-        std::string text = root["text"].asString();
-        if (!root["extra"].isNull()) {
-            for (Json::ValueConstIterator iter = root["extra"].begin(); iter != root["extra"].end(); ++iter) {
-                if (!(*iter).isString()) continue;
-
-                text += (*iter).asString();
-            }
-        }
-
-        std::regex regex(R"::(<(.*?)> (.+)$)::");
-
-        std::sregex_iterator iter(text.begin(), text.end(), regex);
-        std::sregex_iterator end;
-        if (iter != end) {
-            std::smatch match = *iter;
-
-            std::string sender = match[1];
-            std::string message = match[2];
-
-            if (sender.compare(PlayerName) == 0)
-                return;
-
-            Minecraft::Packets::Outbound::ChatPacket chatResponse(message);
-            Send(&chatResponse);
-        }
     }
 
     void HandlePacket(Minecraft::Packets::Inbound::EntityMetadataPacket* packet) {
@@ -275,7 +250,7 @@ public:
                 std::wcout << "Updating gamemode to " << actionData->gamemode << " for player " << actionData->uuid << std::endl;
             break;
             case PlayerListItemPacket::Action::UpdateLatency:
-                std::wcout << "Ping for " << actionData->uuid << " is " << actionData->ping << std::endl;
+           //     std::wcout << "Ping for " << actionData->uuid << " is " << actionData->ping << std::endl;
             break;
             case PlayerListItemPacket::Action::RemovePlayer:
                 std::cout << "Removing player " << actionData->uuid << std::endl;
@@ -448,14 +423,14 @@ public:
             }
 
             if (fall) {
-                m_Position.y--;
-                onGround = false;
+                //m_Position.y--;
+                //onGround = false;
             }
 
             if (GetTime() - lastPosOutput >= 2000) {
                 Minecraft::BlockPtr below = m_World.GetBlock(m_Position - Vector3d(0, 1.0, 0));
-                if (below)
-                    std::cout << "Standing on " << below->GetType() << std::endl;
+              //  if (below)
+                //    std::cout << "Standing on " << below->GetType() << std::endl;
 
                 lastPosOutput = GetTime();
             }
@@ -506,7 +481,7 @@ public:
                         break;
                     }
                 } catch (const std::exception& e) {
-                    std::cerr << e.what() << std::endl;
+                    //std::cerr << e.what() << std::endl;
                     // Temporary until protocol is finished
                 }
             } while (!toHandle.IsFinished() && toHandle.GetSize() > 0);
@@ -533,17 +508,28 @@ private:
     Minecraft::EntityId m_FollowingId;
     Vector3d m_FollowingPos;
 
+    struct PlayerData {
+        Minecraft::EntityId eid;
+        std::wstring name;
+        Vector3d position;
+    };
+
+    std::map<Minecraft::UUID, PlayerData> m_Players;
+
 public:
     PlayerFollower(Minecraft::Packets::PacketDispatcher* dispatcher, Connection* connection)
         : Minecraft::Packets::PacketHandler(dispatcher),
-          m_Connection(connection)
+          m_Connection(connection),
+          m_FollowingId(0xFFFFFFFF)
     {
         using namespace Minecraft;
 
+        dispatcher->RegisterHandler(Protocol::State::Play, Protocol::Play::PlayerListItem, this);
         dispatcher->RegisterHandler(Protocol::State::Play, Protocol::Play::SpawnPlayer, this);
         dispatcher->RegisterHandler(Protocol::State::Play, Protocol::Play::EntityRelativeMove, this);
         dispatcher->RegisterHandler(Protocol::State::Play, Protocol::Play::EntityLookAndRelativeMove, this);
         dispatcher->RegisterHandler(Protocol::State::Play, Protocol::Play::EntityTeleport, this);
+        dispatcher->RegisterHandler(Protocol::State::Play, Protocol::Play::DestroyEntities, this);
     }
 
     ~PlayerFollower() {
@@ -551,43 +537,126 @@ public:
     }
 
     void UpdateRotation() {
+        if (m_FollowingId == 0) return;
+
         Vector3d toFollowing = m_FollowingPos - m_Connection->m_Position;
 
         double dist = std::sqrt(toFollowing.x * toFollowing.x + toFollowing.z * toFollowing.z);
         double pitch = -std::atan2(toFollowing.y, dist);
         double yaw = -std::atan2(toFollowing.x, toFollowing.z);
 
-        m_Connection->m_Yaw = yaw * 180 / 3.14;
-        m_Connection->m_Pitch = pitch * 180 / 3.14;
+        m_Connection->m_Yaw = (float)(yaw * 180 / 3.14);
+        m_Connection->m_Pitch = (float)(pitch * 180 / 3.14);
+    }
+
+    void FindClosestPlayer() {
+        double closest = std::numeric_limits<double>::max();
+
+        for (auto& player : m_Players) {
+            if (player.second.eid == 0) continue;
+
+            double dist = player.second.position.Distance(m_Connection->m_Position);
+
+            if (dist < closest) {
+                closest = dist;
+                m_FollowingId = player.second.eid;
+                m_FollowingPos = player.second.position;
+            }
+        }
+    }
+
+    void HandlePacket(Minecraft::Packets::Inbound::PlayerListItemPacket* packet) {
+        using namespace Minecraft::Packets::Inbound;
+
+        auto action = packet->GetAction();
+        const auto& actionDataList = packet->GetActionData();
+
+        for (const auto& actionData : actionDataList) {
+            Minecraft::UUID uuid = actionData->uuid;
+
+            if (action == PlayerListItemPacket::Action::AddPlayer) {
+                PlayerData pd;
+
+                pd.eid = 0;
+                pd.name = actionData->name;
+
+                m_Players[uuid] = pd;
+            } else if (action == PlayerListItemPacket::Action::RemovePlayer) {
+                if (m_Players[uuid].eid == m_FollowingId)
+                    m_FollowingId = 0;
+
+                m_Players.erase(uuid);
+            }
+        }
+    }
+
+    void HandlePacket(Minecraft::Packets::Inbound::DestroyEntitiesPacket* packet) {
+        std::vector<Minecraft::EntityId> eids = packet->GetEntityIds();
+
+        for (Minecraft::EntityId eid : eids) {
+            for (auto& player : m_Players) {
+                if (player.second.eid == eid)
+                    player.second.eid = 0;
+            }
+        }
+
+        FindClosestPlayer();
+        UpdateRotation();
     }
 
     void HandlePacket(Minecraft::Packets::Inbound::SpawnPlayerPacket* packet) {
-        m_FollowingId = packet->GetEntityId();
-        m_FollowingPos = Vector3d(packet->GetX(), packet->GetY(), packet->GetZ());
+        Minecraft::UUID uuid = packet->GetUUID();
 
+        auto iter = m_Players.find(uuid);
+
+        if (iter == m_Players.end()) return;
+
+        std::wstring name = iter->second.name;
+
+        m_Players[uuid].eid = packet->GetEntityId();
+        m_Players[uuid].position = Vector3d(packet->GetX(), packet->GetY(), packet->GetZ());
+
+        FindClosestPlayer();
         UpdateRotation();
     }
+
     void HandlePacket(Minecraft::Packets::Inbound::EntityRelativeMovePacket* packet) {
-        if (packet->GetEntityId() == m_FollowingId) {
-            Vector3d delta(packet->GetDeltaX(), packet->GetDeltaY(), packet->GetDeltaZ());
-            m_FollowingPos += delta;
-            UpdateRotation();
+        Minecraft::EntityId eid = packet->GetEntityId();
+        
+        Vector3d delta(packet->GetDeltaX(), packet->GetDeltaY(), packet->GetDeltaZ());
+
+        for (auto& player : m_Players) {
+            if (player.second.eid == eid)
+                player.second.position += delta;
         }
+
+        FindClosestPlayer();
+        UpdateRotation();
     }
 
     void HandlePacket(Minecraft::Packets::Inbound::EntityLookAndRelativeMovePacket* packet) {
-        if (packet->GetEntityId() == m_FollowingId) {
-            Vector3f delta = packet->GetDeltaPosition();
-            m_FollowingPos += delta;
-            UpdateRotation();
+        Vector3f delta = packet->GetDeltaPosition();
+        Minecraft::EntityId eid = packet->GetEntityId();
+
+        for (auto& player : m_Players) {
+            if (player.second.eid == eid)
+                player.second.position += ToVector3d(delta);
         }
+
+        FindClosestPlayer();
+        UpdateRotation();
     }
 
     void HandlePacket(Minecraft::Packets::Inbound::EntityTeleportPacket* packet) {
-        if (packet->GetEntityId() == m_FollowingId) {
-            m_FollowingPos = ToVector3d(packet->GetPosition());
-            UpdateRotation();
+        Minecraft::EntityId eid = packet->GetEntityId();
+
+        for (auto& player : m_Players) {
+            if (player.second.eid == eid)
+                player.second.position = ToVector3d(packet->GetPosition());
         }
+
+        FindClosestPlayer();
+        UpdateRotation();
     }
 };
 
@@ -600,8 +669,8 @@ private:
 public:
     Client() 
         : m_Dispatcher(),
-          //m_Connection("play.mysticempire.net", 25565, &m_Dispatcher)
-          m_Connection("192.168.2.3", 25565, &m_Dispatcher),
+          m_Connection("play.mysticempire.net", 25565, &m_Dispatcher),
+          //m_Connection("192.168.2.3", 25565, &m_Dispatcher),
           m_Follower(&m_Dispatcher, &m_Connection)
     {
 

@@ -20,6 +20,19 @@ public:
     UUID(u64 most, u64 least) : m_MostSigBits(most), m_LeastSigBits(least) { }
 
     std::string ToString() const;
+
+    u64 GetUpperBits() const { return m_MostSigBits; }
+    u64 GetLowerBits() const { return m_LeastSigBits; }
+
+    bool operator<(const UUID& r) const {
+        const UUID& l = *this;
+        if (l.GetUpperBits() < r.GetUpperBits()) return true;
+        if (l.GetUpperBits() > r.GetUpperBits()) return false;
+        if (l.GetLowerBits() < r.GetLowerBits()) return true;
+        if (l.GetLowerBits() > r.GetLowerBits()) return false;
+        return false;
+    }
+
     friend DataBuffer& operator<<(DataBuffer& out, const UUID& uuid);
     friend DataBuffer& operator>>(DataBuffer& in, UUID& uuid);
 };
