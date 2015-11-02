@@ -6,11 +6,12 @@
 #include "../Slot.h"
 
 #include <string>
+#include <memory>
 
 namespace Minecraft {
 
 class Entity {
-private:
+protected:
     Vector3d m_Position;
 
     /**
@@ -23,6 +24,7 @@ private:
 
 public:
     Entity(EntityId id) : m_EntityId(id) { }
+    virtual ~Entity() { }
 
     EntityId GetEntityId() const { return m_EntityId; }
     const Vector3d& GetPosition() const { return m_Position; }
@@ -35,6 +37,8 @@ public:
 
     void SetPosition(const Vector3d& pos) { m_Position = pos; }
 };
+
+typedef std::shared_ptr<Entity> EntityPtr;
 
 } // ns Minecraft
 

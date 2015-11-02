@@ -118,8 +118,13 @@
     <ClInclude Include="DataBuffer.h" />
     <ClInclude Include="Compression.h" />
     <ClInclude Include="Encryption.h" />
+    <ClInclude Include="Entity\Creeper.h" />
     <ClInclude Include="Entity\Entity.h" />
+    <ClInclude Include="Entity\EntityFactory.h" />
     <ClInclude Include="Entity\EntityManager.h" />
+    <ClInclude Include="Entity\LivingEntity.h" />
+    <ClInclude Include="Entity\Monster.h" />
+    <ClInclude Include="Entity\Player.h" />
     <ClInclude Include="Hash.h" />
     <ClInclude Include="HTTPClient.h" />
     <ClInclude Include="MCString.h" />
