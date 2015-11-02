@@ -105,6 +105,7 @@
     <ClCompile Include="Packets\PacketDispatcher.cpp" />
     <ClCompile Include="Packets\PacketFactory.cpp" />
     <ClCompile Include="Packets\PacketHandler.cpp" />
+    <ClCompile Include="PlayerManager.cpp" />
     <ClCompile Include="Position.cpp" />
     <ClCompile Include="Slot.cpp" />
     <ClCompile Include="UUID.cpp" />
@@ -135,10 +136,12 @@
     <ClInclude Include="Network\Socket.h" />
     <ClInclude Include="Network\TCPSocket.h" />
     <ClInclude Include="Network\UDPSocket.h" />
+    <ClInclude Include="ObserverSubject.h" />
     <ClInclude Include="Packets\Packet.h" />
     <ClInclude Include="Packets\PacketDispatcher.h" />
     <ClInclude Include="Packets\PacketFactory.h" />
     <ClInclude Include="Packets\PacketHandler.h" />
+    <ClInclude Include="PlayerManager.h" />
     <ClInclude Include="Position.h" />
     <ClInclude Include="Protocol.h" />
     <ClInclude Include="Slot.h" />

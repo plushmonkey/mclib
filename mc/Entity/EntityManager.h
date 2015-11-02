@@ -5,7 +5,7 @@
 #include "Player.h"
 #include "../Packets/Packet.h"
 #include "../Packets/PacketHandler.h"
-
+#include "../ObserverSubject.h"
 #include <array>
 
 namespace Minecraft {
@@ -20,11 +20,10 @@ public:
     virtual void OnEntityMove(EntityPtr entity, Vector3d oldPos, Vector3d newPos) { }
 };
 
-class EntityManager : public Packets::PacketHandler {
+class EntityManager : public Packets::PacketHandler, public ObserverSubject<EntityListener> {
 private:
     std::map<EntityId, EntityPtr> m_Entities;
-    std::vector<EntityListener*> m_Listeners;
-    // Entity Id for the bot
+    // Entity Id for the client player
     EntityId m_EntityId;
 
 public:
@@ -33,8 +32,7 @@ public:
 
     EntityPtr GetPlayerEntity() const { return m_Entities.at(m_EntityId); }
 
-    void RegisterListener(EntityListener* listener);
-    void UnregisterListener(EntityListener* listener);
+    EntityPtr GetEntity(EntityId eid) { return m_Entities[eid]; }
 
     void HandlePacket(Packets::Inbound::JoinGamePacket* packet);
     void HandlePacket(Packets::Inbound::PlayerPositionAndLookPacket* packet);

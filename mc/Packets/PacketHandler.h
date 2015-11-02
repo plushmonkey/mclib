@@ -8,6 +8,13 @@ namespace Packets {
 
 class PacketDispatcher;
 
+/**
+ * Used to listen for specific incoming packets. 
+ * The order in which these packets are handled isn't set, so care must be taken when listening. 
+ * The internal systems might not be updated when the handler is called.
+ * This is mostly for internal classes, other classes should listen to the other systems instead, 
+ * like EntityManager/PlayerManager, to ensure that all the internal data is updated before being handled.
+ */
 class PacketHandler {
 private:
     PacketDispatcher* m_Dispatcher;

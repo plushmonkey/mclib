@@ -28,15 +28,6 @@ EntityManager::~EntityManager() {
     GetDispatcher()->UnregisterHandler(this);
 }
 
-void EntityManager::RegisterListener(EntityListener* listener) {
-    m_Listeners.push_back(listener);
-}
-
-void EntityManager::UnregisterListener(EntityListener* listener) {
-    auto iter = std::find(m_Listeners.begin(), m_Listeners.end(), listener);
-    m_Listeners.erase(iter);
-}
-
 void EntityManager::HandlePacket(Packets::Inbound::JoinGamePacket* packet) {
     EntityId id = packet->GetEntityId();
 
@@ -63,10 +54,10 @@ void EntityManager::HandlePacket(Packets::Inbound::SpawnPlayerPacket* packet) {
     entity->SetPosition(Vector3d(packet->GetX(), packet->GetY(), packet->GetZ()));
     // todo: other data
 
-    for (auto listener : m_Listeners) {
-        listener->OnPlayerSpawn(PlayerEntityPtr(entity), packet->GetUUID());
-        listener->OnEntitySpawn(entity);
-    }
+    UUID uuid = packet->GetUUID();
+
+    NotifyListeners(&EntityListener::OnPlayerSpawn, PlayerEntityPtr(entity), uuid);
+    NotifyListeners(&EntityListener::OnEntitySpawn, entity);
 }
 
 void EntityManager::HandlePacket(Packets::Inbound::SpawnMobPacket* packet) {
@@ -77,27 +68,23 @@ void EntityManager::HandlePacket(Packets::Inbound::SpawnMobPacket* packet) {
     m_Entities[id] = entity;
     entity->SetPosition(Vector3d(packet->GetX(), packet->GetY(), packet->GetZ()));
 
-    for (auto listener : m_Listeners)
-        listener->OnEntitySpawn(entity);
+    NotifyListeners(&EntityListener::OnEntitySpawn, entity);
 }
 
 void EntityManager::HandlePacket(Packets::Inbound::DestroyEntitiesPacket* packet) {
     std::vector<EntityId> eids = packet->GetEntityIds();
 
     for (EntityId eid : eids) {
-        EntityPtr entity = m_Entities[eid];
+        if (!m_Entities[eid]) continue;
 
-        if (!entity) continue;
-
-        for (auto listener : m_Listeners)
-            listener->OnEntityDestroy(entity);
+        NotifyListeners(&EntityListener::OnEntityDestroy, m_Entities[eid]);
 
         m_Entities.erase(eid);
     }
 }
 
 void EntityManager::HandlePacket(Packets::Inbound::EntityPacket* packet) {
-
+    
 }
 
 void EntityManager::HandlePacket(Packets::Inbound::EntityRelativeMovePacket* packet) {
@@ -113,8 +100,7 @@ void EntityManager::HandlePacket(Packets::Inbound::EntityRelativeMovePacket* pac
 
         m_Entities[id]->SetPosition(newPos);
 
-        for (auto listener : m_Listeners)
-            listener->OnEntityMove(m_Entities[id], oldPos, newPos);
+        NotifyListeners(&EntityListener::OnEntityMove, m_Entities[id], oldPos, newPos);
     }
 }
 
@@ -130,8 +116,7 @@ void EntityManager::HandlePacket(Packets::Inbound::EntityLookAndRelativeMovePack
 
         m_Entities[id]->SetPosition(newPos);
 
-        for (auto listener : m_Listeners)
-            listener->OnEntityMove(m_Entities[id], oldPos, newPos);
+        NotifyListeners(&EntityListener::OnEntityMove, m_Entities[id], oldPos, newPos);
     }
 }
 
@@ -145,8 +130,7 @@ void EntityManager::HandlePacket(Packets::Inbound::EntityTeleportPacket* packet)
 
         m_Entities[id]->SetPosition(newPos);
 
-        for (auto listener : m_Listeners)
-            listener->OnEntityMove(m_Entities[id], oldPos, newPos);
+        NotifyListeners(&EntityListener::OnEntityMove, m_Entities[id], oldPos, newPos);
     }
 }
 

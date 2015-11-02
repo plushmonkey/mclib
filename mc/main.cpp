@@ -19,6 +19,8 @@
 #include "Protocol.h"
 #include "Compression.h"
 #include "World.h"
+#include "PlayerManager.h"
+#include "Entity/EntityManager.h"
 #include <memory>
 #include <regex>
 #include <chrono>
@@ -30,8 +32,7 @@
 /** This is all junk code just to get things working */
 
 // TODO: Switch to using vectors in packets instead of individual variables
-// TODO: Create player manager
-// TODO: Create entity system and entity manager
+// TODO: Maybe redesign the way the protocol is setup to allow for different versions
 
 std::string PlayerName = "testplayer";
 std::string PlayerPassword = "";
@@ -445,6 +446,8 @@ public:
     }
 
     void Run() {
+        m_Socket->SetBlocking(false);
+
         if (!Connect()) {
             std::cerr << "Couldn't connect\n";
             return;
@@ -480,7 +483,7 @@ public:
                     } else {
                         break;
                     }
-                } catch (const std::exception& e) {
+                } catch (const std::exception&) {
                     //std::cerr << e.what() << std::endl;
                     // Temporary until protocol is finished
                 }
@@ -502,167 +505,25 @@ public:
     }
 };
 
-#include "Entity/EntityManager.h"
-#include "Entity/Player.h"
+#include <cassert>
 
-class Player {
-private:
-    Minecraft::UUID m_UUID;
-    std::wstring m_Name;
-    Minecraft::PlayerEntityPtr m_Entity;
-
-public:
-    Player(Minecraft::UUID uuid, std::wstring name)
-        : m_UUID(uuid),
-          m_Name(name)
-    {
-
-    }
-
-    std::shared_ptr<Minecraft::PlayerEntity> GetEntity() const { 
-        return m_Entity.lock();
-    }
-    void SetEntity(Minecraft::PlayerEntityPtr entity) { m_Entity = entity; }
-
-    const std::wstring& GetName() const { return m_Name; }
-    Minecraft::UUID GetUUID() const { return m_UUID; }
-};
-typedef std::shared_ptr<Player> PlayerPtr;
-
-class PlayerListener {
-public:
-    virtual ~PlayerListener() { }
-
-    virtual void OnPlayerJoin(PlayerPtr player) { };
-    virtual void OnPlayerLeave(PlayerPtr player) { };
-    virtual void OnPlayerSpawn(PlayerPtr player) { };
-};
-
-class PlayerManager : public Minecraft::Packets::PacketHandler, Minecraft::EntityListener {
-public:
-    typedef std::map<Minecraft::UUID, PlayerPtr>PlayerList;
-    typedef PlayerList::iterator iterator;
-
-private:
-    PlayerList m_Players;
-    Minecraft::EntityManager* m_EntityManager;
-    std::vector<PlayerListener*> m_Listeners;
-
-public:
-    PlayerManager(Minecraft::Packets::PacketDispatcher* dispatcher, Minecraft::EntityManager* entityManager)
-        : Minecraft::Packets::PacketHandler(dispatcher),
-          m_EntityManager(entityManager)
-    {
-        using namespace Minecraft;
-
-        dispatcher->RegisterHandler(Protocol::State::Play, Protocol::Play::PlayerListItem, this);
-
-        m_EntityManager->RegisterListener(this);
-    }
-
-    ~PlayerManager() {
-        m_EntityManager->UnregisterListener(this);
-    }
-
-    void RegisterListener(PlayerListener* listener) {
-        m_Listeners.push_back(listener);
-    }
-
-    void UnregisterListener(PlayerListener* listener) {
-        auto iter = std::find(m_Listeners.begin(), m_Listeners.end(), listener);
-
-        m_Listeners.erase(iter);
-    }
-
-    iterator begin() {
-        return m_Players.begin();
-    }
-
-    iterator end() {
-        return m_Players.end();
-    }
-
-    void OnPlayerSpawn(Minecraft::PlayerEntityPtr entity, Minecraft::UUID uuid) {
-        m_Players[uuid]->SetEntity(entity);
-
-        for (const auto& listener : m_Listeners)
-            listener->OnPlayerSpawn(m_Players[uuid]);
-    }
-
-    PlayerPtr GetPlayerByUUID(Minecraft::UUID uuid) const {
-        if (m_Players.find(uuid) != m_Players.end())
-            return m_Players.at(uuid);
-
-        return nullptr;
-    }
-
-    PlayerPtr GetPlayerByEntityId(Minecraft::EntityId eid) const {
-        auto iter = std::find_if(m_Players.begin(), m_Players.end(), [eid](std::pair<Minecraft::UUID, PlayerPtr> kv) {
-            PlayerPtr player = kv.second;
-            auto ptr = player->GetEntity();
-            if (!ptr) return false;
-            return ptr->GetEntityId() == eid;
-        });
-
-        if (iter != m_Players.end())
-            return iter->second;
-
-        return nullptr;
-    }
-
-    void HandlePacket(Minecraft::Packets::Inbound::PlayerListItemPacket* packet) {
-        using namespace Minecraft::Packets::Inbound;
-
-        auto action = packet->GetAction();
-        const auto& actionDataList = packet->GetActionData();
-
-        for (const auto& actionData : actionDataList) {
-            Minecraft::UUID uuid = actionData->uuid;
-
-            if (action == PlayerListItemPacket::Action::AddPlayer) {
-                PlayerPtr player;
-                
-                player = std::make_shared<Player>(uuid, actionData->name);
-
-                m_Players[uuid] = player;
-
-                for (const auto& listener : m_Listeners)
-                    listener->OnPlayerJoin(player);
-            } else if (action == PlayerListItemPacket::Action::RemovePlayer) {
-                for (const auto& listener : m_Listeners)
-                    listener->OnPlayerLeave(m_Players.at(uuid));
-
-                m_Players.erase(uuid);
-            }
-        }
-    }
-};
-
-class PlayerFollower : public Minecraft::Packets::PacketHandler, PlayerListener {
+class PlayerFollower : public Minecraft::PlayerListener {
 private:
     Connection* m_Connection;
-    PlayerManager& m_PlayerManager;
-    PlayerPtr m_Following;
+    Minecraft::PlayerManager& m_PlayerManager;
+    Minecraft::EntityManager& m_EntityManager;
+    Minecraft::PlayerPtr m_Following;
     
 public:
-    PlayerFollower(Minecraft::Packets::PacketDispatcher* dispatcher, Connection* connection, PlayerManager& playerManager)
-        : Minecraft::Packets::PacketHandler(dispatcher),
-          m_Connection(connection),
-          m_PlayerManager(playerManager)
+    PlayerFollower(Minecraft::Packets::PacketDispatcher* dispatcher, Connection* connection, Minecraft::PlayerManager& playerManager, Minecraft::EntityManager& emanager)
+        : m_Connection(connection),
+          m_PlayerManager(playerManager),
+          m_EntityManager(emanager)
     {
-        using namespace Minecraft;
-
-        dispatcher->RegisterHandler(Protocol::State::Play, Protocol::Play::PlayerListItem, this);
-        dispatcher->RegisterHandler(Protocol::State::Play, Protocol::Play::EntityRelativeMove, this);
-        dispatcher->RegisterHandler(Protocol::State::Play, Protocol::Play::EntityLookAndRelativeMove, this);
-        dispatcher->RegisterHandler(Protocol::State::Play, Protocol::Play::EntityTeleport, this);
-        dispatcher->RegisterHandler(Protocol::State::Play, Protocol::Play::DestroyEntities, this);
-
         m_PlayerManager.RegisterListener(this);
     }
 
     ~PlayerFollower() {
-        GetDispatcher()->UnregisterHandler(this);
         m_PlayerManager.UnregisterListener(this);
     }
 
@@ -687,7 +548,7 @@ public:
         m_Following = nullptr;
 
         for (auto& kv : m_PlayerManager) {
-            PlayerPtr player = kv.second;
+            Minecraft::PlayerPtr player = kv.second;
             auto entity = player->GetEntity();
 
             if (!entity) continue;
@@ -700,7 +561,6 @@ public:
             }
         }
 
-
         if (m_Following) {
             auto entity = m_Following->GetEntity();
             if (entity) {
@@ -712,35 +572,32 @@ public:
         }
     }
 
-    void OnPlayerJoin(PlayerPtr player) {
+    void OnPlayerJoin(Minecraft::PlayerPtr player) {
         UpdateRotation();
     }
 
-    void OnPlayerLeave(PlayerPtr player) {
+    void OnPlayerLeave(Minecraft::PlayerPtr player) {
         UpdateRotation();
     }
 
-    void OnPlayerSpawn(PlayerPtr player) {
+    void OnPlayerSpawn(Minecraft::PlayerPtr player) {
         UpdateRotation();
     }
 
-    void HandlePacket(Minecraft::Packets::Inbound::DestroyEntitiesPacket* packet) {
+    void OnPlayerDestroy(Minecraft::PlayerPtr player, Minecraft::EntityId eid) {
+        auto playerEntity = player->GetEntity();
+
+        assert(playerEntity == nullptr);
+
+        Minecraft::EntityPtr entity = m_EntityManager.GetEntity(eid);
+
+        assert(entity != nullptr);
+
         UpdateRotation();
     }
 
-    void HandlePacket(Minecraft::Packets::Inbound::EntityRelativeMovePacket* packet) {
-        if (m_PlayerManager.GetPlayerByEntityId(packet->GetEntityId()))
-            UpdateRotation();
-    }
-
-    void HandlePacket(Minecraft::Packets::Inbound::EntityLookAndRelativeMovePacket* packet) {
-        if (m_PlayerManager.GetPlayerByEntityId(packet->GetEntityId()))
-            UpdateRotation();
-    }
-
-    void HandlePacket(Minecraft::Packets::Inbound::EntityTeleportPacket* packet) {
-        if (m_PlayerManager.GetPlayerByEntityId(packet->GetEntityId()))
-            UpdateRotation();
+    void OnPlayerMove(Minecraft::PlayerPtr player, Vector3d oldPos, Vector3d newPos) {
+        UpdateRotation();
     }
 };
 
@@ -749,7 +606,7 @@ private:
     Minecraft::Packets::PacketDispatcher m_Dispatcher;
     Connection m_Connection;
     Minecraft::EntityManager m_EntityManager;
-    PlayerManager m_PlayerManager;
+    Minecraft::PlayerManager m_PlayerManager;
     PlayerFollower m_Follower;
 
 public:
@@ -759,7 +616,7 @@ public:
           m_Connection("192.168.2.3", 25565, &m_Dispatcher),
           m_EntityManager(&m_Dispatcher),
           m_PlayerManager(&m_Dispatcher, &m_EntityManager),
-          m_Follower(&m_Dispatcher, &m_Connection, m_PlayerManager)
+          m_Follower(&m_Dispatcher, &m_Connection, m_PlayerManager, m_EntityManager)
     {
 
     }

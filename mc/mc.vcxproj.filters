@@ -111,6 +111,9 @@
     <ClCompile Include="Entity\EntityManager.cpp">
       <Filter>Source Files\Entity</Filter>
     </ClCompile>
+    <ClCompile Include="PlayerManager.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="HTTPClient.h">
@@ -220,6 +223,12 @@
     </ClInclude>
     <ClInclude Include="Entity\Player.h">
       <Filter>Header Files\Entity</Filter>
+    </ClInclude>
+    <ClInclude Include="ObserverSubject.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="PlayerManager.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
