@@ -1134,7 +1134,7 @@ void EncryptionRequestPacket::Dispatch(PacketHandler* handler) {
 }
 
 LoginSuccessPacket::LoginSuccessPacket() {
-    m_Id = 0x01;
+    m_Id = 0x02;
     m_ProtocolState = Minecraft::Protocol::State::Login;
 }
 

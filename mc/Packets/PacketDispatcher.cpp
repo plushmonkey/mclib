@@ -29,8 +29,6 @@ void PacketDispatcher::UnregisterHandler(PacketHandler* handler) {
                 UnregisterHandler(pair.first.first, pair.first.second, handler);
         }
     }
-
-        //UnregisterHandler(pair.first.first, pair.first.second, handler);
 }
 
 void PacketDispatcher::Dispatch(Packet* packet) {

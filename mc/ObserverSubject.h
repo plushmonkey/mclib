@@ -2,6 +2,8 @@
 #define OBSERVER_SUBJECT_H_
 
 #include <functional>
+#include <vector>
+#include <algorithm>
 
 template <typename T>
 class ObserverSubject {

@@ -549,9 +549,13 @@ public:
 
         for (auto& kv : m_PlayerManager) {
             Minecraft::PlayerPtr player = kv.second;
+
             auto entity = player->GetEntity();
 
             if (!entity) continue;
+
+            Minecraft::EntityId peid = m_EntityManager.GetPlayerEntity().lock()->GetEntityId();
+            if (entity->GetEntityId() == peid) continue;
 
             double dist = entity->GetPosition().Distance(m_Connection->m_Position);
 

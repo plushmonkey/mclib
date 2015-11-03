@@ -28,9 +28,7 @@ public:
 
     }
 
-    std::shared_ptr<PlayerEntity> GetEntity() const {
-        return m_Entity.lock();
-    }
+    std::shared_ptr<PlayerEntity> GetEntity() const { return m_Entity.lock(); }
 
     void SetEntity(PlayerEntityPtr entity) { m_Entity = entity; }
 
@@ -43,6 +41,8 @@ class PlayerListener {
 public:
     virtual ~PlayerListener() { }
 
+    // Called when a PlayerPositionAndLook packet is received (when client spawns or is teleported by server). The player's position is already updated in the entity.
+    virtual void OnClientSpawn(PlayerPtr player) { }
     // Called when a player joins the server.
     virtual void OnPlayerJoin(PlayerPtr player) { }
     // Called when a player leaves the server
@@ -65,6 +65,7 @@ public:
 private:
     PlayerList m_Players;
     EntityManager* m_EntityManager;
+    UUID m_ClientUUID;
 
 public:
     PlayerManager(Packets::PacketDispatcher* dispatcher, EntityManager* entityManager);
@@ -82,6 +83,8 @@ public:
     void OnPlayerSpawn(PlayerEntityPtr entity, UUID uuid);
     void OnEntityDestroy(EntityPtr entity);
     void OnEntityMove(EntityPtr entity, Vector3d oldPos, Vector3d newPos);
+    void HandlePacket(Packets::Inbound::LoginSuccessPacket* packet);
+    void HandlePacket(Packets::Inbound::PlayerPositionAndLookPacket* packet);
     void HandlePacket(Packets::Inbound::PlayerListItemPacket* packet);
 };
 

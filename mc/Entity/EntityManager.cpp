@@ -36,12 +36,10 @@ void EntityManager::HandlePacket(Packets::Inbound::JoinGamePacket* packet) {
     std::shared_ptr<PlayerEntity> entity = std::make_shared<PlayerEntity>(id);
 
     m_Entities[id] = entity;
-
-    // Maybe do a listener call?
 }
 
 void EntityManager::HandlePacket(Packets::Inbound::PlayerPositionAndLookPacket* packet) {
-    GetPlayerEntity()->SetPosition(Vector3d(packet->GetX(), packet->GetY(), packet->GetZ()));
+    m_Entities.at(m_EntityId)->SetPosition(Vector3d(packet->GetX(), packet->GetY(), packet->GetZ()));
 }
 
 void EntityManager::HandlePacket(Packets::Inbound::SpawnPlayerPacket* packet) {

@@ -30,9 +30,9 @@ public:
     EntityManager(Packets::PacketDispatcher* dispatcher);
     ~EntityManager();
 
-    EntityPtr GetPlayerEntity() const { return m_Entities.at(m_EntityId); }
+    PlayerEntityPtr GetPlayerEntity() const { return std::dynamic_pointer_cast<PlayerEntity>(m_Entities.at(m_EntityId)); }
 
-    EntityPtr GetEntity(EntityId eid) { return m_Entities[eid]; }
+    EntityPtr GetEntity(EntityId eid) const { return m_Entities.at(eid); }
 
     void HandlePacket(Packets::Inbound::JoinGamePacket* packet);
     void HandlePacket(Packets::Inbound::PlayerPositionAndLookPacket* packet);

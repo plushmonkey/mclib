@@ -24,6 +24,8 @@ public:
     u64 GetUpperBits() const { return m_MostSigBits; }
     u64 GetLowerBits() const { return m_LeastSigBits; }
 
+    static UUID FromString(const std::wstring& str);
+
     bool operator<(const UUID& r) const {
         const UUID& l = *this;
         if (l.GetUpperBits() < r.GetUpperBits()) return true;

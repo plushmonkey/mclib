@@ -7,7 +7,9 @@ PlayerManager::PlayerManager(Packets::PacketDispatcher* dispatcher, EntityManage
     : Packets::PacketHandler(dispatcher),
       m_EntityManager(entityManager)
 {
+    dispatcher->RegisterHandler(Protocol::State::Login, Protocol::Login::LoginSuccess, this);
     dispatcher->RegisterHandler(Protocol::State::Play, Protocol::Play::PlayerListItem, this);
+    dispatcher->RegisterHandler(Protocol::State::Play, Protocol::Play::PlayerPositionAndLook, this);
 
     m_EntityManager->RegisterListener(this);
 }
@@ -71,6 +73,17 @@ PlayerPtr PlayerManager::GetPlayerByEntityId(EntityId eid) const {
     return nullptr;
 }
 
+void PlayerManager::HandlePacket(Packets::Inbound::LoginSuccessPacket* packet) {
+    m_ClientUUID = UUID::FromString(packet->GetUUID());
+}
+
+void PlayerManager::HandlePacket(Packets::Inbound::PlayerPositionAndLookPacket* packet) {
+    auto player = m_EntityManager->GetPlayerEntity();
+    m_Players[m_ClientUUID]->SetEntity(player);
+
+    NotifyListeners(&PlayerListener::OnClientSpawn, m_Players[m_ClientUUID]);
+}
+
 void PlayerManager::HandlePacket(Packets::Inbound::PlayerListItemPacket* packet) {
     using namespace Packets::Inbound;
 
@@ -81,6 +94,8 @@ void PlayerManager::HandlePacket(Packets::Inbound::PlayerListItemPacket* packet)
         UUID uuid = actionData->uuid;
 
         if (action == PlayerListItemPacket::Action::AddPlayer) {
+            if (m_Players.find(uuid) != m_Players.end()) continue;
+
             PlayerPtr player;
 
             player = std::make_shared<Player>(uuid, actionData->name);
@@ -89,6 +104,8 @@ void PlayerManager::HandlePacket(Packets::Inbound::PlayerListItemPacket* packet)
 
             NotifyListeners(&PlayerListener::OnPlayerJoin, m_Players[uuid]);
         } else if (action == PlayerListItemPacket::Action::RemovePlayer) {
+            if (m_Players.find(uuid) == m_Players.end()) continue;
+
             NotifyListeners(&PlayerListener::OnPlayerLeave, m_Players[uuid]);
 
             m_Players.erase(uuid);
