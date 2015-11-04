@@ -34,10 +34,14 @@
 // TODO: Switch to using vectors in packets instead of individual variables
 // TODO: Maybe redesign the way the protocol is setup to allow for different versions
 
-std::string PlayerName = "testplayer";
-std::string PlayerPassword = "";
+class ConnectionListener {
+public:
+    virtual ~ConnectionListener() { }
 
-class Connection : public Minecraft::Packets::PacketHandler {
+    virtual void OnSocketStateChange(Network::Socket::Status newStatus) { }
+};
+
+class Connection : public Minecraft::Packets::PacketHandler, public ObserverSubject<ConnectionListener> {
 private:
     Minecraft::EncryptionStrategy* m_Encrypter;
     Minecraft::CompressionStrategy* m_Compressor;
@@ -46,22 +50,16 @@ private:
     Minecraft::Yggdrasil m_Yggdrasil;
     std::string m_Server;
     u16 m_Port;
-    Minecraft::World m_World;
+    std::string m_Username;
+    std::string m_Password;
+    Minecraft::DataBuffer m_HandleBuffer;
 
 public:
-    Vector3d m_Position;
-    float m_Yaw;
-    float m_Pitch;
-
-    Connection(const std::string& server, u16 port, Minecraft::Packets::PacketDispatcher* dispatcher)
+    Connection(Minecraft::Packets::PacketDispatcher* dispatcher)
         : Minecraft::Packets::PacketHandler(dispatcher), 
-          m_Server(server), 
-          m_Port(port), 
           m_Encrypter(new Minecraft::EncryptionStrategyNone()), 
           m_Compressor(new Minecraft::CompressionNone()),
-          m_Socket(new Network::TCPSocket()), 
-          m_World(dispatcher),
-          m_Position(0, 0, 0)
+          m_Socket(new Network::TCPSocket())
     {
         using namespace Minecraft;
 
@@ -92,6 +90,8 @@ public:
         dispatcher->RegisterHandler(Protocol::State::Play, Protocol::Play::Disconnect, this);
         dispatcher->RegisterHandler(Protocol::State::Play, Protocol::Play::ServerDifficulty, this);
         dispatcher->RegisterHandler(Protocol::State::Play, Protocol::Play::WorldBorder, this);
+
+        m_Socket->SetBlocking(false);
     }
 
     ~Connection() {
@@ -201,7 +201,7 @@ public:
 
     void HandlePacket(Minecraft::Packets::Inbound::KeepAlivePacket* packet) {
         Minecraft::Packets::Outbound::KeepAlivePacket response(packet->GetAliveId());
-        Send(&response);
+        SendPacket(&response);
     }
 
     void HandlePacket(Minecraft::Packets::Inbound::PlayerPositionAndLookPacket* packet) {
@@ -221,14 +221,10 @@ public:
         Outbound::PlayerPositionAndLookPacket response(packet->GetX(), packet->GetY(), packet->GetZ(),
             packet->GetYaw(), packet->GetPitch(), onGround);
 
-        Send(&response);
+        SendPacket(&response);
 
         Outbound::ClientStatusPacket status(Outbound::ClientStatusPacket::Action::PerformRespawn);
-        Send(&status);
-
-        m_Position = Vector3d(packet->GetX(), packet->GetY(), packet->GetZ());
-        m_Yaw = packet->GetYaw();
-        m_Pitch = packet->GetPitch();
+        SendPacket(&status);
     }
 
 
@@ -285,7 +281,7 @@ public:
         std::cout << "Doing client auth\n";
         
         try {
-            if (!m_Yggdrasil.Authenticate(PlayerName, PlayerPassword)) {
+            if (!m_Yggdrasil.Authenticate(m_Username, m_Password)) {
                 std::cerr << "Failed to authenticate" << std::endl;
                 std::abort();
             }
@@ -316,7 +312,7 @@ public:
 
         AuthenticateClient(packet->GetServerId().GetUTF16(), aesEncrypter->GetSharedSecret(), pubkey);
 
-        Send(encResp);
+        SendPacket(encResp);
 
         delete m_Encrypter;
         m_Encrypter = aesEncrypter;
@@ -348,11 +344,16 @@ public:
         std::wcout << "New server difficulty: " << (int)packet->GetDifficulty() << std::endl;
     }
 
-    bool Connect() {
+    bool Connect(const std::string& server, u16 port) {
+        bool result = false;
+
+        m_Server = server;
+        m_Port = port;
+
         if (isdigit(m_Server.at(0))) {
             Network::IPAddress addr(m_Server);
 
-            return m_Socket->Connect(addr, m_Port);
+            result = m_Socket->Connect(addr, m_Port);
         } else {
             std::cout << "Resolving server dns\n";
             auto addrs = Network::Dns::Resolve(m_Server);
@@ -361,12 +362,17 @@ public:
 
             for (auto addr : addrs) {
                 std::cout << "Trying to connect to " << addr << std::endl;
-                if (m_Socket->Connect(addr, m_Port))
-                    return true;
+                if (m_Socket->Connect(addr, m_Port)) {
+                    result = true;
+                    break;
+                }
             }
         }
 
-        return false;
+        if (result)
+            NotifyListeners(&ConnectionListener::OnSocketStateChange, m_Socket->GetStatus());
+
+        return result;
     }
 
     Minecraft::Packets::Packet* CreatePacket(Minecraft::DataBuffer& buffer) {
@@ -384,15 +390,100 @@ public:
         return Minecraft::Packets::PacketFactory::CreatePacket(m_ProtocolState, decompressed, length.GetInt());
     }
 
-    s64 GetTime() const {
-        return std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
+    void CreatePacket() {
+        Minecraft::DataBuffer buffer = m_Socket->Receive(4096);
+
+        if (m_Socket->GetStatus() != Network::Socket::Connected) {
+            NotifyListeners(&ConnectionListener::OnSocketStateChange, m_Socket->GetStatus());
+            return;
+        }
+
+        m_HandleBuffer << m_Encrypter->Decrypt(buffer);
+
+        Minecraft::Packets::Packet* packet = nullptr;
+
+        do {
+            try {
+                packet = CreatePacket(m_HandleBuffer);
+                if (packet) {
+                    this->GetDispatcher()->Dispatch(packet);
+                    Minecraft::Packets::PacketFactory::FreePacket(packet);
+                } else {
+                    break;
+                }
+            } catch (const std::exception&) {
+                //std::cerr << e.what() << std::endl;
+                // Temporary until protocol is finished
+            }
+        } while (!m_HandleBuffer.IsFinished() && m_HandleBuffer.GetSize() > 0);
+
+        if (m_HandleBuffer.IsFinished())
+            m_HandleBuffer = Minecraft::DataBuffer();
+        else if (m_HandleBuffer.GetReadOffset() != 0)
+            m_HandleBuffer = Minecraft::DataBuffer(m_HandleBuffer, m_HandleBuffer.GetReadOffset());
     }
 
-    void UpdatePosition() {
+    void Login(const std::string& username, const std::string& password) {
+        Minecraft::Packets::Outbound::HandshakePacket handshake(47, m_Server, m_Port, Minecraft::Protocol::State::Login);
+        SendPacket(&handshake);
+
+        Minecraft::Packets::Outbound::LoginStartPacket loginStart(username);
+        SendPacket(&loginStart);
+
+        m_Username = username;
+        m_Password = password;
+
+        m_ProtocolState = Minecraft::Protocol::State::Login;
+    }
+
+    void SendPacket(Minecraft::Packets::Packet* packet) {
+        Minecraft::DataBuffer packetBuffer = packet->Serialize();
+        Minecraft::DataBuffer compressed = m_Compressor->Compress(packetBuffer);
+        Minecraft::DataBuffer encrypted = m_Encrypter->Encrypt(compressed);
+
+        m_Socket->Send(encrypted);
+    }
+};
+
+s64 GetTime() {
+    return std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
+}
+
+class PlayerController : public Minecraft::PlayerListener {
+private:
+    Minecraft::PlayerManager& m_PlayerManager;
+    Vector3d m_Position;
+    float m_Yaw;
+    float m_Pitch;
+    Connection* m_Connection;
+    Minecraft::World& m_World;
+
+public:
+    PlayerController(Connection* connection, Minecraft::World& world, Minecraft::PlayerManager& playerManager)
+        : m_PlayerManager(playerManager), 
+          m_Connection(connection),
+          m_World(world),
+          m_Position(0, 0, 0)
+    { 
+        m_PlayerManager.RegisterListener(this);
+    }
+
+    ~PlayerController() {
+        m_PlayerManager.UnregisterListener(this);
+    }
+
+
+    void OnClientSpawn(Minecraft::PlayerPtr player) {
+        m_Yaw = player->GetEntity()->GetYaw();
+        m_Pitch = player->GetEntity()->GetPitch();
+        m_Position = player->GetEntity()->GetPosition();
+    }
+
+    void Update() {
         if (m_Position == Vector3d(0, 0, 0)) return;
         static s64 lastSend = 0;
         static s64 lastPosOutput = 0;
-        
+
         if (GetTime() - lastSend >= 50) {
             bool onGround = true;
 
@@ -430,7 +521,7 @@ public:
 
             if (GetTime() - lastPosOutput >= 2000) {
                 Minecraft::BlockPtr below = m_World.GetBlock(m_Position - Vector3d(0, 1.0, 0));
-              //  if (below)
+                //  if (below)
                 //    std::cout << "Standing on " << below->GetType() << std::endl;
 
                 lastPosOutput = GetTime();
@@ -439,86 +530,33 @@ public:
             Minecraft::Packets::Outbound::PlayerPositionAndLookPacket response(m_Position.x, m_Position.y, m_Position.z,
                 m_Yaw, m_Pitch, onGround);
 
-            Send(&response);
+            m_Connection->SendPacket(&response);
 
             lastSend = GetTime();
         }
     }
 
-    void Run() {
-        m_Socket->SetBlocking(false);
+    Vector3d GetPosition() const { return m_Position; }
+    float GetYaw() const { return m_Yaw; }
+    float GetPitch() const { return m_Pitch; }
 
-        if (!Connect()) {
-            std::cerr << "Couldn't connect\n";
-            return;
-        }
-
-        Minecraft::Packets::Outbound::HandshakePacket handshake(47, m_Server, m_Port, Minecraft::Protocol::State::Login);
-        Send(&handshake);
-
-        Minecraft::Packets::Outbound::LoginStartPacket loginStart(PlayerName);
-        Send(&loginStart);
-
-        m_ProtocolState = Minecraft::Protocol::State::Login;
-
-        Minecraft::DataBuffer toHandle;
-
-        while (true) {
-            Minecraft::DataBuffer buffer = m_Socket->Receive(4096);
-
-            if (m_Socket->GetStatus() != Network::Socket::Connected) break;
-
-            UpdatePosition();
-
-            toHandle << m_Encrypter->Decrypt(buffer);
-
-            Minecraft::Packets::Packet* packet = nullptr;
-
-            do {
-                try {
-                    packet = CreatePacket(toHandle);
-                    if (packet) {
-                        this->GetDispatcher()->Dispatch(packet);
-                        Minecraft::Packets::PacketFactory::FreePacket(packet);
-                    } else {
-                        break;
-                    }
-                } catch (const std::exception&) {
-                    //std::cerr << e.what() << std::endl;
-                    // Temporary until protocol is finished
-                }
-            } while (!toHandle.IsFinished() && toHandle.GetSize() > 0);
-
-            if (toHandle.IsFinished())
-                toHandle = Minecraft::DataBuffer();
-            else if (toHandle.GetReadOffset() != 0)
-                toHandle = Minecraft::DataBuffer(toHandle, toHandle.GetReadOffset());
-        }
-    }
-
-    void Send(Minecraft::Packets::Packet* packet) {
-        Minecraft::DataBuffer packetBuffer = packet->Serialize();
-        Minecraft::DataBuffer compressed = m_Compressor->Compress(packetBuffer);
-        Minecraft::DataBuffer encrypted = m_Encrypter->Encrypt(compressed);
-
-        m_Socket->Send(encrypted);
-    }
+    void Move(Vector3d delta) { m_Position += delta; }
+    void SetYaw(float yaw) { m_Yaw = yaw; }
+    void SetPitch(float pitch) { m_Pitch = pitch; }
 };
-
-#include <cassert>
 
 class PlayerFollower : public Minecraft::PlayerListener {
 private:
-    Connection* m_Connection;
     Minecraft::PlayerManager& m_PlayerManager;
     Minecraft::EntityManager& m_EntityManager;
     Minecraft::PlayerPtr m_Following;
+    PlayerController& m_PlayerController;
     
 public:
-    PlayerFollower(Minecraft::Packets::PacketDispatcher* dispatcher, Connection* connection, Minecraft::PlayerManager& playerManager, Minecraft::EntityManager& emanager)
-        : m_Connection(connection),
-          m_PlayerManager(playerManager),
-          m_EntityManager(emanager)
+    PlayerFollower(Minecraft::Packets::PacketDispatcher* dispatcher, Minecraft::PlayerManager& playerManager, Minecraft::EntityManager& emanager, PlayerController& playerController)
+        : m_PlayerManager(playerManager),
+          m_EntityManager(emanager),
+          m_PlayerController(playerController)
     {
         m_PlayerManager.RegisterListener(this);
     }
@@ -532,14 +570,23 @@ public:
 
         if (!m_Following || !m_Following->GetEntity()) return;
 
-        Vector3d toFollowing = m_Following->GetEntity()->GetPosition() - m_Connection->m_Position;
+        Vector3d toFollowing = m_Following->GetEntity()->GetPosition() - m_PlayerController.GetPosition();
 
         double dist = std::sqrt(toFollowing.x * toFollowing.x + toFollowing.z * toFollowing.z);
         double pitch = -std::atan2(toFollowing.y, dist);
         double yaw = -std::atan2(toFollowing.x, toFollowing.z);
 
-        m_Connection->m_Yaw = (float)(yaw * 180 / 3.14);
-        m_Connection->m_Pitch = (float)(pitch * 180 / 3.14);
+        m_PlayerController.SetYaw((float)(yaw * 180 / 3.14));
+        m_PlayerController.SetPitch((float)(pitch * 180 / 3.14));
+
+        static const double WalkingSpeed = 4.3; // m/s
+        static const double TicksPerSecond = 20;
+
+        if (toFollowing.y == 0 && dist >= 0.5) {
+            Vector3d n = Vector3Normalize(toFollowing);
+            n *= WalkingSpeed / TicksPerSecond;
+            m_PlayerController.Move(n);
+        }
     }
 
     void FindClosestPlayer() {
@@ -557,7 +604,7 @@ public:
             Minecraft::EntityId peid = m_EntityManager.GetPlayerEntity().lock()->GetEntityId();
             if (entity->GetEntityId() == peid) continue;
 
-            double dist = entity->GetPosition().Distance(m_Connection->m_Position);
+            double dist = entity->GetPosition().Distance(m_PlayerController.GetPosition());
 
             if (dist < closest) {
                 closest = dist;
@@ -565,14 +612,19 @@ public:
             }
         }
 
-        if (m_Following) {
-            auto entity = m_Following->GetEntity();
-            if (entity) {
-                double dist = m_Connection->m_Position.Distance(entity->GetPosition());
-                std::wcout << L"Tracking " << m_Following->GetName() << " dist: " << dist << std::endl;
+        static u64 lastOutput = 0;
+
+        if (GetTime() - lastOutput >= 3000) {
+            lastOutput = GetTime();
+            if (m_Following) {
+                auto entity = m_Following->GetEntity();
+                if (entity) {
+                    double dist = m_PlayerController.GetPosition().Distance(entity->GetPosition());
+                    std::wcout << L"Tracking " << m_Following->GetName() << " dist: " << dist << std::endl;
+                }
+            } else {
+                std::wcout << L"Not tracking anyone" << std::endl;
             }
-        } else {
-            std::wcout << L"Not tracking anyone" << std::endl;
         }
     }
 
@@ -589,14 +641,6 @@ public:
     }
 
     void OnPlayerDestroy(Minecraft::PlayerPtr player, Minecraft::EntityId eid) {
-        auto playerEntity = player->GetEntity();
-
-        assert(playerEntity == nullptr);
-
-        Minecraft::EntityPtr entity = m_EntityManager.GetEntity(eid);
-
-        assert(entity != nullptr);
-
         UpdateRotation();
     }
 
@@ -605,35 +649,60 @@ public:
     }
 };
 
-class Client {
+class Client : public ConnectionListener {
 private:
     Minecraft::Packets::PacketDispatcher m_Dispatcher;
     Connection m_Connection;
     Minecraft::EntityManager m_EntityManager;
     Minecraft::PlayerManager m_PlayerManager;
+    Minecraft::World m_World;
     PlayerFollower m_Follower;
+    PlayerController m_PlayerController;
+    bool m_Connected;
 
 public:
     Client() 
         : m_Dispatcher(),
-          //m_Connection("play.mysticempire.net", 25565, &m_Dispatcher),
-          m_Connection("192.168.2.3", 25565, &m_Dispatcher),
+          m_Connection(&m_Dispatcher),
           m_EntityManager(&m_Dispatcher),
           m_PlayerManager(&m_Dispatcher, &m_EntityManager),
-          m_Follower(&m_Dispatcher, &m_Connection, m_PlayerManager, m_EntityManager)
+          m_World(&m_Dispatcher),
+          m_Follower(&m_Dispatcher, m_PlayerManager, m_EntityManager, m_PlayerController),
+          m_PlayerController(&m_Connection, m_World, m_PlayerManager),
+          m_Connected(false)
     {
-
+        m_Connection.RegisterListener(this);
     }
 
-    void Run() {
-        m_Connection.Run();
+    ~Client() {
+        m_Connection.UnregisterListener(this);
+    }
+
+    void OnSocketStateChange(Network::Socket::Status newState) {
+        m_Connected = (newState == Network::Socket::Status::Connected);
+    }
+
+    int Run() {
+        if (!m_Connection.Connect("192.168.2.88", 25565)) {
+            std::cerr << "Failed to connect to server" << std::endl;
+            return -1;
+        }
+
+        m_Connection.Login("testplayer", "");
+
+        while (m_Connected) {
+            m_Connection.CreatePacket();
+
+            m_Follower.UpdateRotation();
+            m_PlayerController.Update();
+        }
+
+        return 0;
     }
 };
 
 int main(void) {
     Client client;
 
-    client.Run();
-
-    return 0;
+    return client.Run();
 }
