@@ -60,14 +60,30 @@ typedef std::shared_ptr<Chunk> ChunkPtr;
  * A null chunk is fully air.
  */
 class ChunkColumn {
-private:
+public:
     enum { ChunksPerColumn = 16 };
 
+    typedef std::array<ChunkPtr, ChunksPerColumn>::iterator iterator;
+    typedef std::array<ChunkPtr, ChunksPerColumn>::reference reference;
+
+private:
     std::array<ChunkPtr, ChunksPerColumn> m_Chunks;
     ChunkColumnMetadata m_Metadata;
 
 public:
     ChunkColumn(ChunkColumnMetadata metadata);
+
+    iterator begin() {
+        return m_Chunks.begin();
+    }
+
+    iterator end() {
+        return m_Chunks.end();
+    }
+
+    reference operator[](std::size_t index) {
+        return m_Chunks[index];
+    }
 
     /**
      * Position is relative to this ChunkColumn position.

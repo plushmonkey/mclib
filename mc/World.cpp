@@ -21,12 +21,21 @@ void World::HandlePacket(Packets::Inbound::ChunkDataPacket* packet) {
     const ChunkColumnMetadata& meta = col->GetMetadata();
     ChunkCoord key(meta.x, meta.z);
 
-    // todo: probably need to handle non-continuous chunks
-
-    if (meta.continuous && meta.sectionmask == 0)
+    if (meta.continuous && meta.sectionmask == 0) {
         m_Chunks[key] = nullptr;
-    else
-        m_Chunks[key] = col;
+        return;
+    }
+
+    if (!m_Chunks[key])
+        m_Chunks[key] = std::make_shared<ChunkColumn>(meta);
+
+    for (s32 i = 0; i < ChunkColumn::ChunksPerColumn; ++i) {
+        if (meta.sectionmask & (1 << i)) {
+            ChunkPtr chunk = (*col)[i];        
+
+            (*m_Chunks[key])[i] = chunk;
+        }
+    }   
 }
 
 void World::HandlePacket(Packets::Inbound::MapChunkBulkPacket* packet) {
@@ -44,15 +53,21 @@ void World::HandlePacket(Packets::Inbound::MultiBlockChangePacket* packet) {
     Vector3i chunkStart(packet->GetChunkX() * 16, 0, packet->GetChunkZ() * 16);
 
     ChunkColumnPtr chunk = GetChunk(chunkStart);
-    if (!chunk) return;
-
+    if (!chunk)
+        return;
 
     const auto& changes = packet->GetBlockChanges();
     for (const auto& change : changes) {
         Vector3i relative(change.x, change.y, change.z);
         BlockPtr block = chunk->GetBlock(relative);
 
-        if (!block) continue;
+        if (!block) {
+            std::size_t index = change.y / 16;
+            ChunkPtr section = std::make_shared<Chunk>();
+
+            (*chunk)[index] = section;
+            block = chunk->GetBlock(relative);
+        }
         block->data = change.blockData;
     }
 }
@@ -61,10 +76,23 @@ void World::HandlePacket(Packets::Inbound::BlockChangePacket* packet) {
     Vector3i pos = packet->GetPosition();
 
     ChunkColumnPtr chunk = GetChunk(pos);
-    if (!chunk) return;
+    if (!chunk) 
+        return;
 
-    BlockPtr block = chunk->GetBlock(pos);
-    if (!block) return;
+    Vector3i relative(pos);
+
+    relative.x %= 16;
+    relative.z %= 16;
+
+    BlockPtr block = chunk->GetBlock(relative);
+
+    if (!block) {
+        std::size_t index = pos.y / 16;
+        ChunkPtr section = std::make_shared<Chunk>();
+        
+        (*chunk)[index] = section;
+        block = chunk->GetBlock(relative);
+    }
 
     s16 blockData = packet->GetBlockData();
     block->data = blockData;

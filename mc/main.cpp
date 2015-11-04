@@ -588,6 +588,7 @@ public:
             }
 
             if (fall) {
+                std::cout << "Falling\n";
                 m_Position.y--;
                 onGround = false;
             }

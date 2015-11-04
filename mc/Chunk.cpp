@@ -6,7 +6,14 @@ namespace Minecraft {
 
 Chunk::Chunk()
 {
-
+    for (s32 y = 0; y < 16; ++y) {
+        for (s32 z = 0; z < 16; ++z) {
+            for (s32 x = 0; x < 16; ++x) {
+                std::size_t index = y * 16 * 16 + z * 16 + x;
+                m_Blocks[index].data = 0;
+            }
+        }
+    }
 }
 
 void Chunk::Load(DataBuffer& in, ChunkColumnMetadata* meta, s32 chunkIndex) {

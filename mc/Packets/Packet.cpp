@@ -920,8 +920,6 @@ bool PlayerListItemPacket::Deserialize(DataBuffer& data, std::size_t packetLengt
 
                 std::shared_ptr<ActionData> actionData = std::make_shared<ActionData>();
                 actionData->uuid = uuid;
-
-                m_Data.push_back(actionData);
             }
             break;
         }
