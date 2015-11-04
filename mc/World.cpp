@@ -1,5 +1,5 @@
 #include "World.h"
-
+#include <iostream>
 namespace Minecraft {
 
 World::World(Packets::PacketDispatcher* dispatcher) 
@@ -35,7 +35,7 @@ void World::HandlePacket(Packets::Inbound::ChunkDataPacket* packet) {
 
             (*m_Chunks[key])[i] = chunk;
         }
-    }   
+    }
 }
 
 void World::HandlePacket(Packets::Inbound::MapChunkBulkPacket* packet) {
@@ -45,7 +45,10 @@ void World::HandlePacket(Packets::Inbound::MapChunkBulkPacket* packet) {
         ChunkCoord key = kv.first;
         ChunkColumnPtr col = kv.second;
 
-        m_Chunks[key] = col;
+        if (col->GetMetadata().continuous && col->GetMetadata().sectionmask == 0)
+            m_Chunks[key] = nullptr;
+        else
+            m_Chunks[key] = col;
     }
 }
 
@@ -61,14 +64,15 @@ void World::HandlePacket(Packets::Inbound::MultiBlockChangePacket* packet) {
         Vector3i relative(change.x, change.y, change.z);
         BlockPtr block = chunk->GetBlock(relative);
 
+        std::size_t index = change.y / 16;
         if (!block) {
-            std::size_t index = change.y / 16;
             ChunkPtr section = std::make_shared<Chunk>();
 
             (*chunk)[index] = section;
             block = chunk->GetBlock(relative);
         }
-        block->data = change.blockData;
+        relative.y %= 16;
+        (*chunk)[index]->SetBlock(relative, BlockRegistry::GetInstance().GetBlock(change.blockData));
     }
 }
 
@@ -84,10 +88,15 @@ void World::HandlePacket(Packets::Inbound::BlockChangePacket* packet) {
     relative.x %= 16;
     relative.z %= 16;
 
+    if (relative.x < 0)
+        relative.x += 16;
+    if (relative.z < 0)
+        relative.z += 16;
+
     BlockPtr block = chunk->GetBlock(relative);
 
+    std::size_t index = (std::size_t)pos.y / 16;
     if (!block) {
-        std::size_t index = pos.y / 16;
         ChunkPtr section = std::make_shared<Chunk>();
         
         (*chunk)[index] = section;
@@ -95,12 +104,13 @@ void World::HandlePacket(Packets::Inbound::BlockChangePacket* packet) {
     }
 
     s16 blockData = packet->GetBlockData();
-    block->data = blockData;
+    relative.y %= 16;
+    (*chunk)[index]->SetBlock(relative, BlockRegistry::GetInstance().GetBlock(blockData));
 }
 
 ChunkColumnPtr World::GetChunk(Vector3i pos) const {
-    s32 x = (s32)pos.x / 16;
-    s32 z = (s32)pos.z / 16;
+    s32 x = (s32)std::floor(pos.x / 16.0);
+    s32 z = (s32)std::floor(pos.z / 16.0);
 
     ChunkCoord key(x, z);
     if (m_Chunks.find(key) == m_Chunks.end()) return nullptr;
@@ -109,11 +119,11 @@ ChunkColumnPtr World::GetChunk(Vector3i pos) const {
 }
 
 BlockPtr World::GetBlock(Vector3f pos) const {
-    return GetBlock(Vector3i((s64)pos.x, (s64)pos.y, (s64)pos.z));
+    return GetBlock(Vector3i((s64)std::floor(pos.x), (s64)std::floor(pos.y), (s64)std::floor(pos.z)));
 }
 
 BlockPtr World::GetBlock(Vector3d pos) const {
-    return GetBlock(Vector3i((s64)pos.x, (s64)pos.y, (s64)pos.z));
+    return GetBlock(Vector3i((s64)std::floor(pos.x), (s64)std::floor(pos.y), (s64)std::floor(pos.z)));
 }
 
 BlockPtr World::GetBlock(Vector3i pos) const {
@@ -121,7 +131,15 @@ BlockPtr World::GetBlock(Vector3i pos) const {
 
     if (!col) return nullptr;
 
-    return col->GetBlock(Vector3i(pos.x % 16, pos.y, pos.z % 16));
+    s64 x = pos.x % 16;
+    s64 z = pos.z % 16;
+
+    if (x < 0)
+        x += 16;
+    if (z < 0)
+        z += 16;
+
+    return col->GetBlock(Vector3i(x, pos.y, z));
 }
 
 }

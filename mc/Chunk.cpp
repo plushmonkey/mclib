@@ -10,7 +10,8 @@ Chunk::Chunk()
         for (s32 z = 0; z < 16; ++z) {
             for (s32 x = 0; x < 16; ++x) {
                 std::size_t index = y * 16 * 16 + z * 16 + x;
-                m_Blocks[index].data = 0;
+
+                m_Blocks[index] = BlockRegistry::GetInstance().GetBlock(0, 0);
             }
         }
     }
@@ -27,7 +28,12 @@ void Chunk::Load(DataBuffer& in, ChunkColumnMetadata* meta, s32 chunkIndex) {
 
                 std::size_t index = y * 16 * 16 + z * 16 + x;
 
-                m_Blocks[index].data = data;
+                m_Blocks[index] = BlockRegistry::GetInstance().GetBlock(data);
+                if (m_Blocks[index] == nullptr) {
+                    u16 type = data >> 4;
+                    u16 meta = data & 15;
+                    m_Blocks[index] = BlockRegistry::GetInstance().GetBlock(type, meta);
+                }
             }
         }
     }
@@ -35,7 +41,12 @@ void Chunk::Load(DataBuffer& in, ChunkColumnMetadata* meta, s32 chunkIndex) {
 
 BlockPtr Chunk::GetBlock(Vector3i chunkPosition) {
     std::size_t index = (std::size_t)(chunkPosition.y * 16 * 16 + chunkPosition.z * 16 + chunkPosition.x);
-    return &m_Blocks[index];
+    return m_Blocks[index];
+}
+
+void Chunk::SetBlock(Vector3i chunkPosition, BlockPtr block) {
+    std::size_t index = (std::size_t)(chunkPosition.y * 16 * 16 + chunkPosition.z * 16 + chunkPosition.x);
+    m_Blocks[index] = block;
 }
 
 ChunkColumn::ChunkColumn(ChunkColumnMetadata metadata)

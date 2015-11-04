@@ -2,6 +2,8 @@
 #define CHUNK_H_
 
 #include "Types.h"
+#include "Block.h"
+
 #include <array>
 #include <memory>
 
@@ -17,27 +19,13 @@ struct ChunkColumnMetadata {
     bool skylight;
 };
 
-// todo:
-class Block {
-public:
-   // Vector3i position;
-    u16 data;
-
-    u16 GetType() const {
-        return data >> 4;
-    }
-    u16 GetMeta() const {
-        return data & 15;
-    }
-};
-typedef Block* BlockPtr;
 
 /**
  * A 16x16x16 area. A ChunkColumn is made up of 16 of these
  */
 class Chunk {
 private:
-    std::array<Block, 16*16*16> m_Blocks;
+    std::array<BlockPtr, 16*16*16> m_Blocks;
 
 public:
     Chunk();
@@ -46,6 +34,11 @@ public:
      * Position is relative to this chunk position
      */
     BlockPtr GetBlock(Vector3i chunkPosition);
+
+    /**
+    * Position is relative to this chunk position
+    */
+    void SetBlock(Vector3i chunkPosition, BlockPtr block);
 
     /**
      * chunkIndex is the index (0-16) of this chunk in the ChunkColumn

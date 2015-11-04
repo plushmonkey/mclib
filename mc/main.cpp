@@ -104,7 +104,7 @@ public:
         auto x = column->GetMetadata().x;
         auto z = column->GetMetadata().z;
 
-        std::cout << "Received chunk data for chunk " << x << ", " << z << std::endl;
+        //std::cout << "Received chunk data for chunk " << x << ", " << z << std::endl;
     }
 
     void HandlePacket(Minecraft::Packets::Inbound::EntityPropertiesPacket* packet) {
@@ -423,8 +423,8 @@ public:
                 } else {
                     break;
                 }
-            } catch (const std::exception&) {
-                //std::cerr << e.what() << std::endl;
+            } catch (const std::exception& e) {
+                std::cerr << e.what() << std::endl;
                 // Temporary until protocol is finished
             }
         } while (!m_HandleBuffer.IsFinished() && m_HandleBuffer.GetSize() > 0);
@@ -484,10 +484,6 @@ public:
         m_PlayerManager.UnregisterListener(this);
     }
 
-    bool IsSolidBlock(u16 type) const {
-        return type != 0 && type != 78;
-    }
-
     bool ClearPath(Vector3d target) {
         double dist = target.Distance(m_Position);
 
@@ -509,17 +505,13 @@ public:
                 Vector3d delta(i * n.x, 0, i * n.z);
                 Vector3d checkAbove = start + delta + Vector3d(0, 1, 0);
                 Vector3d checkBelow = start + delta + Vector3d(0, 0, 0);
-                Vector3d checkFloor = start + delta + Vector3d(0, -1, 0);
 
                 Minecraft::BlockPtr aboveBlock = m_World.GetBlock(checkAbove);
                 Minecraft::BlockPtr belowBlock = m_World.GetBlock(checkBelow);
-                Minecraft::BlockPtr floorBlock = m_World.GetBlock(checkFloor);
 
-                if (!aboveBlock || IsSolidBlock(aboveBlock->GetType()))
+                if (!aboveBlock || aboveBlock->IsSolid())
                     return false;
-                if (!belowBlock || IsSolidBlock(belowBlock->GetType()))
-                    return false;
-                if (!floorBlock || !IsSolidBlock(floorBlock->GetType()))
+                if (!belowBlock || belowBlock->IsSolid())
                     return false;
             }
             return true;
@@ -527,6 +519,14 @@ public:
 
         if (!check(right, target + side * CheckWidth)) return false;
         if (!check(left, target - side * CheckWidth)) return false;
+
+        for (s32 i = 0; i < (int)std::ceil(dist); ++i) {
+            Vector3d delta(i * n.x, 0, i * n.z);
+            Vector3d checkFloor = m_Position + delta + Vector3d(0, -1, 0);
+            Minecraft::BlockPtr floorBlock = m_World.GetBlock(checkFloor);
+            if (!floorBlock || !floorBlock->IsSolid())
+                return false;
+        }
         
         return true;
     }
@@ -557,10 +557,12 @@ public:
         static s64 lastSend = 0;
         static s64 lastPosOutput = 0;
 
+        m_Position.y = (double)(s64)m_Position.y;
+
         if (GetTime() - lastSend >= 50) {
             bool onGround = true;
 
-            const float CheckWidth = 0.4f;
+            const float CheckWidth = 0.3f;
 
             std::vector<Vector3d> belowchecks = {
                 Vector3d(m_Position.x + CheckWidth, m_Position.y - 1, m_Position.z),
@@ -581,7 +583,7 @@ public:
             for (u32 i = 0; i < belowchecks.size(); ++i) {
                 Minecraft::BlockPtr check = m_World.GetBlock(belowchecks[i]);
 
-                if (!check || (check && check->GetType() != 0)) {
+                if (!check || (check && check->IsSolid())) {
                     fall = false;
                     break;
                 }
@@ -589,7 +591,7 @@ public:
 
             if (fall) {
                 std::cout << "Falling\n";
-                m_Position.y--;
+                m_Position.y -= 4.3 * (50 / 1000.0);
                 onGround = false;
             }
 
@@ -654,21 +656,17 @@ public:
         if (!m_Following || !m_Following->GetEntity()) return;
 
         Vector3d toFollowing = m_Following->GetEntity()->GetPosition() - m_PlayerController.GetPosition();
-        double dist = std::sqrt(toFollowing.x * toFollowing.x + toFollowing.z * toFollowing.z);
+        double dist = toFollowing.Length();
 
-        if (toFollowing.y < .1) {
+        if (toFollowing.y < .5 && toFollowing.y >= -0.25 && dist >= 1.0) {
             if (!m_PlayerController.ClearPath(m_Following->GetEntity()->GetPosition()))
                 return;
 
-            if (dist >= 1.0) {
-                Vector3d n = Vector3Normalize(toFollowing);
-                double change = dt / 1000.0;
+            Vector3d n = Vector3Normalize(toFollowing);
+            double change = dt / 1000.0;
 
-                n *= WalkingSpeed * change;
-                m_PlayerController.Move(n);
-            } else {
-            //    m_PlayerController.Attack(m_Following->GetEntity()->GetEntityId());
-            }
+            n *= WalkingSpeed * change;
+            m_PlayerController.Move(n);
         }
     }
 
@@ -772,6 +770,7 @@ public:
           m_PlayerController(&m_Connection, m_World, m_PlayerManager),
           m_Connected(false)
     {
+        Minecraft::BlockRegistry::GetInstance().RegisterVanillaBlocks();
         m_Connection.RegisterListener(this);
     }
 
