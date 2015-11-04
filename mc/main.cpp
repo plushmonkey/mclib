@@ -81,6 +81,7 @@ public:
         dispatcher->RegisterHandler(Protocol::State::Play, Protocol::Play::SetExperience, this);
         dispatcher->RegisterHandler(Protocol::State::Play, Protocol::Play::EntityProperties, this);
         dispatcher->RegisterHandler(Protocol::State::Play, Protocol::Play::MapChunkBulk, this);
+        dispatcher->RegisterHandler(Protocol::State::Play, Protocol::Play::ChunkData, this);
         dispatcher->RegisterHandler(Protocol::State::Play, Protocol::Play::SetSlot, this);
         dispatcher->RegisterHandler(Protocol::State::Play, Protocol::Play::WindowItems, this);
         dispatcher->RegisterHandler(Protocol::State::Play, Protocol::Play::Statistics, this);
@@ -96,6 +97,14 @@ public:
 
     ~Connection() {
         GetDispatcher()->UnregisterHandler(this);
+    }
+
+    void HandlePacket(Minecraft::Packets::Inbound::ChunkDataPacket* packet) {
+        auto column = packet->GetChunkColumn();
+        auto x = column->GetMetadata().x;
+        auto z = column->GetMetadata().z;
+
+        std::cout << "Received chunk data for chunk " << x << ", " << z << std::endl;
     }
 
     void HandlePacket(Minecraft::Packets::Inbound::EntityPropertiesPacket* packet) {
@@ -274,7 +283,10 @@ public:
     void HandlePacket(Minecraft::Packets::Inbound::DisconnectPacket* packet) {
         std::cout << "Disconnected from server. Reason: " << std::endl;
         std::wcout << packet->GetReason() << std::endl;
-        std::abort();
+
+        m_Socket->Disconnect();
+
+        NotifyListeners(&ConnectionListener::OnSocketStateChange, m_Socket->GetStatus());
     }
 
     void AuthenticateClient(const std::wstring& serverId, const std::string& sharedSecret, const std::string& pubkey) {
@@ -472,11 +484,72 @@ public:
         m_PlayerManager.UnregisterListener(this);
     }
 
+    bool IsSolidBlock(u16 type) const {
+        return type != 0 && type != 78;
+    }
+
+    bool ClearPath(Vector3d target) {
+        double dist = target.Distance(m_Position);
+
+        Vector3d toTarget = target - m_Position;
+        Vector3d n = Vector3Normalize(toTarget);
+
+        Vector3d side = n.Cross(Vector3d(0, 1, 0));
+
+        const double CheckWidth = 0.3;
+
+        Vector3d right = m_Position + side * CheckWidth;
+        Vector3d left = m_Position - side * CheckWidth;
+
+        auto check = [&](Vector3d start, Vector3d target) -> bool {
+            Vector3d toTarget = target - start;
+            Vector3d n = Vector3Normalize(toTarget);
+
+            for (s32 i = 0; i < (int)std::ceil(dist); ++i) {
+                Vector3d delta(i * n.x, 0, i * n.z);
+                Vector3d checkAbove = start + delta + Vector3d(0, 1, 0);
+                Vector3d checkBelow = start + delta + Vector3d(0, 0, 0);
+                Vector3d checkFloor = start + delta + Vector3d(0, -1, 0);
+
+                Minecraft::BlockPtr aboveBlock = m_World.GetBlock(checkAbove);
+                Minecraft::BlockPtr belowBlock = m_World.GetBlock(checkBelow);
+                Minecraft::BlockPtr floorBlock = m_World.GetBlock(checkFloor);
+
+                if (!aboveBlock || IsSolidBlock(aboveBlock->GetType()))
+                    return false;
+                if (!belowBlock || IsSolidBlock(belowBlock->GetType()))
+                    return false;
+                if (!floorBlock || !IsSolidBlock(floorBlock->GetType()))
+                    return false;
+            }
+            return true;
+        };
+
+        if (!check(right, target + side * CheckWidth)) return false;
+        if (!check(left, target - side * CheckWidth)) return false;
+        
+        return true;
+    }
 
     void OnClientSpawn(Minecraft::PlayerPtr player) {
         m_Yaw = player->GetEntity()->GetYaw();
         m_Pitch = player->GetEntity()->GetPitch();
         m_Position = player->GetEntity()->GetPosition();
+    }
+
+    void Attack(Minecraft::EntityId id) {
+        static u64 timer = 0;
+        static const u64 cooldown = 500;
+
+        if (GetTime() - timer < cooldown)
+            return;
+
+        using namespace Minecraft::Packets::Outbound;
+
+        UseEntityPacket useEntity(id, UseEntityPacket::Action::Attack);
+        m_Connection->SendPacket(&useEntity);
+
+        timer = GetTime();
     }
 
     void Update() {
@@ -515,14 +588,14 @@ public:
             }
 
             if (fall) {
-                //m_Position.y--;
-                //onGround = false;
+                m_Position.y--;
+                onGround = false;
             }
 
             if (GetTime() - lastPosOutput >= 2000) {
                 Minecraft::BlockPtr below = m_World.GetBlock(m_Position - Vector3d(0, 1.0, 0));
                 //  if (below)
-                //    std::cout << "Standing on " << below->GetType() << std::endl;
+                  //  std::cout << "Standing on " << below->GetType() << std::endl;
 
                 lastPosOutput = GetTime();
             }
@@ -551,6 +624,7 @@ private:
     Minecraft::EntityManager& m_EntityManager;
     Minecraft::PlayerPtr m_Following;
     PlayerController& m_PlayerController;
+    u64 m_LastUpdate;
     
 public:
     PlayerFollower(Minecraft::Packets::PacketDispatcher* dispatcher, Minecraft::PlayerManager& playerManager, Minecraft::EntityManager& emanager, PlayerController& playerController)
@@ -565,9 +639,39 @@ public:
         m_PlayerManager.UnregisterListener(this);
     }
 
-    void UpdateRotation() {
-        FindClosestPlayer();
+    void UpdatePosition() {
+        static const double WalkingSpeed = 4.3; // m/s
+        static const double TicksPerSecond = 20;
 
+        u64 dt = GetTime() - m_LastUpdate;
+
+        if (dt < 1000 / TicksPerSecond)
+            return;
+
+        m_LastUpdate = GetTime();
+
+        if (!m_Following || !m_Following->GetEntity()) return;
+
+        Vector3d toFollowing = m_Following->GetEntity()->GetPosition() - m_PlayerController.GetPosition();
+        double dist = std::sqrt(toFollowing.x * toFollowing.x + toFollowing.z * toFollowing.z);
+
+        if (toFollowing.y < .1) {
+            if (!m_PlayerController.ClearPath(m_Following->GetEntity()->GetPosition()))
+                return;
+
+            if (dist >= 1.0) {
+                Vector3d n = Vector3Normalize(toFollowing);
+                double change = dt / 1000.0;
+
+                n *= WalkingSpeed * change;
+                m_PlayerController.Move(n);
+            } else {
+            //    m_PlayerController.Attack(m_Following->GetEntity()->GetEntityId());
+            }
+        }
+    }
+
+    void UpdateRotation() {
         if (!m_Following || !m_Following->GetEntity()) return;
 
         Vector3d toFollowing = m_Following->GetEntity()->GetPosition() - m_PlayerController.GetPosition();
@@ -578,15 +682,6 @@ public:
 
         m_PlayerController.SetYaw((float)(yaw * 180 / 3.14));
         m_PlayerController.SetPitch((float)(pitch * 180 / 3.14));
-
-        static const double WalkingSpeed = 4.3; // m/s
-        static const double TicksPerSecond = 20;
-
-        if (toFollowing.y == 0 && dist >= 0.5) {
-            Vector3d n = Vector3Normalize(toFollowing);
-            n *= WalkingSpeed / TicksPerSecond;
-            m_PlayerController.Move(n);
-        }
     }
 
     void FindClosestPlayer() {
@@ -629,22 +724,27 @@ public:
     }
 
     void OnPlayerJoin(Minecraft::PlayerPtr player) {
+        FindClosestPlayer();
         UpdateRotation();
     }
 
     void OnPlayerLeave(Minecraft::PlayerPtr player) {
+        FindClosestPlayer();
         UpdateRotation();
     }
 
     void OnPlayerSpawn(Minecraft::PlayerPtr player) {
+        FindClosestPlayer();
         UpdateRotation();
     }
 
     void OnPlayerDestroy(Minecraft::PlayerPtr player, Minecraft::EntityId eid) {
+        FindClosestPlayer();
         UpdateRotation();
     }
 
     void OnPlayerMove(Minecraft::PlayerPtr player, Vector3d oldPos, Vector3d newPos) {
+        FindClosestPlayer();
         UpdateRotation();
     }
 };
@@ -683,8 +783,11 @@ public:
     }
 
     int Run() {
-        if (!m_Connection.Connect("192.168.2.88", 25565)) {
-            std::cerr << "Failed to connect to server" << std::endl;
+        std::string host = "192.168.2.88";
+        //std::string host = "play.mysticempire.net";
+
+        if (!m_Connection.Connect(host, 25565)) {
+            std::cerr << "Failed to connect to server " << host << std::endl;
             return -1;
         }
 
@@ -693,7 +796,7 @@ public:
         while (m_Connected) {
             m_Connection.CreatePacket();
 
-            m_Follower.UpdateRotation();
+            m_Follower.UpdatePosition();
             m_PlayerController.Update();
         }
 

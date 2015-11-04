@@ -1250,6 +1250,30 @@ DataBuffer ChatPacket::Serialize() const {
     return buffer;
 }
 
+UseEntityPacket::UseEntityPacket(EntityId target, Action action, Vector3f position)
+    : m_Target(target), m_Action(action), m_Position(position)
+{
+    m_Id = 0x02;
+}
+
+DataBuffer UseEntityPacket::Serialize() const {
+    DataBuffer buffer;
+    VarInt target(m_Target);
+    VarInt type(m_Action);
+
+    buffer << m_Id;
+    buffer << target;
+    buffer << type;
+
+    if (m_Action == Action::InteractAt) {
+        buffer << m_Position.x;
+        buffer << m_Position.y;
+        buffer << m_Position.z;
+    }
+
+    return buffer;
+}
+
 PlayerPositionAndLookPacket::PlayerPositionAndLookPacket(double x, double y, double z, float yaw, float pitch, bool onGround)
     : m_X(x), m_Y(y), m_Z(z), m_Yaw(yaw), m_Pitch(pitch), m_OnGround(onGround)
 {

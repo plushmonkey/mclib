@@ -13,7 +13,7 @@ void Chunk::Load(DataBuffer& in, ChunkColumnMetadata* meta, s32 chunkIndex) {
     for (s32 y = 0; y < 16; ++y) {
         for (s32 z = 0; z < 16; ++z) {
             for (s32 x = 0; x < 16; ++x) {
-                s16 data;
+                s16 data;                
 
                 in >> data;
                 std::reverse((u8*)&data, (u8*)&data + sizeof(s16));
@@ -52,7 +52,7 @@ DataBuffer& operator>>(DataBuffer& in, ChunkColumn& column) {
 
     for (s16 i = 0; i < ChunkColumn::ChunksPerColumn; ++i) {
         // The section mask says whether or not there is data in this chunk.
-        if (meta->sectionmask & 1 << i) {
+        if (meta->sectionmask & (1 << i)) {
             column.m_Chunks[i] = std::make_shared<Chunk>();
 
             column.m_Chunks[i]->Load(in, meta, i);
@@ -61,6 +61,25 @@ DataBuffer& operator>>(DataBuffer& in, ChunkColumn& column) {
             column.m_Chunks[i] = nullptr;
         }
     }
+
+    static const s64 lightSize = 16 * 16 * 16 / 2;
+
+    for (s16 i = 0; i < ChunkColumn::ChunksPerColumn; ++i) {
+        // Block light data
+        if (meta->sectionmask & (1 << i))
+            in.SetReadOffset(in.GetReadOffset() + lightSize);
+    }
+
+    if (meta->skylight) {
+        for (s16 i = 0; i < ChunkColumn::ChunksPerColumn; ++i) {
+            // Skylight data
+            if (meta->sectionmask & (1 << i))
+                in.SetReadOffset(in.GetReadOffset() + lightSize);
+        }
+    }
+
+    if (meta->continuous)
+        in.SetReadOffset(in.GetReadOffset() + 256);
 
     return in;
 }

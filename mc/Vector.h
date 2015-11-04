@@ -139,7 +139,7 @@ public:
         return x * other.x + y * other.y + z * other.z;
     }
 
-    inline Vector3& Cross(const Vector3& v2) const {
+    inline Vector3 Cross(const Vector3& v2) const {
         return Vector3(y*v2.z - z*v2.y,
                         z*v2.x - x*v2.z,
                         x*v2.y - y*v2.x);

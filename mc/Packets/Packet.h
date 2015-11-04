@@ -988,6 +988,22 @@ public:
     const std::wstring& GetChatMessage() const { return m_Message; }
 };
 
+class UseEntityPacket : public OutboundPacket { // 0x02
+public:
+    enum Action { Interact, Attack, InteractAt };
+private:
+    EntityId m_Target;
+    Action m_Action;
+    Vector3f m_Position;
+
+public:
+    UseEntityPacket(EntityId target, Action action, Vector3f position = Vector3f(0, 0, 0));
+    DataBuffer Serialize() const;
+
+
+};
+
+
 class PlayerPositionAndLookPacket : public OutboundPacket { // 0x06
 private:
     double m_X;

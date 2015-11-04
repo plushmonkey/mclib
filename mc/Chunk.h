@@ -21,12 +21,12 @@ struct ChunkColumnMetadata {
 class Block {
 public:
    // Vector3i position;
-    s16 data;
+    u16 data;
 
-    s16 GetType() const {
+    u16 GetType() const {
         return data >> 4;
     }
-    s16 GetMeta() const {
+    u16 GetMeta() const {
         return data & 15;
     }
 };
