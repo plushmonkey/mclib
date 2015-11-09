@@ -145,9 +145,29 @@ public:
     void HandlePacket(Minecraft::Packets::Inbound::ChatPacket* packet) {
         const Json::Value& root = packet->GetChatData();
 
-        Json::StyledWriter writer;
-        std::string out = writer.write(root);
-        std::cout << out << std::endl;
+        //Json::StyledWriter writer;
+        //std::string out = writer.write(root);
+        
+        if (root["text"].isNull()) return;
+
+        std::string message = root["text"].asString();
+
+
+        if (!root["extra"].isNull()) {
+            auto iter = root["extra"].begin();
+            for (; iter != root["extra"].end(); ++iter) {
+                if ((*iter).isString()) {
+                    message += iter->asString();
+                } else {
+                    if (!(*iter)["text"].isNull())
+                        message += (*iter)["text"].asString();
+                }
+            }
+        }
+
+        std::cout << message << std::endl;
+
+        //std::cout << out << std::endl;
     }
 
     void HandlePacket(Minecraft::Packets::Inbound::EntityMetadataPacket* packet) {
@@ -349,7 +369,9 @@ public:
     }
 
     void HandlePacket(Minecraft::Packets::Inbound::PluginMessagePacket* packet) {
-        std::wcout << "Plugin message received on channel " << packet->GetChannel() << std::endl;
+        std::wcout << "Plugin message received on channel " << packet->GetChannel();
+        auto value = packet->GetData();
+        std::cout << " Value: " << value << std::endl;
     }
 
     void HandlePacket(Minecraft::Packets::Inbound::ServerDifficultyPacket* packet) {
@@ -423,8 +445,8 @@ public:
                 } else {
                     break;
                 }
-            } catch (const std::exception& e) {
-                std::cerr << e.what() << std::endl;
+            } catch (const std::exception& ) {
+                //std::cerr << e.what() << std::endl;
                 // Temporary until protocol is finished
             }
         } while (!m_HandleBuffer.IsFinished() && m_HandleBuffer.GetSize() > 0);
@@ -461,6 +483,8 @@ s64 GetTime() {
     return std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
 }
 
+#include <queue>
+
 class PlayerController : public Minecraft::PlayerListener {
 private:
     Minecraft::PlayerManager& m_PlayerManager;
@@ -469,7 +493,9 @@ private:
     float m_Pitch;
     Connection* m_Connection;
     Minecraft::World& m_World;
-
+    
+    std::queue<Vector3d> m_DigQueue;
+    
 public:
     PlayerController(Connection* connection, Minecraft::World& world, Minecraft::PlayerManager& playerManager)
         : m_PlayerManager(playerManager), 
@@ -485,17 +511,19 @@ public:
     }
 
     bool ClearPath(Vector3d target) {
-        double dist = target.Distance(m_Position);
+        Vector3d position = m_Position;
 
-        Vector3d toTarget = target - m_Position;
+        double dist = target.Distance(position);
+
+        Vector3d toTarget = target - position;
         Vector3d n = Vector3Normalize(toTarget);
 
         Vector3d side = n.Cross(Vector3d(0, 1, 0));
 
         const double CheckWidth = 0.3;
 
-        Vector3d right = m_Position + side * CheckWidth;
-        Vector3d left = m_Position - side * CheckWidth;
+        Vector3d right = position + side * CheckWidth;
+        Vector3d left = position - side * CheckWidth;
 
         auto check = [&](Vector3d start, Vector3d target) -> bool {
             Vector3d toTarget = target - start;
@@ -508,11 +536,24 @@ public:
 
                 Minecraft::BlockPtr aboveBlock = m_World.GetBlock(checkAbove);
                 Minecraft::BlockPtr belowBlock = m_World.GetBlock(checkBelow);
-
+                
                 if (!aboveBlock || aboveBlock->IsSolid())
                     return false;
-                if (!belowBlock || belowBlock->IsSolid())
-                    return false;
+
+                if (!belowBlock || belowBlock->IsSolid()) {
+                    Minecraft::BlockPtr twoAboveBlock = m_World.GetBlock(checkAbove + Vector3d(0, 1, 0));
+                    // Bad path if there isn't a two high gap in it
+                    if (!twoAboveBlock || twoAboveBlock->IsSolid())
+                        return false;
+
+                    // Jump up 1 block to keep searching
+                    start += Vector3d(0, 1, 0);
+                }
+
+                Minecraft::BlockPtr floorBlock = m_World.GetBlock(start + delta - Vector3d(0, 1, 0));
+
+                if (floorBlock && !floorBlock->IsSolid()) 
+                    start -= Vector3d(0, 1, 0);
             }
             return true;
         };
@@ -522,10 +563,17 @@ public:
 
         for (s32 i = 0; i < (int)std::ceil(dist); ++i) {
             Vector3d delta(i * n.x, 0, i * n.z);
-            Vector3d checkFloor = m_Position + delta + Vector3d(0, -1, 0);
+            Vector3d checkFloor = position + delta + Vector3d(0, -1, 0);
             Minecraft::BlockPtr floorBlock = m_World.GetBlock(checkFloor);
-            if (!floorBlock || !floorBlock->IsSolid())
-                return false;
+            if (!floorBlock || !floorBlock->IsSolid()) {
+                Minecraft::BlockPtr belowFloorBlock = m_World.GetBlock(checkFloor - Vector3d(0, 1, 0));
+
+                // Fail if there is a two block drop
+                if (!belowFloorBlock || !belowFloorBlock->IsSolid())
+                    return false;
+
+                position.y--;
+            }
         }
         
         return true;
@@ -535,6 +583,14 @@ public:
         m_Yaw = player->GetEntity()->GetYaw();
         m_Pitch = player->GetEntity()->GetPitch();
         m_Position = player->GetEntity()->GetPosition();
+    }
+
+    void Dig(Vector3d target) {
+        Vector3d toTarget = target - m_Position;
+
+        if (toTarget.Length() > 6) return;
+
+        m_DigQueue.push(target);
     }
 
     void Attack(Minecraft::EntityId id) {
@@ -552,10 +608,17 @@ public:
         timer = GetTime();
     }
 
+    void UpdateDigging() {
+        if (m_DigQueue.empty()) return;
+
+        Vector3d target = m_DigQueue.front();
+
+    }
+
     void Update() {
         if (m_Position == Vector3d(0, 0, 0)) return;
         static s64 lastSend = 0;
-        static s64 lastPosOutput = 0;
+        static u64 StartTime = GetTime();
 
         m_Position.y = (double)(s64)m_Position.y;
 
@@ -595,18 +658,17 @@ public:
                 onGround = false;
             }
 
-            if (GetTime() - lastPosOutput >= 2000) {
-                Minecraft::BlockPtr below = m_World.GetBlock(m_Position - Vector3d(0, 1.0, 0));
-                //  if (below)
-                  //  std::cout << "Standing on " << below->GetType() << std::endl;
+            u64 ticks = GetTime() - StartTime;
 
-                lastPosOutput = GetTime();
-            }
+            m_Pitch = (((float)std::sin(ticks * 0.5 * 3.14 / 1000) * 0.5f + 0.5f)  * 360.0) - 180.0f;
+            //m_Pitch = 180.0f;
 
             Minecraft::Packets::Outbound::PlayerPositionAndLookPacket response(m_Position.x, m_Position.y, m_Position.z,
                 m_Yaw, m_Pitch, onGround);
 
             m_Connection->SendPacket(&response);
+
+            UpdateDigging();
 
             lastSend = GetTime();
         }
@@ -616,9 +678,33 @@ public:
     float GetYaw() const { return m_Yaw; }
     float GetPitch() const { return m_Pitch; }
 
-    void Move(Vector3d delta) { m_Position += delta; }
+    void Move(Vector3d delta) { 
+        delta.y = 0;
+        m_Position += delta;
+
+        Vector3d heading = Vector3Normalize(delta);
+
+        Minecraft::BlockPtr block = m_World.GetBlock(m_Position + heading * 0.3);
+
+        if (!block || block->IsSolid()) {
+            Minecraft::BlockPtr aboveBlock = m_World.GetBlock(m_Position + heading * 0.3 + Vector3d(0, 1, 0));
+            if (aboveBlock && !aboveBlock->IsSolid())
+                m_Position.y++;
+        }
+    }
+
     void SetYaw(float yaw) { m_Yaw = yaw; }
     void SetPitch(float pitch) { m_Pitch = pitch; }
+    void LookAt(Vector3d target) {
+        Vector3d toTarget = target - m_Position;
+
+        double dist = std::sqrt(toTarget.x * toTarget.x + toTarget.z * toTarget.z);
+        double pitch = -std::atan2(toTarget.y, dist);
+        double yaw = -std::atan2(toTarget.x, toTarget.z);
+
+        SetYaw((float)(yaw * 180 / 3.14));
+        SetPitch((float)(pitch * 180 / 3.14));
+    }
 };
 
 class PlayerFollower : public Minecraft::PlayerListener {
@@ -627,13 +713,15 @@ private:
     Minecraft::EntityManager& m_EntityManager;
     Minecraft::PlayerPtr m_Following;
     PlayerController& m_PlayerController;
+    Minecraft::World& m_World;
     u64 m_LastUpdate;
     
 public:
-    PlayerFollower(Minecraft::Packets::PacketDispatcher* dispatcher, Minecraft::PlayerManager& playerManager, Minecraft::EntityManager& emanager, PlayerController& playerController)
+    PlayerFollower(Minecraft::Packets::PacketDispatcher* dispatcher, Minecraft::PlayerManager& playerManager, Minecraft::EntityManager& emanager, PlayerController& playerController, Minecraft::World& world)
         : m_PlayerManager(playerManager),
           m_EntityManager(emanager),
-          m_PlayerController(playerController)
+          m_PlayerController(playerController),
+          m_World(world)
     {
         m_PlayerManager.RegisterListener(this);
     }
@@ -658,7 +746,8 @@ public:
         Vector3d toFollowing = m_Following->GetEntity()->GetPosition() - m_PlayerController.GetPosition();
         double dist = toFollowing.Length();
 
-        if (toFollowing.y < .5 && toFollowing.y >= -0.25 && dist >= 1.0) {
+        //if (toFollowing.y < .5 && toFollowing.y >= -0.25 && dist >= 1.0) {
+        if (toFollowing.y < 5 && toFollowing.y >= -5 && dist >= 1.0) {
             if (!m_PlayerController.ClearPath(m_Following->GetEntity()->GetPosition()))
                 return;
 
@@ -666,6 +755,7 @@ public:
             double change = dt / 1000.0;
 
             n *= WalkingSpeed * change;
+            
             m_PlayerController.Move(n);
         }
     }
@@ -673,14 +763,7 @@ public:
     void UpdateRotation() {
         if (!m_Following || !m_Following->GetEntity()) return;
 
-        Vector3d toFollowing = m_Following->GetEntity()->GetPosition() - m_PlayerController.GetPosition();
-
-        double dist = std::sqrt(toFollowing.x * toFollowing.x + toFollowing.z * toFollowing.z);
-        double pitch = -std::atan2(toFollowing.y, dist);
-        double yaw = -std::atan2(toFollowing.x, toFollowing.z);
-
-        m_PlayerController.SetYaw((float)(yaw * 180 / 3.14));
-        m_PlayerController.SetPitch((float)(pitch * 180 / 3.14));
+        m_PlayerController.LookAt(m_Following->GetEntity()->GetPosition());
     }
 
     void FindClosestPlayer() {
@@ -695,7 +778,7 @@ public:
 
             if (!entity) continue;
 
-            Minecraft::EntityId peid = m_EntityManager.GetPlayerEntity().lock()->GetEntityId();
+            Minecraft::EntityId peid = m_EntityManager.GetPlayerEntity()->GetEntityId();
             if (entity->GetEntityId() == peid) continue;
 
             double dist = entity->GetPosition().Distance(m_PlayerController.GetPosition());
@@ -716,10 +799,11 @@ public:
                     double dist = m_PlayerController.GetPosition().Distance(entity->GetPosition());
                     std::wcout << L"Tracking " << m_Following->GetName() << " dist: " << dist << std::endl;
                 }
-            } else {
-                std::wcout << L"Not tracking anyone" << std::endl;
             }
         }
+
+        if (!m_Following)
+            std::wcout << L"Not tracking anyone" << std::endl;
     }
 
     void OnPlayerJoin(Minecraft::PlayerPtr player) {
@@ -766,7 +850,7 @@ public:
           m_EntityManager(&m_Dispatcher),
           m_PlayerManager(&m_Dispatcher, &m_EntityManager),
           m_World(&m_Dispatcher),
-          m_Follower(&m_Dispatcher, m_PlayerManager, m_EntityManager, m_PlayerController),
+          m_Follower(&m_Dispatcher, m_PlayerManager, m_EntityManager, m_PlayerController, m_World),
           m_PlayerController(&m_Connection, m_World, m_PlayerManager),
           m_Connected(false)
     {
@@ -784,7 +868,6 @@ public:
 
     int Run() {
         std::string host = "192.168.2.88";
-        //std::string host = "play.mysticempire.net";
 
         if (!m_Connection.Connect(host, 25565)) {
             std::cerr << "Failed to connect to server " << host << std::endl;

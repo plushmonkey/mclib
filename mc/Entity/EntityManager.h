@@ -30,7 +30,7 @@ public:
     EntityManager(Packets::PacketDispatcher* dispatcher);
     ~EntityManager();
 
-    PlayerEntityPtr GetPlayerEntity() const { return std::dynamic_pointer_cast<PlayerEntity>(m_Entities.at(m_EntityId)); }
+    std::shared_ptr<PlayerEntity> GetPlayerEntity() const { return std::dynamic_pointer_cast<PlayerEntity>(m_Entities.at(m_EntityId)); }
 
     EntityPtr GetEntity(EntityId eid) const { return m_Entities.at(eid); }
 

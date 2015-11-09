@@ -9,6 +9,10 @@
 #include <map>
 #include <json/json.h>
 
+/**
+ * Thanks to #mcdevs on irc.freenode.net (http://wiki.vg/Protocol) for protocol information.
+ */
+
 namespace Minecraft {
 namespace Packets {
 

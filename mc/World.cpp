@@ -100,7 +100,6 @@ void World::HandlePacket(Packets::Inbound::BlockChangePacket* packet) {
         ChunkPtr section = std::make_shared<Chunk>();
         
         (*chunk)[index] = section;
-        block = chunk->GetBlock(relative);
     }
 
     s16 blockData = packet->GetBlockData();

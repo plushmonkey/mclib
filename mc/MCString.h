@@ -21,6 +21,9 @@ public:
     std::wstring GetUTF16() const;
     std::string GetUTF8() const;
 
+
+    static MCString FromUTF8(const std::string& utf8);
+
     friend DataBuffer& operator<<(DataBuffer& out, const MCString& str);
     friend DataBuffer& operator>>(DataBuffer& in, MCString& str);
 };

@@ -1182,9 +1182,10 @@ DataBuffer HandshakePacket::Serialize() const {
 
 // Login packets
 
-LoginStartPacket::LoginStartPacket(const std::string& name) {
+LoginStartPacket::LoginStartPacket(const std::string& name) 
+    : m_Name(name)
+{
     m_Id = 0x00;
-    m_Name = name;
 }
 
 DataBuffer LoginStartPacket::Serialize() const {

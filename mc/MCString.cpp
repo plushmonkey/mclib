@@ -24,6 +24,12 @@ std::string MCString::GetUTF8() const {
     return utf8;
 }
 
+MCString MCString::FromUTF8(const std::string& utf8) {
+    std::wstring utf16;
+    utf8::utf8to16(utf8.begin(), utf8.end(), std::back_inserter(utf16));
+    return MCString(utf16);
+}
+
 DataBuffer& operator<<(DataBuffer& out, const MCString& str) {
     std::string utf8;
     utf8::utf16to8(str.m_UTF16.begin(), str.m_UTF16.end(), std::back_inserter(utf8));

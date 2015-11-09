@@ -18,6 +18,8 @@ public:
         };
     };
 
+    typedef VecType value_type;
+
     Vector3() : x(0), y(0), z(0) { }
     Vector3(VecType x, VecType y) : x(x), y(y), z(0) { }
     Vector3(VecType x, VecType y, VecType z) : x(x), y(y), z(z) { }
@@ -205,6 +207,14 @@ inline Vector3d& operator-=(Vector3d& v1, const Vector3f& v2) {
 
 inline Vector3d ToVector3d(const Vector3f& v) {
     return Vector3d(v.x, v.y, v.z);
+}
+
+inline Vector3d ToVector3d(const Vector3i& v) {
+    return Vector3d((double)v.x, (double)v.y, (double)v.z);
+}
+
+inline Vector3i ToVector3i(const Vector3d& d) {
+    return Vector3i((Vector3i::value_type)std::floor(d.x), (Vector3i::value_type)std::floor(d.y), (Vector3i::value_type)std::floor(d.z));
 }
 
 #endif

@@ -29,7 +29,7 @@ namespace Network {
 
 class IPAddress;
 
-typedef Minecraft::DataBuffer DataBuffer;
+using Minecraft::DataBuffer;
 
 typedef int SocketHandle;
 
