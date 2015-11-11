@@ -526,54 +526,41 @@ public:
 
         const double CheckWidth = 0.3;
 
-        Vector3d right = position + side * CheckWidth;
-        Vector3d left = position - side * CheckWidth;
+        auto check = [&](Vector3d start, Vector3d delta) {
+            Vector3d checkAbove = start + delta + Vector3d(0, 1, 0);
+            Vector3d checkBelow = start + delta + Vector3d(0, 0, 0);
+            Minecraft::BlockPtr aboveBlock = m_World.GetBlock(checkAbove);
+            Minecraft::BlockPtr belowBlock = m_World.GetBlock(checkBelow);
 
-        auto check = [&](Vector3d start, Vector3d target) -> bool {
-            Vector3d toTarget = target - start;
-            Vector3d n = Vector3Normalize(toTarget);
+            if (aboveBlock && aboveBlock->IsSolid())
+                return false;
 
-            for (s32 i = 0; i < (int)std::ceil(dist); ++i) {
-                Vector3d delta(i * n.x, 0, i * n.z);
-                Vector3d checkAbove = start + delta + Vector3d(0, 1, 0);
-                Vector3d checkBelow = start + delta + Vector3d(0, 0, 0);
-
-                Minecraft::BlockPtr aboveBlock = m_World.GetBlock(checkAbove);
-                Minecraft::BlockPtr belowBlock = m_World.GetBlock(checkBelow);
-                
-                if (!aboveBlock || aboveBlock->IsSolid())
+            if (belowBlock && belowBlock->IsSolid()) {
+                Minecraft::BlockPtr twoAboveBlock = m_World.GetBlock(checkAbove + Vector3d(0, 1, 0));
+                // Bad path if there isn't a two high gap in it
+                if (twoAboveBlock && twoAboveBlock->IsSolid())
                     return false;
 
-                if (!belowBlock || belowBlock->IsSolid()) {
-                    Minecraft::BlockPtr twoAboveBlock = m_World.GetBlock(checkAbove + Vector3d(0, 1, 0));
-                    // Bad path if there isn't a two high gap in it
-                    if (!twoAboveBlock || twoAboveBlock->IsSolid())
-                        return false;
-
-                    // Jump up 1 block to keep searching
-                    start += Vector3d(0, 1, 0);
-                }
-
-                Minecraft::BlockPtr floorBlock = m_World.GetBlock(start + delta - Vector3d(0, 1, 0));
-
-                if (floorBlock && !floorBlock->IsSolid()) 
-                    start -= Vector3d(0, 1, 0);
+                // Jump up 1 block to keep searching
+                position += Vector3d(0, 1, 0);
             }
             return true;
         };
 
-        if (!check(right, target + side * CheckWidth)) return false;
-        if (!check(left, target - side * CheckWidth)) return false;
-
         for (s32 i = 0; i < (int)std::ceil(dist); ++i) {
             Vector3d delta(i * n.x, 0, i * n.z);
+
+            // Check right side
+            if (!check(position + side * CheckWidth, delta)) return false;
+            if (!check(position - side * CheckWidth, delta)) return false;
+
             Vector3d checkFloor = position + delta + Vector3d(0, -1, 0);
             Minecraft::BlockPtr floorBlock = m_World.GetBlock(checkFloor);
-            if (!floorBlock || !floorBlock->IsSolid()) {
+            if (floorBlock && !floorBlock->IsSolid()) {
                 Minecraft::BlockPtr belowFloorBlock = m_World.GetBlock(checkFloor - Vector3d(0, 1, 0));
 
                 // Fail if there is a two block drop
-                if (!belowFloorBlock || !belowFloorBlock->IsSolid())
+                if (belowFloorBlock && !belowFloorBlock->IsSolid())
                     return false;
 
                 position.y--;
@@ -619,6 +606,40 @@ public:
 
     }
 
+    bool HandleJump() {
+        const float CheckWidth = 0.3f;
+        const float FullCircle = 2.0f * 3.14159f;
+        bool jump = false;
+
+        for (float angle = 0.0f; angle < FullCircle; angle += FullCircle / 8) {
+            Vector3d checkPos = m_Position + Vector3RotateAboutY(Vector3d(0, 0, CheckWidth), angle);
+
+            Minecraft::BlockPtr checkBlock = m_World.GetBlock(checkPos);
+            if (checkBlock && checkBlock->IsSolid()) {
+                jump = true;
+                break;
+            }
+        }
+        return jump;
+    }
+
+    bool HandleFall() {
+        const float CheckWidth = 0.3f;
+        const float FullCircle = 2.0f * 3.14159f;
+        bool fall = true;
+
+        for (float angle = 0.0; angle < FullCircle; angle += FullCircle / 8) {
+            Vector3d checkPos = m_Position + Vector3RotateAboutY(Vector3d(0, -1, CheckWidth), angle);
+
+            Minecraft::BlockPtr checkBlock = m_World.GetBlock(checkPos);
+            if (!checkBlock || (checkBlock && checkBlock->IsSolid())) {
+                fall = false;
+                break;
+            }
+        }
+        return fall;
+    }
+
     void Update() {
         if (m_Position == Vector3d(0, 0, 0)) return;
         static s64 lastSend = 0;
@@ -629,43 +650,21 @@ public:
         if (GetTime() - lastSend >= 50) {
             bool onGround = true;
 
-            const float CheckWidth = 0.3f;
-
-            std::vector<Vector3d> belowchecks = {
-                Vector3d(m_Position.x + CheckWidth, m_Position.y - 1, m_Position.z),
-                Vector3d(m_Position.x - CheckWidth, m_Position.y - 1, m_Position.z),
-
-                Vector3d(m_Position.x, m_Position.y - 1, m_Position.z + CheckWidth),
-                Vector3d(m_Position.x, m_Position.y - 1, m_Position.z - CheckWidth),
-
-                Vector3d(m_Position.x + CheckWidth, m_Position.y - 1, m_Position.z + CheckWidth),
-                Vector3d(m_Position.x - CheckWidth, m_Position.y - 1, m_Position.z - CheckWidth),
-
-                Vector3d(m_Position.x + CheckWidth, m_Position.y - 1, m_Position.z - CheckWidth),
-                Vector3d(m_Position.x - CheckWidth, m_Position.y - 1, m_Position.z + CheckWidth),
-
-            };
-
-            bool fall = true;
-            for (u32 i = 0; i < belowchecks.size(); ++i) {
-                Minecraft::BlockPtr check = m_World.GetBlock(belowchecks[i]);
-
-                if (!check || (check && check->IsSolid())) {
-                    fall = false;
-                    break;
+            if (HandleJump()) {
+                std::cout << "Jumping\n";
+                m_Position.y++;
+            } else {
+                if (HandleFall()) {
+                    std::cout << "Falling\n";
+                    m_Position.y -= 4.3 * (50 / 1000.0);
+                    onGround = false;
                 }
-            }
-
-            if (fall) {
-                std::cout << "Falling\n";
-                m_Position.y -= 4.3 * (50 / 1000.0);
-                onGround = false;
             }
 
             u64 ticks = GetTime() - StartTime;
 
-            m_Pitch = (((float)std::sin(ticks * 0.5 * 3.14 / 1000) * 0.5f + 0.5f)  * 360.0) - 180.0f;
-            //m_Pitch = 180.0f;
+            
+            m_Pitch = (((float)std::sin(ticks * 0.5 * 3.14 / 1000) * 0.5f + 0.5f)  * 360.0f) - 180.0f;
 
             Minecraft::Packets::Outbound::PlayerPositionAndLookPacket response(m_Position.x, m_Position.y, m_Position.z,
                 m_Yaw, m_Pitch, onGround);
@@ -685,16 +684,6 @@ public:
     void Move(Vector3d delta) { 
         delta.y = 0;
         m_Position += delta;
-
-        Vector3d heading = Vector3Normalize(delta);
-
-        Minecraft::BlockPtr block = m_World.GetBlock(m_Position + heading * 0.3);
-
-        if (!block || block->IsSolid()) {
-            Minecraft::BlockPtr aboveBlock = m_World.GetBlock(m_Position + heading * 0.3 + Vector3d(0, 1, 0));
-            if (aboveBlock && !aboveBlock->IsSolid())
-                m_Position.y++;
-        }
     }
 
     void SetYaw(float yaw) { m_Yaw = yaw; }
@@ -871,7 +860,7 @@ public:
 
     int Run() {
         std::string host = "192.168.2.88";
-
+        
         if (!m_Connection.Connect(host, 25565)) {
             std::cerr << "Failed to connect to server " << host << std::endl;
             return -1;

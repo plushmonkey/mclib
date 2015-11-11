@@ -171,6 +171,14 @@ inline Vector3<T> Vector3Normalize(const Vector3<T>& v1) {
     return copy;
 }
 
+// Todo: rotation matrix
+template <typename T>
+inline Vector3<T> Vector3RotateAboutY(Vector3<T> vec, double rads) {
+    double cosA = std::cos(rads);
+    double sinA = std::sin(rads);
+    return Vector3<T>(cosA * vec.x - sinA * vec.z, vec.y, sinA * vec.x + cosA * vec.z);
+}
+
 template <typename T>
 inline std::ostream& operator<<(std::ostream& out, const Vector3<T>& v) {
     return out << "(" << v.x << ", " << v.y << ", " << v.z << ")";
