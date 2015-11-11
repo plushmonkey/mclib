@@ -89,20 +89,30 @@ DataBuffer& operator<<(DataBuffer& out, const EntityMetadata& md) {
         switch (type) {
         case EntityMetadata::Types::Byte:
             out << *((EntityMetadata::ByteType*)value);
+            break;
         case EntityMetadata::Types::Short:
             out << *((EntityMetadata::ShortType*)value);
+            break;
         case EntityMetadata::Types::Int:
             out << *((EntityMetadata::IntType*)value);
+            break;
         case EntityMetadata::Types::Float:
             out << *((EntityMetadata::FloatType*)value);
+            break;
         case EntityMetadata::Types::String:
             out << *((EntityMetadata::StringType*)value);
+            break;
         case EntityMetadata::Types::Slot:
             out << *((EntityMetadata::SlotType*)value);
+            break;
         case EntityMetadata::Types::IntVector:
             out << *((EntityMetadata::IntVectorType*)value);
+            break;
         case EntityMetadata::Types::FloatVector:
             out << *((EntityMetadata::FloatVectorType*)value);
+            break;
+        default:
+            break;
         }
     }
 
@@ -186,6 +196,8 @@ DataBuffer& operator>>(DataBuffer& in, EntityMetadata& md) {
             md.m_Metadata[index].first = value;
             md.m_Metadata[index].second = EntityMetadata::Types::FloatVector;
         }
+        break;
+        default:
         break;
         }
     }

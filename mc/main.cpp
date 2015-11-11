@@ -100,11 +100,11 @@ public:
     }
 
     void HandlePacket(Minecraft::Packets::Inbound::ChunkDataPacket* packet) {
-        auto column = packet->GetChunkColumn();
+        /*auto column = packet->GetChunkColumn();
         auto x = column->GetMetadata().x;
         auto z = column->GetMetadata().z;
 
-        //std::cout << "Received chunk data for chunk " << x << ", " << z << std::endl;
+        std::cout << "Received chunk data for chunk " << x << ", " << z << std::endl;*/
     }
 
     void HandlePacket(Minecraft::Packets::Inbound::EntityPropertiesPacket* packet) {
@@ -157,7 +157,7 @@ public:
             auto iter = root["extra"].begin();
             for (; iter != root["extra"].end(); ++iter) {
                 if ((*iter).isString()) {
-                    message += iter->asString();
+                    message += (*iter).asString();
                 } else {
                     if (!(*iter)["text"].isNull())
                         message += (*iter)["text"].asString();
@@ -171,13 +171,13 @@ public:
     }
 
     void HandlePacket(Minecraft::Packets::Inbound::EntityMetadataPacket* packet) {
-        const auto& metadata = packet->GetMetadata();
+        //const auto& metadata = packet->GetMetadata();
 
         //std::cout << "Received entity metadata" << std::endl;
     }
 
     void HandlePacket(Minecraft::Packets::Inbound::SpawnMobPacket* packet) {
-        const auto& metadata = packet->GetMetadata();
+        //const auto& metadata = packet->GetMetadata();
         
         //std::cout << "Received SpawnMobPacket" << std::endl;
     }
@@ -203,7 +203,7 @@ public:
             s16 id = slot.GetItemId();
             u8 count = slot.GetItemCount();
             s16 dmg = slot.GetItemDamage();
-            const Minecraft::NBT::NBT& nbt = slot.GetNBT();
+            //const Minecraft::NBT::NBT& nbt = slot.GetNBT();
 
             if (id != -1) {
                 std::cout << "Item: " << id << " Amount: " << (int)count << " Dmg: " << dmg << std::endl;
@@ -224,6 +224,8 @@ public:
                 std::cout << "World border center: " << packet->GetX() << ", " << packet->GetZ() << std::endl;
                 std::cout << "World border warning time: " << packet->GetWarningTime() << " seconds, blocks: " << packet->GetWarningBlocks() << " meters" << std::endl;
             }
+            break;
+            default:
             break;
         }
     }
@@ -280,6 +282,8 @@ public:
             break;
             case PlayerListItemPacket::Action::RemovePlayer:
                 std::cout << "Removing player " << actionData->uuid << std::endl;
+            break;
+            default:
             break;
             }
         }
@@ -488,11 +492,11 @@ s64 GetTime() {
 class PlayerController : public Minecraft::PlayerListener {
 private:
     Minecraft::PlayerManager& m_PlayerManager;
+    Connection* m_Connection;
+    Minecraft::World& m_World;
     Vector3d m_Position;
     float m_Yaw;
     float m_Pitch;
-    Connection* m_Connection;
-    Minecraft::World& m_World;
     
     std::queue<Vector3d> m_DigQueue;
     
@@ -611,7 +615,7 @@ public:
     void UpdateDigging() {
         if (m_DigQueue.empty()) return;
 
-        Vector3d target = m_DigQueue.front();
+        //Vector3d target = m_DigQueue.front();
 
     }
 
@@ -713,15 +717,13 @@ private:
     Minecraft::EntityManager& m_EntityManager;
     Minecraft::PlayerPtr m_Following;
     PlayerController& m_PlayerController;
-    Minecraft::World& m_World;
     u64 m_LastUpdate;
     
 public:
-    PlayerFollower(Minecraft::Packets::PacketDispatcher* dispatcher, Minecraft::PlayerManager& playerManager, Minecraft::EntityManager& emanager, PlayerController& playerController, Minecraft::World& world)
+    PlayerFollower(Minecraft::Packets::PacketDispatcher* dispatcher, Minecraft::PlayerManager& playerManager, Minecraft::EntityManager& emanager, PlayerController& playerController)
         : m_PlayerManager(playerManager),
           m_EntityManager(emanager),
-          m_PlayerController(playerController),
-          m_World(world)
+          m_PlayerController(playerController)
     {
         m_PlayerManager.RegisterListener(this);
     }
@@ -747,7 +749,8 @@ public:
         double dist = toFollowing.Length();
 
         //if (toFollowing.y < .5 && toFollowing.y >= -0.25 && dist >= 1.0) {
-        if (toFollowing.y < 5 && toFollowing.y >= -5 && dist >= 1.0) {
+        //if (toFollowing.y < 5 && toFollowing.y >= -5 && dist >= 1.0) {
+        if (dist >= 1.0) {
             if (!m_PlayerController.ClearPath(m_Following->GetEntity()->GetPosition()))
                 return;
 
@@ -850,7 +853,7 @@ public:
           m_EntityManager(&m_Dispatcher),
           m_PlayerManager(&m_Dispatcher, &m_EntityManager),
           m_World(&m_Dispatcher),
-          m_Follower(&m_Dispatcher, m_PlayerManager, m_EntityManager, m_PlayerController, m_World),
+          m_Follower(&m_Dispatcher, m_PlayerManager, m_EntityManager, m_PlayerController),
           m_PlayerController(&m_Connection, m_World, m_PlayerManager),
           m_Connected(false)
     {

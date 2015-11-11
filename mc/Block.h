@@ -11,8 +11,8 @@ namespace Minecraft {
 class Block {
 private:
     std::wstring m_Name;
-    bool m_Solid;
     u16 m_Data;
+    bool m_Solid;
 
 public:
     u16 GetType() const {
