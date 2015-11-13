@@ -5,10 +5,6 @@
 namespace Minecraft {
 namespace NBT {
 
-Tag::Tag(std::wstring name) : m_Name(name) {
-    
-}
-
 std::wstring Tag::GetName() const {
     return m_Name;
 }
@@ -59,6 +55,25 @@ DataBuffer& operator<<(DataBuffer& out, const TagDouble& tag) {
     return out;
 }
 
+DataBuffer& operator<<(DataBuffer& out, const TagList& tag) {
+    tag.Write(out);
+    return out;
+}
+
+DataBuffer& operator<<(DataBuffer& out, const TagCompound& tag) {
+    tag.Write(out);
+    return out;
+}
+
+DataBuffer& operator<<(DataBuffer& out, const NBT& nbt) {
+    auto root = nbt.GetRoot();
+
+    //u8 type = 10; // Compound start
+    //out << type;
+    out << (Tag&)root;
+    return out;
+}
+
 TagType TagString::GetType() const {
     return TagType::String;
 }
@@ -77,11 +92,15 @@ void TagString::Read(DataBuffer& buffer) {
 
     buffer >> length;
 
-    std::string utf8;
-    buffer.ReadSome(utf8, length);
-
     m_Value.clear();
-    utf8::utf8to16(utf8.begin(), utf8.end(), std::back_inserter(m_Value));
+
+    if (length > 0) {
+        std::string utf8;
+        buffer.ReadSome(utf8, length);
+
+        m_Value.clear();
+        utf8::utf8to16(utf8.begin(), utf8.end(), std::back_inserter(m_Value));
+    }
 }
 
 
@@ -198,22 +217,21 @@ TagList::~TagList() {
 
 
 void TagCompound::Write(DataBuffer& buffer) const {
-    s32 size = m_Tags.size();
-
-    buffer << size;
-
     for (TagPtr tag : m_Tags)
         buffer << *tag;
+
+    buffer << (u8)0;
 }
 
 void TagCompound::Read(DataBuffer& buffer) {
     while (true) {
         u8 type;
-        TagString name;
 
         buffer >> type;
 
         if (type == 0) break;
+
+        TagString name;
 
         ((Tag&)name).Read(buffer);
 
@@ -253,7 +271,7 @@ void TagCompound::Read(DataBuffer& buffer) {
 }
 
 TagType TagCompound::GetType() const {
-    return TagType::List;
+    return TagType::Compound;
 }
 
 void TagCompound::AddItem(TagPtr item) {

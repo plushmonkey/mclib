@@ -9,6 +9,7 @@ DataBuffer::DataBuffer(const DataBuffer& other) : m_Buffer(other.m_Buffer), m_Re
 DataBuffer::DataBuffer(DataBuffer&& other) : m_Buffer(std::move(other.m_Buffer)), m_ReadOffset(std::move(other.m_ReadOffset)) { }
 DataBuffer::DataBuffer(const std::string& str) : m_Buffer(str.begin(), str.end()) { }
 DataBuffer::DataBuffer(const DataBuffer& other, std::size_t offset) {
+    m_Buffer.reserve(other.GetSize() - offset);
     std::copy(other.m_Buffer.begin() + offset, other.m_Buffer.end(), std::back_inserter(m_Buffer));
 }
 
@@ -25,6 +26,9 @@ DataBuffer& DataBuffer::operator=(DataBuffer&& other) {
 }
 
 void DataBuffer::SetReadOffset(std::size_t pos) {
+    assert(pos <= GetSize());
+    //if (pos > GetSize())
+      //  pos = GetSize();
     m_ReadOffset = pos;
 }
 

@@ -18,6 +18,13 @@ private:
 
 public:
     Slot() : m_ItemId(-1), m_ItemCount(0), m_ItemDamage(0) { }
+    Slot(s16 itemId, u8 itemCount, s16 itemDamage)
+        : m_ItemId(itemId), m_ItemCount(itemCount), m_ItemDamage(itemDamage), m_NBT()
+    { }
+
+    Slot(s16 itemId, u8 itemCount, s16 itemDamage, NBT::NBT nbt) 
+        : m_ItemId(itemId), m_ItemCount(itemCount), m_ItemDamage(itemDamage), m_NBT(nbt)
+    { }
 
     s16 GetItemId() const { return m_ItemId; }
     u8 GetItemCount() const { return m_ItemCount; }

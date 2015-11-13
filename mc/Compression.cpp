@@ -1,6 +1,8 @@
 #include "Compression.h"
 #include "DataBuffer.h"
 #include <zlib.h>
+#include <cassert>
+#include <iostream>
 
 namespace Minecraft {
 
@@ -76,6 +78,9 @@ DataBuffer CompressionZ::Decompress(DataBuffer& buffer, std::size_t packetLength
         return ret;
     }
 
+
+    assert(buffer.GetReadOffset() + compressedLength <= buffer.GetSize());
+
     std::string deflatedData;
     buffer.ReadSome(deflatedData, compressedLength);
 
@@ -83,6 +88,8 @@ DataBuffer CompressionZ::Decompress(DataBuffer& buffer, std::size_t packetLength
     inflated.resize(uncompressedLength.GetInt());
 
     inflate(deflatedData, inflated);
+
+    assert(inflated.length() == uncompressedLength.GetInt());
     return DataBuffer(inflated);
 }
 

@@ -3,6 +3,7 @@
 
 #include "Types.h"
 #include "HTTPClient.h"
+#include "UUID.h"
 #include <string>
 #include <exception>
 
@@ -95,6 +96,9 @@ public:
     bool JoinServer(const std::string& serverHash);
 
     // Todo: refresh, validate, signout
+
+    UUID GetPlayerUUID(const std::string& name);
+    Json::Value GetPlayerProfile(UUID& uuid);
 };
 
 } // ns Minecraft

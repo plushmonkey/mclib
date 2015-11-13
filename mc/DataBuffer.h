@@ -5,6 +5,7 @@
 #include <vector>
 #include <algorithm>
 #include <cstring>
+#include <cassert>
 
 namespace Minecraft {
 
@@ -65,6 +66,7 @@ public:
 
     template <typename T>
     DataBuffer& operator>>(T& data) {
+        assert(m_ReadOffset + sizeof(T) <= GetSize());
         data = *(T *)&m_Buffer[m_ReadOffset];
         std::reverse((u8*)&data, (u8*)&data + sizeof(T));
         m_ReadOffset += sizeof(T);
@@ -86,22 +88,26 @@ public:
     }
 
     void ReadSome(char* buffer, std::size_t amount) {
+        assert(m_ReadOffset + amount <= GetSize());
         strncpy(buffer, (char*)&m_Buffer.at(m_ReadOffset), amount);
         m_ReadOffset += amount;
     }
 
     void ReadSome(u8* buffer, std::size_t amount) {
+        assert(m_ReadOffset + amount <= GetSize());
         strncpy((char*)buffer, (char*)&m_Buffer.at(m_ReadOffset), amount);
         m_ReadOffset += amount;
     }
 
     void ReadSome(DataBuffer& buffer, std::size_t amount) {
+        assert(m_ReadOffset + amount <= GetSize());
         buffer.Resize(amount);
         std::copy(m_Buffer.begin() + m_ReadOffset, m_Buffer.begin() + m_ReadOffset + amount, buffer.begin());
         m_ReadOffset += amount;
     }
 
     void ReadSome(std::string& buffer, std::size_t amount) {
+        assert(m_ReadOffset + amount <= GetSize());
         buffer.resize(amount);
         std::copy(m_Buffer.begin() + m_ReadOffset, m_Buffer.begin() + m_ReadOffset + amount, buffer.begin());
         m_ReadOffset += amount;

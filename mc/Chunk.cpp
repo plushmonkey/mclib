@@ -1,7 +1,7 @@
 #include "Chunk.h"
 #include "DataBuffer.h"
-#include <iostream>
 #include <algorithm>
+
 namespace Minecraft {
 
 Chunk::Chunk()
@@ -29,11 +29,6 @@ void Chunk::Load(DataBuffer& in, ChunkColumnMetadata* meta, s32 chunkIndex) {
                 std::size_t index = y * 16 * 16 + z * 16 + x;
 
                 m_Blocks[index] = BlockRegistry::GetInstance().GetBlock(data);
-                if (m_Blocks[index] == nullptr) {
-                    u16 type = data >> 4;
-                    u16 meta = data & 15;
-                    m_Blocks[index] = BlockRegistry::GetInstance().GetBlock(type, meta);
-                }
             }
         }
     }

@@ -3,7 +3,7 @@
 
 #include "Types.h"
 
-#include <map>
+#include <unordered_map>
 #include <string>
 
 namespace Minecraft {
@@ -37,7 +37,7 @@ typedef Block* BlockPtr;
 
 class BlockRegistry {
 private:
-    std::map<u16, BlockPtr> m_Blocks;
+    std::unordered_map<u16, BlockPtr> m_Blocks;
 
     BlockRegistry() { }
 public:
@@ -46,16 +46,19 @@ public:
         return registry;
     }
 
-    BlockPtr GetBlock(u16 data) {
-        if (m_Blocks.find(data) == m_Blocks.end()) {
+    BlockPtr GetBlock(u16 data) const {
+        auto iter = m_Blocks.find(data);
+
+        if (iter == m_Blocks.end()) {
             data &= ~15; // Return basic version if the meta type can't be found
-            if (m_Blocks.find(data) == m_Blocks.end())
+            iter = m_Blocks.find(data);
+            if (iter == m_Blocks.end())
                 return nullptr;
         }
-        return m_Blocks[data];
+        return iter->second;
     }
 
-    BlockPtr GetBlock(u16 type, u16 meta) {
+    BlockPtr GetBlock(u16 type, u16 meta) const {
         u16 data = (type << 4) | (meta & 15);
         return GetBlock(data);
     }

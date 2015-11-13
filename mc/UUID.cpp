@@ -6,7 +6,7 @@
 
 namespace Minecraft {
 
-std::string UUID::ToString() const {
+std::string UUID::ToString(bool dashes) const {
     DataBuffer buffer;
     buffer << *this;
 
@@ -15,13 +15,15 @@ std::string UUID::ToString() const {
 
     for (u32 i = 0; i < 4; ++i)
         out << std::hex << std::setfill('0') << std::setw(2) << ((int)buffer[pos + i] & 0xFF);
-    out << '-';
+    if (dashes)
+        out << '-';
     pos += 4;
 
     for (u32 j = 0; j < 3; ++j) {
         for (u32 i = 0; i < 2; ++i)
             out << std::hex << std::setfill('0') << std::setw(2) << ((int)buffer[pos + i] & 0xFF);
-        out << '-';
+        if (dashes)
+            out << '-';
         pos += 2;
     }
 
@@ -31,9 +33,16 @@ std::string UUID::ToString() const {
     return out.str();
 }
 
-UUID UUID::FromString(const std::wstring& str) {
-    assert(str.length() == 36);
-    
+UUID UUID::FromString(const std::string& str, bool dashes) {
+    std::wstring wstr(str.begin(), str.end());
+    return UUID::FromString(wstr, dashes);
+}
+
+UUID UUID::FromString(const std::wstring& str, bool dashes) {
+    if (dashes)
+        assert(str.length() == 36);
+    else
+        assert(str.length() == 32);
 
     //0ba955da-bce3-3796-b74a-9faae6cc08a2
 
@@ -44,17 +53,26 @@ UUID UUID::FromString(const std::wstring& str) {
 
     upperStr = L"0x";
     lowerStr = L"0x";
-    for (u32 i = 0; i < 8; ++i)
-        upperStr += str[i];
-    for (u32 i = 0; i < 4; ++i)
-        upperStr += str[i + 9];
-    for (u32 i = 0; i < 4; ++i)
-        upperStr += str[i + 14];
 
-    for (u32 i = 0; i < 4; ++i)
-        lowerStr += str[i + 19];
-    for (u32 i = 0; i < 12; ++i)
-        lowerStr += str[i + 24];
+    if (dashes) {
+        for (u32 i = 0; i < 8; ++i)
+            upperStr += str[i];
+        for (u32 i = 0; i < 4; ++i)
+            upperStr += str[i + 9];
+        for (u32 i = 0; i < 4; ++i)
+            upperStr += str[i + 14];
+
+        for (u32 i = 0; i < 4; ++i)
+            lowerStr += str[i + 19];
+        for (u32 i = 0; i < 12; ++i)
+            lowerStr += str[i + 24];
+    } else {
+        for (u32 i = 0; i < 16; ++i)
+            upperStr += str[i];
+
+        for (u32 i = 0; i < 16; ++i)
+            lowerStr += str[i + 16];
+    }
 
     UUID uuid;
 

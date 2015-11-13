@@ -25,6 +25,9 @@ struct ChunkColumnMetadata {
  */
 class Chunk {
 private:
+    // This array could just be s16 for the block data instead of a pointer. 
+    // GetBlock would just do a lookup in BlockRegistry when needed. 
+    // It would reduce memory use, but it could have performance cost.
     std::array<BlockPtr, 16*16*16> m_Blocks;
 
 public:

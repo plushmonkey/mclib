@@ -1,4 +1,4 @@
-#include <iostream>
+﻿#include <iostream>
 #include <iomanip>
 #include <string>
 #include <sstream>
@@ -416,15 +416,24 @@ public:
     Minecraft::Packets::Packet* CreatePacket(Minecraft::DataBuffer& buffer) {
         std::size_t readOffset = buffer.GetReadOffset();
         Minecraft::VarInt length;
-        buffer >> length;
+
+        try {
+            buffer >> length;
+        } catch (const std::out_of_range&) {
+            // This will happen when the buffer only contains part of the VarInt, 
+            // so only part of the packet was received so far.
+            // The buffer read offset isn't advanced when the exception is thrown, so no need to set it back to what it was.
+            return nullptr;
+        }
 
         if (buffer.GetRemaining() < (u32)length.GetInt()) {
+            // Reset the read offset back to what it was because the full packet hasn't been received yet.
             buffer.SetReadOffset(readOffset);
             return nullptr;
         }
 
         Minecraft::DataBuffer decompressed = m_Compressor->Decompress(buffer, length.GetInt());
-        
+
         return Minecraft::Packets::PacketFactory::CreatePacket(m_ProtocolState, decompressed, length.GetInt());
     }
 
@@ -449,9 +458,10 @@ public:
                 } else {
                     break;
                 }
-            } catch (const std::exception& ) {
-                //std::cerr << e.what() << std::endl;
-                // Temporary until protocol is finished
+            } catch (const Minecraft::Protocol::UnfinishedProtocolException&) {
+                // Ignore for now
+            } catch (const std::exception& e) {
+                std::cerr << e.what() << std::endl;
             }
         } while (!m_HandleBuffer.IsFinished() && m_HandleBuffer.GetSize() > 0);
 
@@ -628,7 +638,7 @@ public:
         const float FullCircle = 2.0f * 3.14159f;
         bool fall = true;
 
-        for (float angle = 0.0; angle < FullCircle; angle += FullCircle / 8) {
+        for (float angle = 0.0f; angle < FullCircle; angle += FullCircle / 8) {
             Vector3d checkPos = m_Position + Vector3RotateAboutY(Vector3d(0, -1, CheckWidth), angle);
 
             Minecraft::BlockPtr checkBlock = m_World.GetBlock(checkPos);
@@ -637,6 +647,7 @@ public:
                 break;
             }
         }
+
         return fall;
     }
 
@@ -737,8 +748,6 @@ public:
         Vector3d toFollowing = m_Following->GetEntity()->GetPosition() - m_PlayerController.GetPosition();
         double dist = toFollowing.Length();
 
-        //if (toFollowing.y < .5 && toFollowing.y >= -0.25 && dist >= 1.0) {
-        //if (toFollowing.y < 5 && toFollowing.y >= -5 && dist >= 1.0) {
         if (dist >= 1.0) {
             if (!m_PlayerController.ClearPath(m_Following->GetEntity()->GetPosition()))
                 return;
@@ -823,6 +832,63 @@ public:
         UpdateRotation();
     }
 };
+#include <thread>
+class CreativeCreator : public Minecraft::Packets::PacketHandler {
+private:
+    Connection* m_Connection;
+    s16 m_Slot;
+    Minecraft::Slot m_Item;
+
+public:
+    CreativeCreator(Minecraft::Packets::PacketDispatcher* dispatcher, Connection* connection, s16 slot, Minecraft::Slot item)
+        : Minecraft::Packets::PacketHandler(dispatcher),
+          m_Connection(connection),
+          m_Slot(slot), m_Item(item)
+    {
+        using namespace Minecraft::Protocol;
+
+        dispatcher->RegisterHandler(State::Play, Play::Chat, this);
+        dispatcher->RegisterHandler(State::Play, Play::PlayerPositionAndLook, this);
+    }
+
+    ~CreativeCreator() {
+        GetDispatcher()->UnregisterHandler(this);
+    }
+
+    void CreateItem() {
+        Minecraft::Packets::Outbound::CreativeInventoryActionPacket packet(m_Slot, m_Item);
+        
+        m_Connection->SendPacket(&packet);
+    }
+
+    void HandlePacket(Minecraft::Packets::Inbound::PlayerPositionAndLookPacket* packet) {
+        std::this_thread::sleep_for(std::chrono::seconds(2));
+        CreateItem();
+    }
+
+    void HandlePacket(Minecraft::Packets::Inbound::ChatPacket* packet) {
+        const Json::Value& root = packet->GetChatData();
+
+        if (root["text"].isNull()) return;
+
+        std::string message = root["text"].asString();
+
+        if (!root["extra"].isNull()) {
+            auto iter = root["extra"].begin();
+            for (; iter != root["extra"].end(); ++iter) {
+                if ((*iter).isString()) {
+                    message += (*iter).asString();
+                } else {
+                    if (!(*iter)["text"].isNull())
+                        message += (*iter)["text"].asString();
+                }
+            }
+        }
+
+        if (message.find("!create") != std::string::npos)
+            CreateItem();
+    }
+};
 
 class Client : public ConnectionListener {
 private:
@@ -834,6 +900,7 @@ private:
     PlayerFollower m_Follower;
     PlayerController m_PlayerController;
     bool m_Connected;
+    CreativeCreator* m_Creator;
 
 public:
     Client() 
@@ -844,10 +911,112 @@ public:
           m_World(&m_Dispatcher),
           m_Follower(&m_Dispatcher, m_PlayerManager, m_EntityManager, m_PlayerController),
           m_PlayerController(&m_Connection, m_World, m_PlayerManager),
-          m_Connected(false)
+          m_Connected(false),
+          m_Creator(nullptr)
     {
         Minecraft::BlockRegistry::GetInstance().RegisterVanillaBlocks();
         m_Connection.RegisterListener(this);
+
+        using namespace Minecraft::NBT;
+
+       /* 
+       
+       // Test code to create skulls with enchants/attributes
+       NBT nbt;
+
+        Minecraft::Yggdrasil profileService;
+        
+        Minecraft::UUID uuid;
+        std::string playerName = "MHF_Chest";
+        std::string textureValue;
+
+        try {
+            uuid = profileService.GetPlayerUUID(playerName);
+            Json::Value profile = profileService.GetPlayerProfile(uuid);
+
+            if (profile["properties"].isArray()) {
+                Json::Value texture = profile["properties"][0];
+                if (!texture.isNull())
+                    textureValue = texture["value"].asString();
+            }
+
+        } catch (Minecraft::YggdrasilException& e) {
+            std::cerr << e.what() << std::endl;
+            return;
+        }
+        
+        if (textureValue.length() == 0) {
+            std::cerr << "Failed to fetch texture" << std::endl;
+            return;
+        }
+       
+        TagCompound* skullOwner = new TagCompound(L"SkullOwner");
+        TagPtr name(new TagString("Name", playerName));
+        TagPtr id(new TagString("Id", uuid.ToString()));
+        TagCompound* properties = new TagCompound(L"Properties");
+        TagList* textures = new TagList(L"Textures", TagType::Compound);
+        TagCompound* textureCompound = new TagCompound(L"");
+        TagPtr value(new TagString("Value", textureValue));
+        textureCompound->AddItem(value);
+
+        textures->AddItem(TagPtr(textureCompound));
+        properties->AddItem(TagPtr(textures));
+        skullOwner->AddItem(TagPtr(properties));
+        skullOwner->AddItem(name);
+        skullOwner->AddItem(id);
+
+        nbt.GetRoot().AddItem(TagPtr(skullOwner));
+
+        TagList* ench = new TagList("ench", TagType::Compound);
+        {
+            TagCompound* enchCompound = new TagCompound(L"");
+            TagPtr enchId(new TagShort("id", 61));
+            TagPtr enchLvl(new TagShort("lvl", 10));
+
+            enchCompound->AddItem(enchId);
+            enchCompound->AddItem(enchLvl);
+            ench->AddItem(TagPtr(enchCompound));
+        }
+        {
+            TagCompound* enchCompound = new TagCompound(L"");
+            TagPtr enchId(new TagShort("id", 62));
+            TagPtr enchLvl(new TagShort("lvl", 10));
+
+            enchCompound->AddItem(enchId);
+            enchCompound->AddItem(enchLvl);
+            ench->AddItem(TagPtr(enchCompound));
+        }
+
+        nbt.GetRoot().AddItem(TagPtr(ench));
+
+        TagList* attr = new TagList("AttributeModifiers", TagType::Compound);
+        TagCompound* attrCompound = new TagCompound(L"");
+        TagPtr attrAttrName(new TagString("AttributeName", "generic.movementSpeed"));
+        TagPtr attrName(new TagString("Name", "Test"));
+        TagPtr attrSlot(new TagString("Slot", "head"));
+        TagPtr attrOperation(new TagInt("Operation", 2));
+        TagPtr attrAmount(new TagDouble("Amount", 10.0));
+        TagPtr attrMost(new TagLong("UUIDMost", 7361814797886573596));
+        TagPtr attrLeast(new TagLong("UUIDLeast", 9805346747102734221));
+
+        attr->AddItem(TagPtr(attrCompound));
+        attrCompound->AddItem(attrAttrName);
+        attrCompound->AddItem(attrName);
+        attrCompound->AddItem(attrSlot);
+        attrCompound->AddItem(attrOperation);
+        attrCompound->AddItem(attrAmount);
+        attrCompound->AddItem(attrMost);
+        attrCompound->AddItem(attrLeast);
+
+        nbt.GetRoot().AddItem(TagPtr(attr));
+        nbt.GetRoot().SetName(L"tag");
+
+        Minecraft::Slot slot(397, 1, 3, nbt);
+        //Minecraft::Slot slot(346, 1, 0, nbt);
+        //Minecraft::Slot slot(349, 1, 2, nbt);
+
+        m_Creator = new CreativeCreator(&m_Dispatcher, &m_Connection, 15, slot);
+        std::cout << "Created skull creator" << std::endl;*/
     }
 
     ~Client() {
@@ -860,7 +1029,7 @@ public:
 
     int Run() {
         std::string host = "192.168.2.88";
-        
+
         if (!m_Connection.Connect(host, 25565)) {
             std::cerr << "Failed to connect to server " << host << std::endl;
             return -1;

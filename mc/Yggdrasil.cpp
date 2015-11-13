@@ -86,4 +86,46 @@ bool Yggdrasil::Authenticate(const std::string& username, const std::string& pas
     return true;
 }
 
+UUID Yggdrasil::GetPlayerUUID(const std::string& name) {
+    std::string url = "https://api.mojang.com/users/profiles/minecraft/" + name;
+
+    HTTPResponse resp = m_Http->Get(url, { { "Content-Type", "application/json" } });
+
+    if (resp.status == 0) 
+        throw YggdrasilException("No response from server.");
+
+    Json::Reader reader;
+    Json::Value result;
+
+    if (!reader.parse(resp.body, result))
+        throw YggdrasilException("Failed to parse data received from server.");
+
+    if (!result["error"].isNull())
+        throw YggdrasilException(result["error"].asString(), result["errorMessage"].asString());
+
+    std::string uuidStr = result["id"].asString();
+
+    return UUID::FromString(uuidStr, false);
+}
+
+Json::Value Yggdrasil::GetPlayerProfile(UUID& uuid) {
+    std::string url = "https://sessionserver.mojang.com/session/minecraft/profile/" + uuid.ToString(false);
+
+    HTTPResponse resp = m_Http->Get(url, { { "Content-Type", "application/json" } });
+
+    if (resp.status == 0)
+        throw YggdrasilException("No response from server.");
+
+    Json::Reader reader;
+    Json::Value result;
+
+    if (!reader.parse(resp.body, result))
+        throw YggdrasilException("Failed to parse data received from server.");
+
+    if (!result["error"].isNull())
+        throw YggdrasilException(result["error"].asString(), result["errorMessage"].asString());
+
+    return result;
+}
+
 } // ns Minecraft

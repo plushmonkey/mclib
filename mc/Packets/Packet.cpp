@@ -1,5 +1,7 @@
 #include "Packet.h"
 #include "PacketHandler.h"
+#include <cassert>
+#include <iostream>
 
 namespace {
 
@@ -551,6 +553,7 @@ void EntityPropertiesPacket::Dispatch(PacketHandler* handler) {
 ChunkDataPacket::ChunkDataPacket() {
     m_Id = 0x21;
 }
+
 bool ChunkDataPacket::Deserialize(DataBuffer& data, std::size_t packetLength) {
     ChunkColumnMetadata metadata;
 
@@ -559,13 +562,34 @@ bool ChunkDataPacket::Deserialize(DataBuffer& data, std::size_t packetLength) {
     data >> metadata.continuous;
     data >> metadata.sectionmask;
 
+    std::size_t chunkSize = 0;
+    static const s64 lightSize = 16 * 16 * 16 / 2;
+
+    for (u32 i = 0; i < 16; ++i) {
+        // Calculate size of a chunk + light data
+        if (metadata.sectionmask & (1 << i)) {
+            chunkSize += (16 * 16 * 16) * sizeof(u16);
+            chunkSize += lightSize;
+        }
+    }
+
+    if (metadata.continuous)
+        chunkSize += 256;
+
     VarInt size;
 
     data >> size;
 
+    metadata.skylight = size.GetInt() != chunkSize;
+
     m_ChunkColumn = std::make_shared<ChunkColumn>(metadata);
 
     data >> *m_ChunkColumn;
+
+    if (!data.IsFinished()) {
+        std::cout << "Not finishing!" << std::endl;
+        assert(data.IsFinished());
+    }
 
     return true;
 }
@@ -697,9 +721,11 @@ bool SoundEffectPacket::Deserialize(DataBuffer& data, std::size_t packetLength) 
 
     m_SoundName = name.GetUTF16();
 
-    data >> m_Position.x;
-    data >> m_Position.y;
-    data >> m_Position.z;
+    s32 x, y, z;
+    data >> x >> y >> z;
+    m_Position.x = x;
+    m_Position.y = y;
+    m_Position.z = z;
 
     m_Position /= 8;
 
@@ -959,7 +985,7 @@ bool PluginMessagePacket::Deserialize(DataBuffer& data, std::size_t packetLength
 
     data >> m_Channel;
 
-    data.ReadSome(m_Data, packetLength - (data.GetReadOffset() - begin));
+    data.ReadSome(m_Data, data.GetSize() - (data.GetReadOffset() - begin) - 1);
 
     return true;
 }
@@ -1286,6 +1312,23 @@ DataBuffer PlayerPositionAndLookPacket::Serialize() const {
     buffer << m_X << m_Y << m_Z;
     buffer << m_Yaw << m_Pitch;
     buffer << m_OnGround;
+
+    return buffer;
+}
+
+CreativeInventoryActionPacket::CreativeInventoryActionPacket(s16 slot, Slot item) 
+    : m_Slot(slot),
+      m_Item(item)
+{
+    m_Id = 0x10;
+}
+
+DataBuffer CreativeInventoryActionPacket::Serialize() const {
+    DataBuffer buffer;
+
+    buffer << m_Id;
+    buffer << m_Slot;
+    buffer << m_Item;
 
     return buffer;
 }

@@ -18,8 +18,11 @@ public:
 
 Packet* LoginPacketFactory::CreatePacket(DataBuffer& data, std::size_t length) {
     if (data.GetSize() == 0) return nullptr;
-    u8 id;
-    data >> id;
+    //u8 id;
+    VarInt vid;
+    data >> vid;
+
+    u32 id = vid.GetInt();
 
     InboundPacket* packet = nullptr;
 
@@ -37,7 +40,7 @@ Packet* LoginPacketFactory::CreatePacket(DataBuffer& data, std::size_t length) {
         packet = new Inbound::SetCompressionPacket();
         break;
     default:
-        throw std::runtime_error("Unknown packet type " + std::to_string(id) + " received during login protocol state.");
+        throw Protocol::UnfinishedProtocolException(vid, Protocol::State::Login);
     }
 
     if (packet)
@@ -48,8 +51,11 @@ Packet* LoginPacketFactory::CreatePacket(DataBuffer& data, std::size_t length) {
 
 Packet* PlayPacketFactory::CreatePacket(DataBuffer& data, std::size_t length) {
     if (data.GetSize() == 0) return nullptr;
-    u8 id;
-    data >> id;
+    //u8 id;
+    VarInt vid;
+    data >> vid;
+
+    u32 id = vid.GetInt();
 
     InboundPacket* packet = nullptr;
 
@@ -184,7 +190,7 @@ Packet* PlayPacketFactory::CreatePacket(DataBuffer& data, std::size_t length) {
         packet = new Inbound::WorldBorderPacket();
         break;
     default:
-        throw std::runtime_error("Unknown packet type " + std::to_string(id) + " received during play protocol state.");
+        throw Protocol::UnfinishedProtocolException(vid, Protocol::State::Play);
     }
 
     if (packet)

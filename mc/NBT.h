@@ -5,6 +5,7 @@
 #include <string>
 #include <vector>
 #include <memory>
+#include <map>
 
 namespace Minecraft {
 
@@ -24,7 +25,8 @@ protected:
     virtual void Read(DataBuffer& buffer) = 0;
 
 public:
-    Tag(std::wstring name);
+    Tag(const std::string& name) : m_Name(name.begin(), name.end()) { }
+    Tag(const std::wstring& name) : m_Name(name) { }
     std::wstring GetName() const;
     void SetName(const std::wstring& name) { m_Name = name; }
     virtual TagType GetType() const = 0;
@@ -46,6 +48,7 @@ private:
 public:
     TagString() : Tag(L"") { }
     TagString(std::wstring name, std::wstring val) : Tag(name), m_Value(val) { }
+    TagString(std::string name, std::string val) : Tag(name), m_Value(val.begin(), val.end()) { }
 
     TagType GetType() const;
 
@@ -63,6 +66,7 @@ private:
 public:
     TagByteArray() : Tag(L"") { }
     TagByteArray(std::wstring name, std::string val) : Tag(name), m_Value(val) { }
+    TagByteArray(std::string name, std::string val) : Tag(name), m_Value(val) { }
 
     TagType GetType() const;
 
@@ -80,6 +84,7 @@ private:
 public:
     TagIntArray() : Tag(L"") { }
     TagIntArray(std::wstring name, std::vector<s32> val) : Tag(name), m_Value(val) { }
+    TagIntArray(std::string name, std::vector<s32> val) : Tag(name), m_Value(val) { }
 
     TagType GetType() const;
 
@@ -97,7 +102,8 @@ private:
 
 public:
     TagList() : Tag(L""), m_ListType(TagType::End) { }
-    TagList(std::wstring name, TagType listType);
+    TagList(std::wstring name, TagType listType) : Tag(name), m_ListType(listType) { }
+    TagList(std::string name, TagType listType) : Tag(name), m_ListType(listType) { }
     ~TagList();
 
     TagType GetType() const;
@@ -105,25 +111,31 @@ public:
     std::vector<TagPtr> GetList() const { return m_Tags; }
 
     void AddItem(TagPtr item);
+    friend DataBuffer& operator<<(DataBuffer& out, const TagList& tag);
     friend DataBuffer& operator<<(DataBuffer& out, const Tag& tag);
 };
 
 class TagCompound : public Tag {
 private:
     std::vector<TagPtr> m_Tags;
-    TagType m_ListType;
 
     void Write(DataBuffer& buffer) const;
     void Read(DataBuffer& buffer);
 public:
-    TagCompound() : Tag(L""), m_ListType(TagType::End) { }
+    TagCompound() : Tag(L"") { }
+    TagCompound(const std::wstring& name) : Tag(name) { }
+    TagCompound(const std::string& name) : Tag(name) { }
     ~TagCompound();
 
     TagType GetType() const;
-    TagType GetListType() const { return m_ListType; }
-    std::vector<TagPtr> GetList() const { return m_Tags; }
+
+    std::vector<TagPtr> ::iterator begin() { return m_Tags.begin(); }
+    std::vector<TagPtr> ::iterator end() { return m_Tags.end(); }
+    std::vector<TagPtr> ::const_iterator begin() const { return m_Tags.begin(); }
+    std::vector<TagPtr> ::const_iterator end() const { return m_Tags.end(); }
 
     void AddItem(TagPtr item);
+    friend DataBuffer& operator<<(DataBuffer& out, const TagCompound& tag);
     friend DataBuffer& operator<<(DataBuffer& out, const Tag& tag);
 };
 
@@ -137,6 +149,7 @@ private:
 public:
     TagByte() : Tag(L""), m_Value(0) { }
     TagByte(std::wstring name, u8 value) : Tag(name), m_Value(value) { }
+    TagByte(std::string name, u8 value) : Tag(name), m_Value(value) { }
     TagType GetType() const;
 
     u8 GetValue() const { return m_Value; }
@@ -153,6 +166,7 @@ private:
 public:
     TagShort() : Tag(L""), m_Value(0) { }
     TagShort(std::wstring name, s16 value) : Tag(name), m_Value(value) { }
+    TagShort(std::string name, s16 value) : Tag(name), m_Value(value) { }
     TagType GetType() const;
 
     s16 GetValue() const { return m_Value; }
@@ -169,6 +183,7 @@ private:
 public:
     TagInt() : Tag(L""), m_Value(0) { }
     TagInt(std::wstring name, s32 value) : Tag(name), m_Value(value) { }
+    TagInt(std::string name, s32 value) : Tag(name), m_Value(value) { }
     TagType GetType() const;
 
     s32 GetValue() const { return m_Value; }
@@ -185,6 +200,7 @@ private:
 public:
     TagLong() : Tag(L""), m_Value(0) { }
     TagLong(std::wstring name, s64 value) : Tag(name), m_Value(value) { }
+    TagLong(std::string name, s64 value) : Tag(name), m_Value(value) { }
     TagType GetType() const;
 
     s64 GetValue() const { return m_Value; }
@@ -201,6 +217,7 @@ private:
 public:
     TagFloat() : Tag(L""), m_Value(0.0f) { }
     TagFloat(std::wstring name, float value) : Tag(name), m_Value(value) { }
+    TagFloat(std::string name, float value) : Tag(name), m_Value(value) { }
     TagType GetType() const;
 
     float GetValue() const { return m_Value; }
@@ -217,6 +234,7 @@ private:
 public:
     TagDouble() : Tag(L""), m_Value(0.0) { }
     TagDouble(std::wstring name, double value) : Tag(name), m_Value(value) { }
+    TagDouble(std::string name, double value) : Tag(name), m_Value(value) { }
     TagType GetType() const;
 
     double GetValue() const { return m_Value; }
@@ -233,7 +251,7 @@ public:
 
     TagCompound& GetRoot() { return m_Root; }
     const TagCompound& GetRoot() const { return m_Root; }
-    bool HasData() const { return m_Root.GetList().size() != 0; }
+    bool HasData() const { return m_Root.begin() != m_Root.end(); }
 
     friend DataBuffer& operator>>(DataBuffer& out, NBT& nbt);
 };
@@ -250,6 +268,7 @@ DataBuffer& operator<<(DataBuffer& out, const TagInt& tag);
 DataBuffer& operator<<(DataBuffer& out, const TagLong& tag);
 DataBuffer& operator<<(DataBuffer& out, const TagFloat& tag);
 DataBuffer& operator<<(DataBuffer& out, const TagDouble& tag);
+DataBuffer& operator<<(DataBuffer& out, const NBT& nbt);
 
 DataBuffer& operator>>(DataBuffer& in, NBT& nbt);
 DataBuffer& operator>>(DataBuffer& in, Tag& tag);

@@ -7,6 +7,7 @@
 #include "../Packets/PacketHandler.h"
 #include "../ObserverSubject.h"
 #include <array>
+#include <unordered_map>
 
 namespace Minecraft {
 
@@ -22,7 +23,7 @@ public:
 
 class EntityManager : public Packets::PacketHandler, public ObserverSubject<EntityListener> {
 private:
-    std::map<EntityId, EntityPtr> m_Entities;
+    std::unordered_map<EntityId, EntityPtr> m_Entities;
     // Entity Id for the client player
     EntityId m_EntityId;
 

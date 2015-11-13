@@ -1031,6 +1031,16 @@ public:
     bool IsOnGround() const { return m_OnGround; }
 };
 
+class CreativeInventoryActionPacket : public OutboundPacket { // 0x10
+private:
+    s16 m_Slot;
+    Slot m_Item;
+
+public:
+    CreativeInventoryActionPacket(s16 slot, Slot item);
+    DataBuffer Serialize() const;
+};
+
 class ClientStatusPacket : public OutboundPacket { // 0x16
 public:
     enum Action { PerformRespawn, RequestStats, TakingInventoryAchievement };
