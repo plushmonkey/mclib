@@ -44,6 +44,7 @@ public:
     virtual void HandlePacket(Inbound::HeldItemChangePacket* packet) { } // 0x09
     virtual void HandlePacket(Inbound::AnimationPacket* packet) { } // 0x0B
     virtual void HandlePacket(Inbound::SpawnPlayerPacket* packet) { } // 0x0C
+    virtual void HandlePacket(Inbound::SpawnObjectPacket* packet) { } // 0x0E
     virtual void HandlePacket(Inbound::SpawnMobPacket* packet) { } // 0x0F
     virtual void HandlePacket(Inbound::EntityVelocityPacket* packet) { } // 0x12
     virtual void HandlePacket(Inbound::DestroyEntitiesPacket* packet) { } // 0x13

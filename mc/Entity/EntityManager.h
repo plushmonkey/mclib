@@ -17,6 +17,7 @@ public:
 
     virtual void OnPlayerSpawn(PlayerEntityPtr entity, Minecraft::UUID uuid) { }
     virtual void OnEntitySpawn(EntityPtr entity) { }
+    virtual void OnObjectSpawn(EntityPtr entity) { }
     virtual void OnEntityDestroy(EntityPtr entity) { }
     virtual void OnEntityMove(EntityPtr entity, Vector3d oldPos, Vector3d newPos) { }
 };
@@ -39,6 +40,7 @@ public:
     void HandlePacket(Packets::Inbound::PlayerPositionAndLookPacket* packet);
     void HandlePacket(Packets::Inbound::SpawnPlayerPacket* packet);
     void HandlePacket(Packets::Inbound::SpawnMobPacket* packet);
+    void HandlePacket(Packets::Inbound::SpawnObjectPacket* packet);
     void HandlePacket(Packets::Inbound::EntityPacket* packet);
     void HandlePacket(Packets::Inbound::EntityRelativeMovePacket* packet);
     void HandlePacket(Packets::Inbound::EntityLookAndRelativeMovePacket* packet);

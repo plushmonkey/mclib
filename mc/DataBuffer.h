@@ -117,6 +117,10 @@ public:
         m_Buffer.resize(size);
     }
 
+    void Reserve(std::size_t amount) {
+        m_Buffer.reserve(amount);
+    }
+
     void erase(iterator it) {
         m_Buffer.erase(it);
     }

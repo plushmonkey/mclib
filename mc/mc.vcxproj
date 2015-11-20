@@ -235,6 +235,7 @@
   <ItemGroup>
     <ClCompile Include="Block.cpp" />
     <ClCompile Include="Chunk.cpp" />
+    <ClCompile Include="Connection.cpp" />
     <ClCompile Include="DataBuffer.cpp" />
     <ClCompile Include="Compression.cpp" />
     <ClCompile Include="Encryption.cpp" />
@@ -266,6 +267,7 @@
     <ClInclude Include="Block.h" />
     <ClInclude Include="Chunk.h" />
     <ClInclude Include="Common.h" />
+    <ClInclude Include="Connection.h" />
     <ClInclude Include="DataBuffer.h" />
     <ClInclude Include="Compression.h" />
     <ClInclude Include="Encryption.h" />

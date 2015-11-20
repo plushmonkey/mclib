@@ -53,8 +53,10 @@ void PlayerManager::OnEntityMove(EntityPtr entity, Vector3d oldPos, Vector3d new
 }
 
 PlayerPtr PlayerManager::GetPlayerByUUID(UUID uuid) const {
-    if (m_Players.find(uuid) != m_Players.end())
-        return m_Players.at(uuid);
+    auto iter = m_Players.find(uuid);
+
+    if (iter != m_Players.end())
+        return iter->second;
 
     return nullptr;
 }

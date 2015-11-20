@@ -319,6 +319,35 @@ public:
     const EntityMetadata& GetMetadata() const { return m_Metadata; }
 };
 
+class SpawnObjectPacket : public InboundPacket { // 0x0E
+private:
+    EntityId m_EntityId;
+    u8 m_Type;
+    Vector3f m_Position;
+    u8 m_Pitch;
+    u8 m_Yaw;
+    s32 m_Data;
+    
+    bool m_HasSpeed;
+    Vector3s m_Speed;
+
+public:
+    SpawnObjectPacket();
+    bool Deserialize(DataBuffer& data, std::size_t packetLength);
+    void Dispatch(PacketHandler* handler);
+
+    EntityId GetEntityId() const { return m_EntityId; }
+    u8 GetType() const { return m_Type; }
+    Vector3f GetPosition() const { return m_Position; }
+    u8 GetPitch() const { return m_Pitch; }
+    u8 GetYaw() const { return m_Yaw; }
+
+    s32 GetData() const { return m_Data; }
+
+    bool HasSpeed() const { return m_HasSpeed; }
+    Vector3s GetSpeed() const { return m_Speed; }
+};
+
 class SpawnMobPacket : public InboundPacket { // 0x0F
 private:
     EntityId m_EntityId;

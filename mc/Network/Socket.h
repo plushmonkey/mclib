@@ -69,6 +69,8 @@ public:
 
     virtual std::size_t Send(const uint8_t* data, std::size_t size) = 0;
     virtual DataBuffer Receive(std::size_t amount) = 0;
+
+    virtual std::size_t Receive(DataBuffer& buffer, std::size_t amount) = 0;
 };
 
 typedef std::shared_ptr<Socket> SocketPtr;

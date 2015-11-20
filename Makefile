@@ -8,3 +8,4 @@ mcclient: $(SRC:.cpp=.o)
 
 clean:
 	-rm -f mc/*.o
+	-rm -f mc/*/*.o

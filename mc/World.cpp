@@ -112,9 +112,12 @@ ChunkColumnPtr World::GetChunk(Vector3i pos) const {
     s32 z = (s32)std::floor(pos.z / 16.0);
 
     ChunkCoord key(x, z);
-    if (m_Chunks.find(key) == m_Chunks.end()) return nullptr;
 
-    return m_Chunks.at(key);
+    auto iter = m_Chunks.find(key);
+
+    if (iter == m_Chunks.end()) return nullptr;
+
+    return iter->second;
 }
 
 BlockPtr World::GetBlock(Vector3f pos) const {

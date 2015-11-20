@@ -96,6 +96,9 @@ Packet* PlayPacketFactory::CreatePacket(DataBuffer& data, std::size_t length) {
     case Protocol::Play::SpawnPlayer:
         packet = new Inbound::SpawnPlayerPacket();
         break;
+    case Protocol::Play::SpawnObject:
+        packet = new Inbound::SpawnObjectPacket();
+        break;
     case Protocol::Play::SpawnMob:
         packet = new Inbound::SpawnMobPacket();
         break;

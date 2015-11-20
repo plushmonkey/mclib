@@ -263,6 +263,40 @@ void SpawnPlayerPacket::Dispatch(PacketHandler* handler) {
     handler->HandlePacket(this);
 }
 
+SpawnObjectPacket::SpawnObjectPacket() {
+    m_Id = 0x0E;
+}
+
+bool SpawnObjectPacket::Deserialize(DataBuffer& data, std::size_t packetLength) {
+    VarInt eid;
+
+    data >> eid;
+    m_EntityId = eid.GetInt();
+
+    data >> m_Type;
+
+    FixedPointNumber<s32> x, y, z;
+
+    data >> x >> y >> z;
+
+    m_Position = Vector3f(x.GetFloat(), y.GetFloat(), z.GetFloat());
+
+    data >> m_Pitch >> m_Yaw;
+
+    data >> m_Data;
+
+    m_HasSpeed = m_Data != 0;
+
+    if (m_HasSpeed)
+        data >> m_Speed.x >> m_Speed.y >> m_Speed.z;
+
+    return true;
+}
+
+void SpawnObjectPacket::Dispatch(PacketHandler* handler) {
+    handler->HandlePacket(this);
+}
+
 SpawnMobPacket::SpawnMobPacket() {
     m_Id = 0x0F;
 }

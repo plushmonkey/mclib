@@ -3,6 +3,8 @@
 
 #include <algorithm>
 
+// todo: Use factories to create the entities
+
 namespace Minecraft {
 
 EntityManager::EntityManager(Packets::PacketDispatcher* dispatcher)
@@ -14,6 +16,7 @@ EntityManager::EntityManager(Packets::PacketDispatcher* dispatcher)
     GetDispatcher()->RegisterHandler(Protocol::State::Play, Protocol::Play::PlayerPositionAndLook, this);
     GetDispatcher()->RegisterHandler(Protocol::State::Play, Protocol::Play::SpawnPlayer, this);
     GetDispatcher()->RegisterHandler(Protocol::State::Play, Protocol::Play::SpawnMob, this);
+    GetDispatcher()->RegisterHandler(Protocol::State::Play, Protocol::Play::SpawnObject, this);
     GetDispatcher()->RegisterHandler(Protocol::State::Play, Protocol::Play::Entity, this);
     GetDispatcher()->RegisterHandler(Protocol::State::Play, Protocol::Play::EntityRelativeMove, this);
     GetDispatcher()->RegisterHandler(Protocol::State::Play, Protocol::Play::EntityLookAndRelativeMove, this);
@@ -56,6 +59,18 @@ void EntityManager::HandlePacket(Packets::Inbound::SpawnPlayerPacket* packet) {
 
     NotifyListeners(&EntityListener::OnPlayerSpawn, PlayerEntityPtr(entity), uuid);
     NotifyListeners(&EntityListener::OnEntitySpawn, entity);
+}
+
+void EntityManager::HandlePacket(Packets::Inbound::SpawnObjectPacket* packet) {
+    EntityId id = packet->GetEntityId();
+
+    EntityPtr entity = std::make_shared<Entity>(id);
+
+    m_Entities[id] = entity;
+    entity->SetPosition(ToVector3d(packet->GetPosition()));
+    //
+
+    NotifyListeners(&EntityListener::OnObjectSpawn, entity);
 }
 
 void EntityManager::HandlePacket(Packets::Inbound::SpawnMobPacket* packet) {
