@@ -15,7 +15,7 @@ namespace Network {
 
 /* Create an invalid address */
 IPAddress::IPAddress()
-    : m_Valid(true), m_Address(0)
+    : m_Valid(false), m_Address(0)
 {
 
 }
@@ -40,7 +40,9 @@ IPAddress::IPAddress(const std::string& ip)
     m_Valid = true;
 }
 
-IPAddress::IPAddress(const std::wstring& ip) {
+IPAddress::IPAddress(const std::wstring& ip)
+    : m_Address(0), m_Valid(false)
+{
     std::wsregex_iterator begin(ip.begin(), ip.end(), IPRegexW);
     std::wsregex_iterator end;
 
@@ -113,6 +115,11 @@ bool IPAddress::operator==(bool b) {
 
 std::ostream& operator<<(std::ostream& os, const IPAddress& addr) {
     return os << addr.ToString();
+}
+
+std::wostream& operator<<(std::wostream& os, const IPAddress& addr) {
+    std::string str = addr.ToString();
+    return os << std::wstring(str.begin(), str.end());
 }
 
 } // ns network

@@ -13,7 +13,7 @@
 
 namespace Minecraft {
 
-class EncryptionStrategy;
+struct EncryptionStrategy;
 class CompressionStrategy;
 
 class ConnectionListener {

@@ -185,6 +185,11 @@ inline std::ostream& operator<<(std::ostream& out, const Vector3<T>& v) {
 }
 
 template <typename T>
+inline std::wostream& operator<<(std::wostream& out, const Vector3<T>& v) {
+    return out << L"(" << v.x << L", " << v.y << L", " << v.z << L")";
+}
+
+template <typename T>
 inline Vector3<T> operator+(const Vector3<T>& v1, const Vector3<T>& v2) {
     return Vector3<T>(v1.x + v2.x, v1.y + v2.y, v1.z + v2.z);
 }

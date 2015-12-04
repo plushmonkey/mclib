@@ -1,40 +1,138 @@
 #include "Block.h"
 
+
+// Maybe do virtual getboundingbox based on the position inside of the block.
+// This will allow aabb to work easily with stairs
+
 namespace Minecraft {
 
+class StoneBlock : public Block {
+public:
+    StoneBlock(u16 meta) : Block(L"Stone", 1, meta, true) { }
+
+    std::wstring GetName() const {
+        u16 meta = GetMeta();
+
+        std::wstring names[] = { L"Stone", 
+                                 L"Granite", L"Polished Granite", 
+                                 L"Diorite", L"Polished Diorite", 
+                                 L"Andesite", L"Polished Andesite" };
+
+        return names[meta];
+    }
+
+    static void RegisterBlocks(BlockRegistry* registry) {
+        for (int i = 0; i < 7; ++i)
+            registry->RegisterBlock(new StoneBlock(i));
+    }
+};
+
+class DirtBlock : public Block {
+public:
+    DirtBlock(u16 meta) : Block(L"Dirt", 3, meta, true) { }
+
+    std::wstring GetName() const {
+        u16 meta = GetMeta();
+
+        std::wstring names[] = { L"Dirt", L"Coarse Dirt", L"Podzol" };
+
+        return names[meta];
+    }
+
+    static void RegisterBlocks(BlockRegistry* registry) {
+        for (int i = 0; i < 3; ++i)
+            registry->RegisterBlock(new DirtBlock(i));
+    }
+};
+
+class WoodPlanksBlock : public Block {
+public:
+    WoodPlanksBlock(u16 meta) : Block(L"Wood Planks", 5, meta, true) { }
+
+    std::wstring GetName() const {
+        u16 meta = GetMeta();
+
+        std::wstring names[] = { L"Oak Wood Planks", L"Spruce Wood Planks", 
+                                 L"Birch Wood Planks", L"Jungle Wood Planks", 
+                                 L"Acacia Wood Planks", L"Dark Oak Wood Planks" };
+
+        return names[meta];
+    }
+
+    static void RegisterBlocks(BlockRegistry* registry) {
+        for (int i = 0; i < 6; ++i)
+            registry->RegisterBlock(new WoodPlanksBlock(i));
+    }
+};
+
+class SaplingBlock : public Block {
+public:
+    SaplingBlock(u16 meta) : Block(L"Sapling", 6, meta, false) { }
+
+    std::wstring GetName() const {
+        u16 meta = GetMeta();
+        meta &= 7;
+
+        std::wstring names[] = { L"Oak Sapling", L"Spruce Sapling", 
+                                 L"Birch Sapling", L"Jungle Sapling",
+                                 L"Acacia Sapling", L"Dark Oak Sapling",
+        };
+
+        return names[meta];
+    }
+
+    static void RegisterBlocks(BlockRegistry* registry) {
+        for (int i = 0; i < 6; ++i)
+            registry->RegisterBlock(new SaplingBlock(i));
+    }
+};
+
+class SandBlock : public Block {
+public:
+    SandBlock(u16 meta) : Block(L"Sand", 12, meta, true) { }
+
+    std::wstring GetName() const {
+        u16 meta = GetMeta();
+
+        std::wstring names[] = { L"Sand", L"Red Sand" };
+
+        return names[meta];
+    }
+
+    static void RegisterBlocks(BlockRegistry* registry) {
+        for (int i = 0; i < 2; ++i)
+            registry->RegisterBlock(new SandBlock(i));
+    }
+};
+
 void BlockRegistry::RegisterVanillaBlocks() {
+    const AABB FullSolidBounds(Vector3d(0, 0, 0), Vector3d(1, 1, 1));
+    const AABB LowerHalfBounds(Vector3d(0, 0, 0), Vector3d(1, 0.5, 1));
+    const AABB UpperHalfBounds(Vector3d(0, 0.5, 0), Vector3d(1, 1, 1));
+
     this->RegisterBlock(new Block(L"Air", 0, 0, false));
-    this->RegisterBlock(new Block(L"Stone", 1, 0, true));
-    this->RegisterBlock(new Block(L"Granite", 1, 1, true));
-    this->RegisterBlock(new Block(L"Polished Granite", 1, 2, true));
-    this->RegisterBlock(new Block(L"Diorite", 1, 3, true));
-    this->RegisterBlock(new Block(L"Polished Diorite", 1, 4, true));
-    this->RegisterBlock(new Block(L"Andesite", 1, 5, true));
-    this->RegisterBlock(new Block(L"Polished Andesite", 1, 6, true));
+
+    StoneBlock::RegisterBlocks(this);
+    
     this->RegisterBlock(new Block(L"Grass", 2, 0, true));
-    this->RegisterBlock(new Block(L"Dirt", 3, 0, true));
-    this->RegisterBlock(new Block(L"Coarse Dirt", 3, 1, true));
-    this->RegisterBlock(new Block(L"Podzol", 3, 2, true));
+
+    DirtBlock::RegisterBlocks(this);
+    
     this->RegisterBlock(new Block(L"Cobblestone", 4, 0, true));
-    this->RegisterBlock(new Block(L"Oak Wood Plank", 5, 0, true));
-    this->RegisterBlock(new Block(L"Spruce Wood Plank", 5, 1, true));
-    this->RegisterBlock(new Block(L"Birch Wood Plank", 5, 2, true));
-    this->RegisterBlock(new Block(L"Jungle Wood Plank", 5, 3, true));
-    this->RegisterBlock(new Block(L"Acacia Wood Plank", 5, 4, true));
-    this->RegisterBlock(new Block(L"Dark Oak Wood Plank", 5, 5, true));
-    this->RegisterBlock(new Block(L"Oak Sapling", 6, 0, false));
-    this->RegisterBlock(new Block(L"Spruce Sapling", 6, 1, false));
-    this->RegisterBlock(new Block(L"Birch Sapling", 6, 2, false));
-    this->RegisterBlock(new Block(L"Jungle Sapling", 6, 3, false));
-    this->RegisterBlock(new Block(L"Acacia Sapling", 6, 4, false));
-    this->RegisterBlock(new Block(L"Dark Oak Sapling", 6, 5, false));
+
+    WoodPlanksBlock::RegisterBlocks(this);
+    SaplingBlock::RegisterBlocks(this);
+
     this->RegisterBlock(new Block(L"Bedrock", 7, 0, true));
+
+    // TODO: Handle the data values for these
     this->RegisterBlock(new Block(L"Flowing Water", 8, 0, false));
     this->RegisterBlock(new Block(L"Still Water", 9, 0, false));
     this->RegisterBlock(new Block(L"Flowing Lava", 10, 0, false));
     this->RegisterBlock(new Block(L"Still Lava", 11, 0, false));
-    this->RegisterBlock(new Block(L"Sand", 12, 0, true));
-    this->RegisterBlock(new Block(L"Red Sand", 12, 1, true));
+
+    SandBlock::RegisterBlocks(this);
+
     this->RegisterBlock(new Block(L"Gravel", 13, 0, true));
     this->RegisterBlock(new Block(L"Gold Ore", 14, 0, true));
     this->RegisterBlock(new Block(L"Iron Ore", 15, 0, true));
@@ -106,14 +204,28 @@ void BlockRegistry::RegisterVanillaBlocks() {
     this->RegisterBlock(new Block(L"Double Stone Brick Slab", 43, 5, true));
     this->RegisterBlock(new Block(L"Double Nether Brick Slab", 43, 6, true));
     this->RegisterBlock(new Block(L"Double Quartz Slab", 43, 7, true));
-    this->RegisterBlock(new Block(L"Stone Slab", 44, 0, true));
-    this->RegisterBlock(new Block(L"Sandstone Slab", 44, 1, true));
-    this->RegisterBlock(new Block(L"Wooden Slab", 44, 2, true));
-    this->RegisterBlock(new Block(L"Cobblestone Slab", 44, 3, true));
-    this->RegisterBlock(new Block(L"Brick Slab", 44, 4, true));
-    this->RegisterBlock(new Block(L"Stone Brick Slab", 44, 5, true));
-    this->RegisterBlock(new Block(L"Nether Brick Slab", 44, 6, true));
-    this->RegisterBlock(new Block(L"Quartz Slab", 44, 7, true));
+
+
+    // Lower Slabs
+    this->RegisterBlock(new Block(L"Stone Slab", 44, 0, true, LowerHalfBounds));
+    this->RegisterBlock(new Block(L"Sandstone Slab", 44, 1, true, LowerHalfBounds));
+    this->RegisterBlock(new Block(L"Wooden Slab", 44, 2, true, LowerHalfBounds));
+    this->RegisterBlock(new Block(L"Cobblestone Slab", 44, 3, true, LowerHalfBounds));
+    this->RegisterBlock(new Block(L"Brick Slab", 44, 4, true, LowerHalfBounds));
+    this->RegisterBlock(new Block(L"Stone Brick Slab", 44, 5, true, LowerHalfBounds));
+    this->RegisterBlock(new Block(L"Nether Brick Slab", 44, 6, true, LowerHalfBounds));
+    this->RegisterBlock(new Block(L"Quartz Slab", 44, 7, true, LowerHalfBounds));
+
+    // Upper slabs
+    this->RegisterBlock(new Block(L"Upper Stone Slab", 44, 8, true, UpperHalfBounds));
+    this->RegisterBlock(new Block(L"Upper Sandstone Slab", 44, 9, true, UpperHalfBounds));
+    this->RegisterBlock(new Block(L"Upper Wooden Slab", 44, 10, true, UpperHalfBounds));
+    this->RegisterBlock(new Block(L"Upper Cobblestone Slab", 44, 11, true, UpperHalfBounds));
+    this->RegisterBlock(new Block(L"Upper Bricks Slab", 44, 12, true, UpperHalfBounds));
+    this->RegisterBlock(new Block(L"Upper Stone Brick Slab", 44, 13, true, UpperHalfBounds));
+    this->RegisterBlock(new Block(L"Upper Nether Brick Slab", 44, 14, true, UpperHalfBounds));
+    this->RegisterBlock(new Block(L"Upper Quartz Slab", 44, 15, true, UpperHalfBounds));
+
     this->RegisterBlock(new Block(L"Bricks", 45, 0, true));
     this->RegisterBlock(new Block(L"TNT", 46, 0, true));
     this->RegisterBlock(new Block(L"Bookshelf", 47, 0, true));
@@ -359,6 +471,15 @@ void BlockRegistry::RegisterVanillaBlocks() {
     this->RegisterBlock(new Block(L"Jungle Door Block", 195, 0, true));
     this->RegisterBlock(new Block(L"Acacia Door Block", 196, 0, true));
     this->RegisterBlock(new Block(L"Dark Oak Door Block", 197, 0, true));
+
+    // Set full boudning box on fully solid blocks
+    for (auto kv : m_Blocks) {
+        AABB bounds = kv.second->GetBoundingBox();
+        if (kv.second->IsSolid() && (bounds.max - bounds.min).Length() == 0)
+            kv.second->SetBoundingBox(FullSolidBounds);
+    }
+
+
 }
 
 } // ns Minecraft

@@ -39,3 +39,7 @@ DataBuffer& operator>>(DataBuffer& in, Position& pos) {
 std::ostream& operator<<(std::ostream& out, const Minecraft::Position& pos) {
     return out << "(" << pos.GetX() << ", " << pos.GetY() << ", " << pos.GetZ() << ")";
 }
+
+std::wostream& operator<<(std::wostream& out, const Minecraft::Position& pos) {
+    return out << L"(" << pos.GetX() << L", " << pos.GetY() << L", " << pos.GetZ() << L")";
+}

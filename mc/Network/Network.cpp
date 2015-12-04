@@ -38,10 +38,11 @@ IPAddresses Dns::Resolve(const std::string& host) {
     for (addrinfo *p = addresses; p != NULL; p = p->ai_next) {
 
 #ifdef _WIN32
-        wchar_t straddr[35];
+        //wchar_t straddr[35];
+        char straddr[35];
         DWORD len;
         
-        WSAAddressToString(p->ai_addr, p->ai_addrlen, NULL, straddr, &len);
+        WSAAddressToStringA(p->ai_addr, p->ai_addrlen, NULL, straddr, &len);
 #else
         char straddr[35];
 

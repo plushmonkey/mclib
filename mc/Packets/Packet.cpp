@@ -1,7 +1,5 @@
 #include "Packet.h"
 #include "PacketHandler.h"
-#include <cassert>
-#include <iostream>
 
 namespace {
 
@@ -619,11 +617,6 @@ bool ChunkDataPacket::Deserialize(DataBuffer& data, std::size_t packetLength) {
     m_ChunkColumn = std::make_shared<ChunkColumn>(metadata);
 
     data >> *m_ChunkColumn;
-
-    if (!data.IsFinished()) {
-        std::cout << "Not finishing!" << std::endl;
-        assert(data.IsFinished());
-    }
 
     return true;
 }

@@ -49,6 +49,7 @@ public:
 typedef std::vector<IPAddress> IPAddresses;
 
 std::ostream& operator<<(std::ostream& os, const IPAddress& addr);
+std::wostream& operator<<(std::wostream& os, const IPAddress& addr);
 
 } // ns Network
 

@@ -1,6 +1,7 @@
 #ifndef BLOCK_H_
 #define BLOCK_H_
 
+#include "AABB.h"
 #include "Types.h"
 
 #include <unordered_map>
@@ -13,11 +14,28 @@ private:
     std::wstring m_Name;
     u16 m_Data;
     bool m_Solid;
+    AABB m_BoundingBox;
 
 public:
+    Block(const std::wstring& name, s32 data, bool solid = true) : m_Name(name), m_Data((u16)data), m_Solid(solid) { }
+    Block(const std::wstring& name, s32 type, s32 meta, bool solid = true)
+        : m_Name(name), m_Data((u16)((type << 4) | (meta & 15))), m_Solid(solid)
+    { 
+
+    }
+
+    Block(const std::wstring& name, s32 type, s32 meta, bool solid, const AABB& bounds)
+        : m_Name(name), m_Data((u16)((type << 4) | (meta & 15))), m_Solid(solid), m_BoundingBox(bounds)
+    {
+
+    }
+
+    virtual std::wstring GetName() const { return m_Name; }
+
     u16 GetType() const {
         return m_Data >> 4;
     }
+
     u16 GetMeta() const {
         return m_Data & 15;
     }
@@ -26,11 +44,21 @@ public:
         return m_Solid;
     }
 
-    Block(const std::wstring& name, s32 data, bool solid = true) : m_Name(name), m_Data((u16)data), m_Solid(solid) { }
-    Block(const std::wstring& name, s32 type, s32 meta, bool solid = true)
-        : m_Name(name), m_Data((u16)((type << 4) | (meta & 15))), m_Solid(solid)
-    { 
+    void SetBoundingBox(const AABB& bound) {
+        m_BoundingBox = bound;
+    }
 
+    AABB GetBoundingBox() const {
+        return m_BoundingBox;
+    }
+
+    // at is the world position of this block. Used to get the world bounding box
+    AABB GetBoundingBox(Vector3i at) const { 
+        Vector3d atd = ToVector3d(at);
+        AABB bounds = m_BoundingBox;
+        bounds.min += atd;
+        bounds.max += atd;
+        return bounds;
     }
 };
 typedef Block* BlockPtr;

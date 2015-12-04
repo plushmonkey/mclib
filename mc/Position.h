@@ -33,5 +33,6 @@ DataBuffer& operator>>(DataBuffer& in, Position& pos);
 }
 
 std::ostream& operator<<(std::ostream& out, const Minecraft::Position& pos);
+std::wostream& operator<<(std::wostream& out, const Minecraft::Position& pos);
 
 #endif

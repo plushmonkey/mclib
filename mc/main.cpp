@@ -34,21 +34,36 @@ private:
     Vector3d m_Position;
     float m_Yaw;
     float m_Pitch;
+    AABB m_BoundingBox;
     
     std::queue<Vector3d> m_DigQueue;
+
+    // todo: gravity
+    const float FallSpeed = 8.3f * (50.0f / 1000.0f);
     
 public:
     PlayerController(Minecraft::Connection* connection, Minecraft::World& world, Minecraft::PlayerManager& playerManager)
         : m_PlayerManager(playerManager), 
           m_Connection(connection),
           m_World(world),
-          m_Position(0, 0, 0)
+          m_Position(0, 0, 0),
+          m_BoundingBox(Vector3d(0, 0, 0), Vector3d(0.6, 1.8, 0.6))
     { 
         m_PlayerManager.RegisterListener(this);
     }
 
     ~PlayerController() {
         m_PlayerManager.UnregisterListener(this);
+    }
+
+    AABB GetBoundingBox() const {
+        Vector3d pos = m_Position;
+        Vector3d min = m_BoundingBox.min;
+        Vector3d max = m_BoundingBox.max;
+
+        pos -= Vector3d(max.x / 2, 0.0, max.z / 2);
+
+        return AABB(pos + min, pos + max);
     }
 
     bool ClearPath(Vector3d target) {
@@ -144,38 +159,42 @@ public:
     }
 
     bool HandleJump() {
-        const float CheckWidth = 0.3f;
         const float FullCircle = 2.0f * 3.14159f;
-        bool jump = false;
+        AABB playerBounds = GetBoundingBox();
+        const float CheckWidth = (float)m_BoundingBox.max.x / 2.0f;
 
         for (float angle = 0.0f; angle < FullCircle; angle += FullCircle / 8) {
             Vector3d checkPos = m_Position + Vector3RotateAboutY(Vector3d(0, 0, CheckWidth), angle);
 
             Minecraft::BlockPtr checkBlock = m_World.GetBlock(checkPos);
             if (checkBlock && checkBlock->IsSolid()) {
-                jump = true;
-                break;
+                Vector3i pos = ToVector3i(checkPos);
+                AABB bounds = checkBlock->GetBoundingBox(pos);
+
+                if (playerBounds.Intersects(bounds)) {
+                    m_Position.y += checkBlock->GetBoundingBox().max.y;
+                    return true;
+                }
             }
         }
-        return jump;
+
+        return false;
     }
 
     bool HandleFall() {
-        const float CheckWidth = 0.3f;
         const float FullCircle = 2.0f * 3.14159f;
-        bool fall = true;
+        const float CheckWidth = (float)m_BoundingBox.max.x / 2.0f;
 
         for (float angle = 0.0f; angle < FullCircle; angle += FullCircle / 8) {
-            Vector3d checkPos = m_Position + Vector3RotateAboutY(Vector3d(0, -1, CheckWidth), angle);
+            Vector3d checkPos = m_Position + Vector3RotateAboutY(Vector3d(0, -FallSpeed, CheckWidth), angle);
 
             Minecraft::BlockPtr checkBlock = m_World.GetBlock(checkPos);
-            if (!checkBlock || (checkBlock && checkBlock->IsSolid())) {
-                fall = false;
-                break;
-            }
+            if (!checkBlock || (checkBlock && checkBlock->IsSolid()))
+                return false;
         }
 
-        return fall;
+        m_Position.y -= FallSpeed;
+        return true;
     }
 
     void Update() {
@@ -183,18 +202,19 @@ public:
         static s64 lastSend = 0;
         static u64 StartTime = GetTime();
 
-        m_Position.y = (double)(s64)m_Position.y;
+        // Need to clean this up
+        int yPos = (int)m_Position.y;
+        if (m_Position.y - yPos <= FallSpeed)
+            m_Position.y = yPos;
 
         if (GetTime() - lastSend >= 50) {
             bool onGround = true;
 
             if (HandleJump()) {
-                std::cout << "Jumping\n";
-                m_Position.y++;
+                std::wcout << "Jumping\n";
             } else {
                 if (HandleFall()) {
-                    std::cout << "Falling\n";
-                    m_Position.y -= 4.3 * (50 / 1000.0);
+                    std::wcout << "Falling\n";
                     onGround = false;
                 }
             }
@@ -242,10 +262,10 @@ class EventLogger : public Minecraft::PlayerListener, public Minecraft::Connecti
 private:
     Minecraft::PlayerManager* m_PlayerManager;
     Minecraft::Connection* m_Connection;
-    std::ostream& m_Out;
+    std::wostream& m_Out;
 
 public:
-    EventLogger(std::ostream& out, Minecraft::Packets::PacketDispatcher* dispatcher, Minecraft::PlayerManager* playerManager, Minecraft::Connection* connection)
+    EventLogger(std::wostream& out, Minecraft::Packets::PacketDispatcher* dispatcher, Minecraft::PlayerManager* playerManager, Minecraft::Connection* connection)
         : Minecraft::Packets::PacketHandler(dispatcher),
           m_Out(out),
           m_PlayerManager(playerManager),
@@ -296,7 +316,7 @@ public:
         s32 z = (s32)packet->GetZ();
         Minecraft::Position pos(x, y, z);
 
-        std::cout << "Pos: " << pos << std::endl;
+        m_Out << L"Pos: " << pos << std::endl;
     }
 
     void HandlePacket(Minecraft::Packets::Inbound::ChunkDataPacket* packet) {
@@ -304,85 +324,98 @@ public:
         auto x = column->GetMetadata().x;
         auto z = column->GetMetadata().z;
 
-        std::cout << "Received chunk data for chunk " << x << ", " << z << std::endl;*/
+        std::wcout << "Received chunk data for chunk " << x << ", " << z << std::endl;*/
     }
 
     void HandlePacket(Minecraft::Packets::Inbound::EntityPropertiesPacket* packet) {
-        /*  std::cout << "Received entity properties: " << std::endl;
+        /*  std::wcout << "Received entity properties: " << std::endl;
         const auto& properties = packet->GetProperties();
         for (const auto& kv : properties) {
         std::wstring key = kv.first;
         const auto& property = kv.second;
         std::wcout << key << " : " << property.value << std::endl;
         for (const auto& modifier : property.modifiers)
-        std::cout << "Modifier: " << modifier.uuid << " " << modifier.amount << " " << (int)modifier.operation << std::endl;
+        std::wcout << "Modifier: " << modifier.uuid << " " << modifier.amount << " " << (int)modifier.operation << std::endl;
         }*/
     }
 
     void HandlePacket(Minecraft::Packets::Inbound::EntityRelativeMovePacket* packet) {
         if (packet->GetDeltaX() != 0 || packet->GetDeltaY() != 0 || packet->GetDeltaZ() != 0) {
-            //std::cout << "Entity " << packet->GetEntityId() << " relative move: (";
-            //std::cout << packet->GetDeltaX() << ", " << packet->GetDeltaY() << ", " << packet->GetDeltaZ() << ")" << std::endl;
+            //std::wcout << "Entity " << packet->GetEntityId() << " relative move: (";
+            //std::wcout << packet->GetDeltaX() << ", " << packet->GetDeltaY() << ", " << packet->GetDeltaZ() << ")" << std::endl;
         }
     }
 
     void HandlePacket(Minecraft::Packets::Inbound::SpawnPlayerPacket* packet) {
-        float x, y, z;
+        /*float x, y, z;
         x = packet->GetX();
         y = packet->GetY();
         z = packet->GetZ();
-        std::cout << "Spawn player " << packet->GetUUID() << " at (" << x << ", " << y << ", " << z << ")" << std::endl;
+        m_Out << "Spawn player " << packet->GetUUID() << " at (" << x << ", " << y << ", " << z << ")" << std::endl;*/
     }
 
     void HandlePacket(Minecraft::Packets::Inbound::UpdateHealthPacket* packet) {
-        std::cout << "Set health. health: " << packet->GetHealth() << std::endl;
+        m_Out << "Set health. health: " << packet->GetHealth() << std::endl;
     }
 
     void HandlePacket(Minecraft::Packets::Inbound::SetExperiencePacket* packet) {
-        std::cout << "Set experience. Level: " << packet->GetLevel() << std::endl;
+        m_Out << "Set experience. Level: " << packet->GetLevel() << std::endl;
+    }
+
+    std::string ParseChatNode(Json::Value node) {
+        if (node.isNull()) return "";
+        if (node.isString()) return node.asString();
+        if (node.isObject()) {
+            std::string result;
+
+            if (!node["extra"].isNull())
+                result += ParseChatNode(node["extra"]);
+            if (node["text"].isString())
+                result += node["text"].asString();
+            return result;
+        }
+        if (node.isArray()) {
+            std::string result;
+
+            for (auto arrayNode : node)
+                result += ParseChatNode(arrayNode);
+            return result;
+        }
+        return "";
     }
 
     void HandlePacket(Minecraft::Packets::Inbound::ChatPacket* packet) {
         const Json::Value& root = packet->GetChatData();
 
-        if (root.isString()) {
-            std::cout << root.asString() << std::endl;
-            return;
+        std::string message = ParseChatNode(root);
+        std::size_t pos = message.find((char)0xA7);
+        
+        while (pos != std::string::npos) {
+            message.erase(pos - 1, 3);
+            pos = message.find((char)0xA7);
         }
-
-        if (root.isNull() || root["text"].isNull()) return;
-
-        std::string message = root["text"].asString();
-
-        if (!root["extra"].isNull()) {
-            auto iter = root["extra"].begin();
-            for (; iter != root["extra"].end(); ++iter) {
-                if ((*iter).isString()) {
-                    message += (*iter).asString();
-                } else {
-                    if (!(*iter)["text"].isNull())
-                        message += (*iter)["text"].asString();
-                }
-            }
-        }
-
-        std::cout << message << std::endl;
+        
+        /*message.erase(std::remove_if(message.begin(), message.end(), [](char c) {
+            return c < 32 || c > 126;
+        }), message.end());*/
+        if (message.length() > 0)
+            m_Out << std::wstring(message.begin(), message.end()) << std::endl;
     }
 
     void HandlePacket(Minecraft::Packets::Inbound::EntityMetadataPacket* packet) {
         //const auto& metadata = packet->GetMetadata();
 
-        //std::cout << "Received entity metadata" << std::endl;
+        //std::wcout << "Received entity metadata" << std::endl;
     }
 
     void HandlePacket(Minecraft::Packets::Inbound::SpawnMobPacket* packet) {
         //const auto& metadata = packet->GetMetadata();
 
-        //std::cout << "Received SpawnMobPacket" << std::endl;
+        //std::wcout << "Received SpawnMobPacket" << std::endl;
     }
 
     void HandlePacket(Minecraft::Packets::Inbound::MapChunkBulkPacket* packet) {
-        std::cout << "Received MapChunkBulkPacket" << std::endl;
+        m_Out << "Received MapChunkBulkPacket" << std::endl;
     }
 
     void HandlePacket(Minecraft::Packets::Inbound::SetSlotPacket* packet) {
@@ -390,11 +423,11 @@ public:
         int window = packet->GetWindowId();
         int index = packet->GetSlotIndex();
 
-        std::cout << "Set slot (" << window << ", " << index << ") = " << slot.GetItemId() << ":" << slot.GetItemDamage() << "\n";
+        m_Out << "Set slot (" << window << ", " << index << ") = " << slot.GetItemId() << ":" << slot.GetItemDamage() << "\n";
     }
 
     void HandlePacket(Minecraft::Packets::Inbound::WindowItemsPacket* packet) {
-        std::cout << "Received window items for WindowId " << (int)packet->GetWindowId() << "." << std::endl;
+        m_Out << "Received window items for WindowId " << (int)packet->GetWindowId() << "." << std::endl;
 
         const std::vector<Minecraft::Slot>& slots = packet->GetSlots();
 
@@ -405,7 +438,7 @@ public:
             //const Minecraft::NBT::NBT& nbt = slot.GetNBT();
 
             if (id != -1) {
-                std::cout << "Item: " << id << " Amount: " << (int)count << " Dmg: " << dmg << std::endl;
+                m_Out << "Item: " << id << " Amount: " << (int)count << " Dmg: " << dmg << std::endl;
             }
         }
     }
@@ -414,14 +447,14 @@ public:
         using namespace Minecraft::Packets::Inbound;
         WorldBorderPacket::Action action = packet->GetAction();
 
-        std::cout << "Received world border packet\n";
+        m_Out << "Received world border packet\n";
 
         switch (action) {
         case WorldBorderPacket::Action::Initialize:
         {
-            std::cout << "World border radius: " << packet->GetRadius() << std::endl;
-            std::cout << "World border center: " << packet->GetX() << ", " << packet->GetZ() << std::endl;
-            std::cout << "World border warning time: " << packet->GetWarningTime() << " seconds, blocks: " << packet->GetWarningBlocks() << " meters" << std::endl;
+            m_Out << "World border radius: " << packet->GetRadius() << std::endl;
+            m_Out << "World border center: " << packet->GetX() << ", " << packet->GetZ() << std::endl;
+            m_Out << "World border warning time: " << packet->GetWarningTime() << " seconds, blocks: " << packet->GetWarningBlocks() << " meters" << std::endl;
         }
         break;
         default:
@@ -429,17 +462,34 @@ public:
         }
     }
 
+    void OnPlayerSpawn(Minecraft::PlayerPtr player) {
+        auto entity = player->GetEntity();
+        Vector3d pos(0, 0, 0);
+
+        if (entity)
+            pos = entity->GetPosition();
+        m_Out << "Spawn player " << player->GetName() << " at " << pos << std::endl;
+    }
+
+    void OnPlayerJoin(Minecraft::PlayerPtr player) {
+        m_Out << player->GetName() << L" added to playerlist" << std::endl;
+    }
+
+    void OnPlayerLeave(Minecraft::PlayerPtr player) {
+        m_Out << player->GetName() << L" removed from playerlist" << std::endl;
+    }
+
     void HandlePacket(Minecraft::Packets::Inbound::PlayerListItemPacket* packet) {
         using namespace Minecraft::Packets::Inbound;
 
-        PlayerListItemPacket::Action action = packet->GetAction();
+      //  PlayerListItemPacket::Action action = packet->GetAction();
 
-        std::vector<PlayerListItemPacket::ActionDataPtr> dataList = packet->GetActionData();
+        //std::vector<PlayerListItemPacket::ActionDataPtr> dataList = packet->GetActionData();
 
-        for (auto actionData : dataList) {
+      /*  for (auto actionData : dataList) {
             switch (action) {
             case PlayerListItemPacket::Action::AddPlayer:
-                std::wcout << "Adding player " << actionData->name << " uuid: " << actionData->uuid << std::endl;
+                m_Out << "Adding player " << actionData->name << " uuid: " << actionData->uuid << std::endl;
 
                 for (auto& property : actionData->properties)
                     std::wcout << property.first << " = " << property.second << std::endl;
@@ -451,57 +501,57 @@ public:
                 //     std::wcout << "Ping for " << actionData->uuid << " is " << actionData->ping << std::endl;
                 break;
             case PlayerListItemPacket::Action::RemovePlayer:
-                std::cout << "Removing player " << actionData->uuid << std::endl;
+                std::wcout << "Removing player " << actionData->uuid << std::endl;
                 break;
             default:
                 break;
             }
-        }
+        }*/
     }
 
     void HandlePacket(Minecraft::Packets::Inbound::StatisticsPacket* packet) {
         const auto& stats = packet->GetStatistics();
 
         for (auto& kv : stats)
-            std::wcout << kv.first << " = " << kv.second << std::endl;
+            m_Out << kv.first << " = " << kv.second << std::endl;
     }
 
     void HandlePacket(Minecraft::Packets::Inbound::PlayerAbilitiesPacket* packet) {
-        std::cout << "Abilities: " << (int)packet->GetFlags() << ", " << packet->GetFlyingSpeed() << ", " << packet->GetWalkingSpeed() << std::endl;
+        m_Out << "Abilities: " << (int)packet->GetFlags() << ", " << packet->GetFlyingSpeed() << ", " << packet->GetWalkingSpeed() << std::endl;
     }
 
     void HandlePacket(Minecraft::Packets::Inbound::SpawnPositionPacket* packet) {
-        std::cout << "Spawn position: " << packet->GetLocation() << std::endl;
+        m_Out << "Spawn position: " << packet->GetLocation() << std::endl;
     }
 
     void HandlePacket(Minecraft::Packets::Inbound::DisconnectPacket* packet) {
-        std::cout << "Disconnected from server. Reason: " << std::endl;
-        std::wcout << packet->GetReason() << std::endl;
+        m_Out << "Disconnected from server. Reason: " << std::endl;
+        m_Out << packet->GetReason() << std::endl;
     }
 
     void HandlePacket(Minecraft::Packets::Inbound::EncryptionRequestPacket* packet) {
-        std::cout << "Encryption request received\n";
+        m_Out << "Encryption request received\n";
     }
 
     void HandlePacket(Minecraft::Packets::Inbound::LoginSuccessPacket* packet) {
-        std::cout << "Successfully logged in. Username: ";
-        std::wcout << packet->GetUsername() << std::endl;
+        m_Out << "Successfully logged in. Username: ";
+        m_Out << packet->GetUsername() << std::endl;
     }
 
     void HandlePacket(Minecraft::Packets::Inbound::JoinGamePacket* packet) {
-        std::cout << "Joining game with entity id of " << packet->GetEntityId() << std::endl;
-        std::cout << "Game difficulty: " << (int)packet->GetDifficulty() << ", Dimension: " << (int)packet->GetDimension() << std::endl;
-        std::wcout << "Level type: " << packet->GetLevelType() << std::endl;
+        m_Out << "Joining game with entity id of " << packet->GetEntityId() << std::endl;
+        m_Out << "Game difficulty: " << (int)packet->GetDifficulty() << ", Dimension: " << (int)packet->GetDimension() << std::endl;
+        m_Out << "Level type: " << packet->GetLevelType() << std::endl;
     }
 
     void HandlePacket(Minecraft::Packets::Inbound::PluginMessagePacket* packet) {
-        std::wcout << "Plugin message received on channel " << packet->GetChannel();
+        m_Out << "Plugin message received on channel " << packet->GetChannel();
         auto value = packet->GetData();
-        std::cout << " Value: " << value << std::endl;
+        m_Out << " Value: " << std::wstring(value.begin(), value.end()) << std::endl;
     }
 
     void HandlePacket(Minecraft::Packets::Inbound::ServerDifficultyPacket* packet) {
-        std::wcout << "New server difficulty: " << (int)packet->GetDifficulty() << std::endl;
+        m_Out << "New server difficulty: " << (int)packet->GetDifficulty() << std::endl;
     }
 };
 
@@ -539,14 +589,15 @@ public:
 
         if (!m_Following || !m_Following->GetEntity()) return;
 
-        Vector3d toFollowing = m_Following->GetEntity()->GetPosition() - m_PlayerController.GetPosition();
-        double dist = toFollowing.Length();
+        Vector3d target = m_Following->GetEntity()->GetPosition();
+        Vector3d toTarget = target - m_PlayerController.GetPosition();
+        double dist = toTarget.Length();
 
         if (dist >= 1.0) {
-            if (!m_PlayerController.ClearPath(m_Following->GetEntity()->GetPosition()))
+            if (!m_PlayerController.ClearPath(target))
                 return;
 
-            Vector3d n = Vector3Normalize(toFollowing);
+            Vector3d n = Vector3Normalize(toTarget);
             double change = dt / 1000.0;
 
             n *= WalkingSpeed * change;
@@ -708,9 +759,8 @@ public:
           m_PlayerController(&m_Connection, m_World, m_PlayerManager),
           m_Connected(false),
           m_Creator(nullptr),
-          m_Logger(std::cout, &m_Dispatcher, &m_PlayerManager, &m_Connection)
+          m_Logger(std::wcout, &m_Dispatcher, &m_PlayerManager, &m_Connection)
     {
-        Minecraft::BlockRegistry::GetInstance().RegisterVanillaBlocks();
         m_Connection.RegisterListener(this);
 
         using namespace Minecraft::NBT;
@@ -812,7 +862,7 @@ public:
         //Minecraft::Slot slot(349, 1, 2, nbt);
 
         m_Creator = new CreativeCreator(&m_Dispatcher, &m_Connection, 15, slot);
-        std::cout << "Created skull creator" << std::endl;*/
+        std::wcout << "Created skull creator" << std::endl;*/
     }
 
     ~Client() {
@@ -840,18 +890,30 @@ public:
             } catch (std::exception& e) {
                 std::cerr << e.what() << std::endl;
             }*/
-
+            
             m_Follower.UpdatePosition();
             m_PlayerController.Update();
         }
 
-        std::cout << "Disconnected from server." << std::endl;
+        std::wcout << "Disconnected from server." << std::endl;
 
         return 0;
     }
 };
 
+#ifdef WIN32
+#include <io.h>
+#include <fcntl.h>
+#define setmode(f, t) _setmode((f), (t))
+#else
+#define setmode(f, t)
+#endif
+
 int main(void) {
+    setmode(_fileno(stdout), _O_U16TEXT);
+
+    Minecraft::BlockRegistry::GetInstance().RegisterVanillaBlocks();
+
     Client client;
 
     return client.Run();
