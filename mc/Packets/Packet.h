@@ -529,6 +529,22 @@ public:
     u8 GetStatus() const { return m_Status; }
 };
 
+class AttachEntityPacket : public InboundPacket { // 0x1B
+private:
+    EntityId m_EntityId;
+    EntityId m_VehicleId;
+    bool m_Leashed;
+
+public:
+    AttachEntityPacket();
+    bool Deserialize(DataBuffer& data, std::size_t packetLength);
+    void Dispatch(PacketHandler* handler);
+
+    EntityId GetEntityId() const { return m_EntityId; }
+    EntityId GetVehicleId() const { return m_VehicleId; }
+    bool IsLeashed() const { return m_Leashed; }
+};
+
 class EntityMetadataPacket : public InboundPacket { // 0x1C
 private:
     EntityId m_EntityId;

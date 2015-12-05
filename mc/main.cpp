@@ -590,6 +590,13 @@ public:
         if (!m_Following || !m_Following->GetEntity()) return;
 
         Vector3d target = m_Following->GetEntity()->GetPosition();
+        Minecraft::EntityId vid = m_Following->GetEntity()->GetVehicleId();
+        if (vid != -1) {
+            auto vehicle = m_EntityManager.GetEntity(vid);
+            if (vehicle)
+                target = vehicle->GetPosition();
+        }
+
         Vector3d toTarget = target - m_PlayerController.GetPosition();
         double dist = toTarget.Length();
 
@@ -627,7 +634,15 @@ public:
             Minecraft::EntityId peid = m_EntityManager.GetPlayerEntity()->GetEntityId();
             if (entity->GetEntityId() == peid) continue;
 
-            double dist = entity->GetPosition().Distance(m_PlayerController.GetPosition());
+            Vector3d pos = entity->GetPosition();
+            Minecraft::EntityId vid = entity->GetVehicleId();
+            if (vid > 0) {
+                Minecraft::EntityPtr vehicle = m_EntityManager.GetEntity(vid);
+                if (vehicle)
+                    pos = vehicle->GetPosition();
+            }
+
+            double dist = pos.Distance(m_PlayerController.GetPosition());
 
             if (dist < closest) {
                 closest = dist;
@@ -642,7 +657,14 @@ public:
             if (m_Following) {
                 auto entity = m_Following->GetEntity();
                 if (entity) {
-                    double dist = m_PlayerController.GetPosition().Distance(entity->GetPosition());
+                    Vector3d pos = entity->GetPosition();
+                    Minecraft::EntityId vid = entity->GetVehicleId();
+                    if (vid > 0) {
+                        Minecraft::EntityPtr vehicle = m_EntityManager.GetEntity(vid);
+                        if (vehicle)
+                            pos = vehicle->GetPosition();
+                    }
+                    double dist = m_PlayerController.GetPosition().Distance(pos);
                     std::wcout << L"Tracking " << m_Following->GetName() << " dist: " << dist << std::endl;
                 }
             }
@@ -678,6 +700,8 @@ public:
     }
 };
 
+#include <future>
+
 class CreativeCreator : public Minecraft::Packets::PacketHandler {
 private:
     Minecraft::Connection* m_Connection;
@@ -692,7 +716,6 @@ public:
     {
         using namespace Minecraft::Protocol;
 
-        dispatcher->RegisterHandler(State::Play, Play::Chat, this);
         dispatcher->RegisterHandler(State::Play, Play::PlayerPositionAndLook, this);
     }
 
@@ -702,36 +725,17 @@ public:
 
     void CreateItem() {
         Minecraft::Packets::Outbound::CreativeInventoryActionPacket packet(m_Slot, m_Item);
-        
+
         m_Connection->SendPacket(&packet);
     }
 
     void HandlePacket(Minecraft::Packets::Inbound::PlayerPositionAndLookPacket* packet) {
-        std::this_thread::sleep_for(std::chrono::seconds(2));
-        CreateItem();
-    }
-
-    void HandlePacket(Minecraft::Packets::Inbound::ChatPacket* packet) {
-        const Json::Value& root = packet->GetChatData();
-
-        if (root["text"].isNull()) return;
-
-        std::string message = root["text"].asString();
-
-        if (!root["extra"].isNull()) {
-            auto iter = root["extra"].begin();
-            for (; iter != root["extra"].end(); ++iter) {
-                if ((*iter).isString()) {
-                    message += (*iter).asString();
-                } else {
-                    if (!(*iter)["text"].isNull())
-                        message += (*iter)["text"].asString();
-                }
-            }
-        }
-
-        if (message.find("!create") != std::string::npos)
+        std::async(std::launch::async, [&] {
+            std::this_thread::sleep_for(std::chrono::seconds(7));
             CreateItem();
+            std::wcout << L"Created item" << std::endl;
+        });
+
     }
 };
 
@@ -859,10 +863,10 @@ public:
 
         Minecraft::Slot slot(397, 1, 3, nbt);
         //Minecraft::Slot slot(346, 1, 0, nbt);
-        //Minecraft::Slot slot(349, 1, 2, nbt);
+        //Minecraft::Slot slot(349, 1, 2, nbt);*/
 
-        m_Creator = new CreativeCreator(&m_Dispatcher, &m_Connection, 15, slot);
-        std::wcout << "Created skull creator" << std::endl;*/
+        //m_Creator = new CreativeCreator(&m_Dispatcher, &m_Connection, 15, slot);
+        //std::wcout << "Created skull creator" << std::endl;
     }
 
     ~Client() {

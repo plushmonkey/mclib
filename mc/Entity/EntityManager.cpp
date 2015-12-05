@@ -25,10 +25,20 @@ EntityManager::EntityManager(Packets::PacketDispatcher* dispatcher)
     GetDispatcher()->RegisterHandler(Protocol::State::Play, Protocol::Play::EntityMetadata, this);
     GetDispatcher()->RegisterHandler(Protocol::State::Play, Protocol::Play::EntityProperties, this);
     GetDispatcher()->RegisterHandler(Protocol::State::Play, Protocol::Play::DestroyEntities, this);
+    GetDispatcher()->RegisterHandler(Protocol::State::Play, Protocol::Play::AttachEntity, this);
 }
 
 EntityManager::~EntityManager() {
     GetDispatcher()->UnregisterHandler(this);
+}
+
+void EntityManager::HandlePacket(Packets::Inbound::AttachEntityPacket* packet) {
+    EntityId eid = packet->GetEntityId();
+    EntityId vid = packet->GetVehicleId();
+
+    auto entity = m_Entities[eid];
+    if (entity)
+        entity->SetVehicleId(vid);
 }
 
 void EntityManager::HandlePacket(Packets::Inbound::JoinGamePacket* packet) {

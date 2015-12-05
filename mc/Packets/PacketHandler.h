@@ -55,6 +55,7 @@ public:
     virtual void HandlePacket(Inbound::EntityTeleportPacket* packet) { } // 0x18
     virtual void HandlePacket(Inbound::EntityHeadLookPacket* packet) { } // 0x19
     virtual void HandlePacket(Inbound::EntityStatusPacket* packet) { } // 0x1A
+    virtual void HandlePacket(Inbound::AttachEntityPacket* packet) { } // 0x1B
     virtual void HandlePacket(Inbound::EntityMetadataPacket* packet) { } // 0x1C
     virtual void HandlePacket(Inbound::SetExperiencePacket* packet) { } // 0x1F
     virtual void HandlePacket(Inbound::EntityPropertiesPacket* packet) { } // 0x20

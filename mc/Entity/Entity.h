@@ -22,11 +22,14 @@ protected:
     EntityMetadata m_Metadata;
     u8 m_Yaw, m_Pitch, m_HeadPitch;
 
+    EntityId m_VehicleId;
+
 public:
-    Entity(EntityId id) : m_EntityId(id) { }
+    Entity(EntityId id) : m_EntityId(id), m_VehicleId(0) { }
     virtual ~Entity() { }
 
     EntityId GetEntityId() const { return m_EntityId; }
+    EntityId GetVehicleId() const { return m_VehicleId; }
     const Vector3d& GetPosition() const { return m_Position; }
     const Vector3s& GetVelocity() const { return m_Velocity; }
     u8 GetYaw() const { return m_Yaw; }
@@ -36,6 +39,7 @@ public:
     const EntityMetadata& GetMetadata() const { return m_Metadata; }
 
     void SetPosition(const Vector3d& pos) { m_Position = pos; }
+    void SetVehicleId(EntityId vid) { m_VehicleId = vid; }
 };
 
 typedef std::shared_ptr<Entity> EntityPtr;

@@ -129,6 +129,9 @@ Packet* PlayPacketFactory::CreatePacket(DataBuffer& data, std::size_t length) {
     case Protocol::Play::EntityStatus:
         packet = new Inbound::EntityStatusPacket();
         break;
+    case Protocol::Play::AttachEntity:
+        packet = new Inbound::AttachEntityPacket();
+        break;
     case Protocol::Play::EntityMetadata:
         packet = new Inbound::EntityMetadataPacket();
         break;

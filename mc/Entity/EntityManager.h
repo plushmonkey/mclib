@@ -34,7 +34,11 @@ public:
 
     std::shared_ptr<PlayerEntity> GetPlayerEntity() const { return std::dynamic_pointer_cast<PlayerEntity>(m_Entities.at(m_EntityId)); }
 
-    EntityPtr GetEntity(EntityId eid) const { return m_Entities.at(eid); }
+    EntityPtr GetEntity(EntityId eid) const { 
+        auto iter = m_Entities.find(eid);
+        if (iter == m_Entities.end()) return nullptr;
+        return iter->second;
+    }
 
     void HandlePacket(Packets::Inbound::JoinGamePacket* packet);
     void HandlePacket(Packets::Inbound::PlayerPositionAndLookPacket* packet);
@@ -49,6 +53,7 @@ public:
     void HandlePacket(Packets::Inbound::EntityMetadataPacket* packet);
     void HandlePacket(Packets::Inbound::EntityPropertiesPacket* packet);
     void HandlePacket(Packets::Inbound::DestroyEntitiesPacket* packet);
+    void HandlePacket(Packets::Inbound::AttachEntityPacket* packet);
 };
 
 } // ns Minecraft

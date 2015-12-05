@@ -506,6 +506,23 @@ void EntityStatusPacket::Dispatch(PacketHandler* handler) {
     handler->HandlePacket(this);
 }
 
+AttachEntityPacket::AttachEntityPacket() {
+    m_Id = 0x1B;
+}
+
+bool AttachEntityPacket::Deserialize(DataBuffer& data, std::size_t packetLength) {
+    // Should these be VarInts?
+    data >> m_EntityId;
+    data >> m_VehicleId;
+    data >> m_Leashed;
+
+    return true;
+}
+
+void AttachEntityPacket::Dispatch(PacketHandler* handler) {
+    handler->HandlePacket(this);
+}
+
 EntityMetadataPacket::EntityMetadataPacket() {
     m_Id = 0x1C;
 }
