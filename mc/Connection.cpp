@@ -7,6 +7,10 @@
 #include "Network/Network.h"
 #include "Network/TCPSocket.h"
 
+#include <future>
+#include <thread>
+
+
 namespace Minecraft {
 
 Connection::Connection(Minecraft::Packets::PacketDispatcher* dispatcher)
@@ -84,6 +88,7 @@ void Connection::AuthenticateClient(const std::wstring& serverId, const std::str
         error = e.what();
     }
 
+    m_Password.clear();
     NotifyListeners(&ConnectionListener::OnAuthentication, success, error);
 }
 
@@ -106,6 +111,26 @@ void Connection::HandlePacket(Minecraft::Packets::Inbound::LoginSuccessPacket* p
     m_ProtocolState = Minecraft::Protocol::State::Play;
 
     NotifyListeners(&ConnectionListener::OnLogin, true);
+
+    using namespace Packets::Outbound;
+
+    // I guess the server doesn't switch protocol state immediately
+    std::async(std::launch::async, [&]{
+        std::this_thread::sleep_for(std::chrono::seconds(5));
+
+        u8 skinFlags = 0;
+        skinFlags |= ClientSettingsPacket::SkinPartFlags::Cape;
+        skinFlags |= ClientSettingsPacket::SkinPartFlags::Jacket;
+        skinFlags |= ClientSettingsPacket::SkinPartFlags::LeftSleeve;
+        skinFlags |= ClientSettingsPacket::SkinPartFlags::RightSleeve;
+        skinFlags |= ClientSettingsPacket::SkinPartFlags::LeftPants;
+        skinFlags |= ClientSettingsPacket::SkinPartFlags::RightPants;
+        skinFlags |= ClientSettingsPacket::SkinPartFlags::Hat;
+
+        ClientSettingsPacket clientSettings(32, ClientSettingsPacket::ChatMode::Enabled, true, skinFlags);
+
+        SendPacket(&clientSettings);
+    });
 }
 
 void Connection::HandlePacket(Minecraft::Packets::Inbound::SetCompressionPacket* packet) {
@@ -141,7 +166,7 @@ bool Connection::Connect(const std::string& server, u16 port) {
     return result;
 }
 
-Minecraft::Packets::Packet* Connection::CreatePacket(Minecraft::DataBuffer& buffer) {
+Minecraft::Packets::Packet* Connection::CreatePacketSync(Minecraft::DataBuffer& buffer) {
     std::size_t readOffset = buffer.GetReadOffset();
     Minecraft::VarInt length;
 
@@ -162,7 +187,31 @@ Minecraft::Packets::Packet* Connection::CreatePacket(Minecraft::DataBuffer& buff
 
     Minecraft::DataBuffer decompressed = m_Compressor->Decompress(buffer, length.GetInt());
 
-    return Minecraft::Packets::PacketFactory::CreatePacket(m_ProtocolState, decompressed, length.GetInt());
+    return Packets::PacketFactory::CreatePacket(m_ProtocolState, decompressed, length.GetInt());
+}
+
+std::future<Minecraft::Packets::Packet*> Connection::CreatePacket(Minecraft::DataBuffer& buffer) {
+    std::size_t readOffset = buffer.GetReadOffset();
+    Minecraft::VarInt length;
+
+    try {
+        buffer >> length;
+    } catch (const std::out_of_range&) {
+        // This will happen when the buffer only contains part of the VarInt, 
+        // so only part of the packet was received so far.
+        // The buffer read offset isn't advanced when the exception is thrown, so no need to set it back to what it was.
+        return std::future<Minecraft::Packets::Packet*>();
+    }
+
+    if (buffer.GetRemaining() < (u32)length.GetInt()) {
+        // Reset the read offset back to what it was because the full packet hasn't been received yet.
+        buffer.SetReadOffset(readOffset);
+        return std::future<Minecraft::Packets::Packet*>();
+    }
+
+    Minecraft::DataBuffer decompressed = m_Compressor->Decompress(buffer, length.GetInt());
+
+    return std::async(std::launch::async, &Minecraft::Packets::PacketFactory::CreatePacket, m_ProtocolState, decompressed, length.GetInt());
 }
 
 void Connection::CreatePacket() {
@@ -175,21 +224,37 @@ void Connection::CreatePacket() {
         return;
     }
 
-    if (buffer.GetSize() == 0) return;
+    //if (buffer.GetSize() == 0) return;
 
     m_HandleBuffer << m_Encrypter->Decrypt(buffer);
 
     Minecraft::Packets::Packet* packet = nullptr;
-
+    
     do {
         try {
-            packet = CreatePacket(m_HandleBuffer);
-            if (packet) {
+            if (m_ProtocolState == Protocol::State::Login) {
+                Minecraft::Packets::Packet* packet = CreatePacketSync(m_HandleBuffer);
+
+                if (packet) {
+                    this->GetDispatcher()->Dispatch(packet);
+                    Minecraft::Packets::PacketFactory::FreePacket(packet);
+                } else {
+                    break;
+                }
+            } else {
+                std::future<Minecraft::Packets::Packet*> futurePacket = CreatePacket(m_HandleBuffer);
+                if (futurePacket.valid())
+                    m_FuturePackets.push(std::move(futurePacket));
+                else 
+                    break;
+            }
+            //packet = CreatePacket(m_HandleBuffer);
+            /*if (packet) {
                 this->GetDispatcher()->Dispatch(packet);
                 Minecraft::Packets::PacketFactory::FreePacket(packet);
             } else {
                 break;
-            }
+            }*/
         } catch (const Minecraft::Protocol::UnfinishedProtocolException&) {
             // Ignore for now
         }
@@ -199,6 +264,34 @@ void Connection::CreatePacket() {
         m_HandleBuffer = Minecraft::DataBuffer();
     else if (m_HandleBuffer.GetReadOffset() != 0)
         m_HandleBuffer = Minecraft::DataBuffer(m_HandleBuffer, m_HandleBuffer.GetReadOffset());
+
+    while (!m_FuturePackets.empty()) {
+        auto& futurePacket = m_FuturePackets.front();
+        if (!futurePacket.valid()) {
+            m_FuturePackets.pop();
+            continue;
+        }
+
+        std::future_status status = futurePacket.wait_for(std::chrono::milliseconds(1));
+
+        if (status != std::future_status::ready) break;
+
+        try {
+            Minecraft::Packets::Packet* packet = futurePacket.get();
+            m_FuturePackets.pop();
+
+            if (packet) {
+                this->GetDispatcher()->Dispatch(packet);
+                Minecraft::Packets::PacketFactory::FreePacket(packet);
+            }
+        } catch (const Minecraft::Protocol::UnfinishedProtocolException&) {
+            // Ignore
+            m_FuturePackets.pop();
+        } catch (std::exception& e) {
+            m_FuturePackets.pop();
+            throw e;
+        }
+    }
 }
 
 void Connection::Login(const std::string& username, const std::string& password) {

@@ -25,7 +25,7 @@ protected:
     EntityId m_VehicleId;
 
 public:
-    Entity(EntityId id) : m_EntityId(id), m_VehicleId(0) { }
+    Entity(EntityId id) : m_EntityId(id), m_VehicleId(-1) { }
     virtual ~Entity() { }
 
     EntityId GetEntityId() const { return m_EntityId; }
@@ -39,6 +39,9 @@ public:
     const EntityMetadata& GetMetadata() const { return m_Metadata; }
 
     void SetPosition(const Vector3d& pos) { m_Position = pos; }
+    void SetVelocity(const Vector3s& vel) { m_Velocity = vel; }
+    void SetYaw(u8 yaw) { m_Yaw = yaw; }
+    void SetPitch(u8 pitch) { m_Pitch = pitch; }
     void SetVehicleId(EntityId vid) { m_VehicleId = vid; }
 };
 

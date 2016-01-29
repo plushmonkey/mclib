@@ -1,6 +1,7 @@
 #include "Position.h"
 #include "DataBuffer.h"
 #include <cmath>
+#include <sstream>
 
 namespace Minecraft {
 
@@ -34,12 +35,22 @@ DataBuffer& operator>>(DataBuffer& in, Position& pos) {
     return in;
 }
 
+std::string to_string(const Position& pos) {
+    std::stringstream ss;
+
+    ss << "(" << pos.GetX() << ", " << pos.GetY() << ", " << pos.GetZ() << ")";
+    return ss.str();
+}
+
 } // ns Minecraft
 
 std::ostream& operator<<(std::ostream& out, const Minecraft::Position& pos) {
-    return out << "(" << pos.GetX() << ", " << pos.GetY() << ", " << pos.GetZ() << ")";
+    return out << Minecraft::to_string(pos);
 }
 
 std::wostream& operator<<(std::wostream& out, const Minecraft::Position& pos) {
-    return out << L"(" << pos.GetX() << L", " << pos.GetY() << L", " << pos.GetZ() << L")";
+    std::string str = Minecraft::to_string(pos);
+    std::wstring wstr(str.begin(), str.end());
+
+    return out << wstr;
 }

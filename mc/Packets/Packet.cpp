@@ -1360,6 +1360,39 @@ DataBuffer PlayerPositionAndLookPacket::Serialize() const {
     return buffer;
 }
 
+PlayerDiggingPacket::PlayerDiggingPacket(Status status, Vector3i position, u8 face)
+    : m_Status(status), m_Position(position), m_Face(face)
+{
+    m_Id = 0x07;
+}
+
+DataBuffer PlayerDiggingPacket::Serialize() const {
+    DataBuffer buffer;
+    Position location(m_Position.x, m_Position.y, m_Position.z);
+
+    buffer << m_Id;
+    buffer << (u8)m_Status;
+    buffer << location;
+    buffer << m_Face;
+
+    return buffer;
+}
+
+PlayerBlockPlacementPacket::PlayerBlockPlacementPacket(Vector3i position, u8 face, Vector3i cursorPos) 
+    : m_Position(position), m_Face(face), m_CursorPos(cursorPos)
+{
+    m_Id = 0x08;
+}
+DataBuffer PlayerBlockPlacementPacket::Serialize() const {
+    DataBuffer buffer;
+
+    buffer << m_Id;
+
+
+
+    return buffer;
+}
+
 CreativeInventoryActionPacket::CreativeInventoryActionPacket(s16 slot, Slot item) 
     : m_Slot(slot),
       m_Item(item)
@@ -1373,6 +1406,26 @@ DataBuffer CreativeInventoryActionPacket::Serialize() const {
     buffer << m_Id;
     buffer << m_Slot;
     buffer << m_Item;
+
+    return buffer;
+}
+
+ClientSettingsPacket::ClientSettingsPacket(u8 viewDistance, ChatMode chatMode, bool chatColors, u8 skinFlags)
+    : m_ViewDistance(viewDistance), m_ChatMode(chatMode),
+      m_ChatColors(chatColors), m_SkinFlags(skinFlags)
+{
+    m_Id = 0x15;
+}
+DataBuffer ClientSettingsPacket::Serialize() const {
+    MCString locale(L"en_GB");
+    DataBuffer buffer;
+
+    buffer << m_Id;
+    buffer << locale;
+    buffer << m_ViewDistance;
+    buffer << (u8)m_ChatMode;
+    buffer << m_ChatColors;
+    buffer << m_SkinFlags;
 
     return buffer;
 }

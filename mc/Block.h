@@ -10,7 +10,7 @@
 namespace Minecraft {
 
 class Block {
-private:
+protected:
     std::wstring m_Name;
     u16 m_Data;
     bool m_Solid;
@@ -53,12 +53,20 @@ public:
     }
 
     // at is the world position of this block. Used to get the world bounding box
-    AABB GetBoundingBox(Vector3i at) const { 
+    virtual AABB GetBoundingBox(Vector3i at) const { 
         Vector3d atd = ToVector3d(at);
         AABB bounds = m_BoundingBox;
         bounds.min += atd;
         bounds.max += atd;
         return bounds;
+    }
+
+    virtual AABB GetBoundingBox(Vector3d at) const {
+        return GetBoundingBox(ToVector3i(at));
+    }
+
+    virtual bool CollidesWith(Vector3d at, const AABB& other) {
+        return GetBoundingBox(ToVector3i(at)).Intersects(other);
     }
 };
 typedef Block* BlockPtr;

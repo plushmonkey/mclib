@@ -33,9 +33,9 @@ public:
 
     bool operator==(const Vector3& rhs) const {
         VecType epsilon = 0.00001;
-        return std::fabs(x - rhs.x) < epsilon && 
-               std::fabs(y - rhs.y) < epsilon &&
-               std::fabs(z - rhs.z) < epsilon;
+        return std::fabs((double)x - rhs.x) < epsilon && 
+               std::fabs((double)y - rhs.y) < epsilon &&
+               std::fabs((double)z - rhs.z) < epsilon;
     }
 
     bool operator!=(const Vector3& rhs) const {
@@ -190,6 +190,13 @@ inline std::wostream& operator<<(std::wostream& out, const Vector3<T>& v) {
 }
 
 template <typename T>
+std::string to_string(const Vector3<T>& v) {
+    std::stringstream ss;
+    ss << "(" << v.x << ", " << v.y << ", " << v.z << ")";
+    return ss.str();
+}
+
+template <typename T>
 inline Vector3<T> operator+(const Vector3<T>& v1, const Vector3<T>& v2) {
     return Vector3<T>(v1.x + v2.x, v1.y + v2.y, v1.z + v2.z);
 }
@@ -223,6 +230,10 @@ inline Vector3d ToVector3d(const Vector3f& v) {
 }
 
 inline Vector3d ToVector3d(const Vector3i& v) {
+    return Vector3d((double)v.x, (double)v.y, (double)v.z);
+}
+
+inline Vector3d ToVector3d(const Vector3s& v) {
     return Vector3d((double)v.x, (double)v.y, (double)v.z);
 }
 

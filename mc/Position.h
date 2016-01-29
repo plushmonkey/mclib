@@ -30,6 +30,8 @@ public:
 DataBuffer& operator<<(DataBuffer& out, const Position& pos);
 DataBuffer& operator>>(DataBuffer& in, Position& pos);
 
+std::string to_string(const Position& data);
+
 }
 
 std::ostream& operator<<(std::ostream& out, const Minecraft::Position& pos);

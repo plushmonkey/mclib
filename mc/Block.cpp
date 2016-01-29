@@ -105,10 +105,43 @@ public:
     }
 };
 
+class StairsBlock : public Block {
+public:
+    StairsBlock(std::wstring name, u16 type, u16 meta) : Block(name, type, meta, true) {
+        static const AABB FullSolidBounds(Vector3d(0, 0, 0), Vector3d(1, 1, 1));
+        m_BoundingBox = FullSolidBounds;
+    }
+
+    /*virtual bool CollidesWith(Vector3d at, const AABB& other) {
+        static AABB LowerHalfBounds(Vector3d(0, 0, 0), Vector3d(1, 0.5, 1));
+        static AABB UpperHalfBounds(Vector3d(0, 0.5, 0), Vector3d(1, 1, 1));
+
+        u16 meta = GetMeta();
+
+        bool flipped = (meta & 0x4) != 0;
+        u8 dir = meta & 0x2;
+
+        AABB& flatPart = LowerHalfBounds;
+        if (flipped)
+            flatPart = UpperHalfBounds;
+
+        Vector3d ati = ToVector3d(ToVector3i(at));
+        Vector3d pointInside = at - ati;
+        
+        // If the point is inside the flat part then it must be colliding
+        if (flatPart.Contains(pointInside))
+            return true;
+
+        // Determine upper collision
+        return true;
+    }*/
+};
+
 void BlockRegistry::RegisterVanillaBlocks() {
     const AABB FullSolidBounds(Vector3d(0, 0, 0), Vector3d(1, 1, 1));
     const AABB LowerHalfBounds(Vector3d(0, 0, 0), Vector3d(1, 0.5, 1));
     const AABB UpperHalfBounds(Vector3d(0, 0.5, 0), Vector3d(1, 1, 1));
+    const AABB CarpetBounds(Vector3d(0, 0, 0), Vector3d(1, 0.0625, 1));
 
     this->RegisterBlock(new Block(L"Air", 0, 0, false));
 
@@ -156,8 +189,8 @@ void BlockRegistry::RegisterVanillaBlocks() {
     this->RegisterBlock(new Block(L"Smooth Sandstone", 24, 2, true));
     this->RegisterBlock(new Block(L"Note Block", 25, 0, true));
     this->RegisterBlock(new Block(L"Bed", 26, 0, true));
-    this->RegisterBlock(new Block(L"Powered Rail", 27, 0, true));
-    this->RegisterBlock(new Block(L"Detector Rail", 28, 0, true));
+    this->RegisterBlock(new Block(L"Powered Rail", 27, 0, false));
+    this->RegisterBlock(new Block(L"Detector Rail", 28, 0, false));
     this->RegisterBlock(new Block(L"Sticky Piston", 29, 0, true));
     this->RegisterBlock(new Block(L"Cobweb", 30, 0, false));
     this->RegisterBlock(new Block(L"Dead Shrub", 31, 0, false));
@@ -234,7 +267,7 @@ void BlockRegistry::RegisterVanillaBlocks() {
     this->RegisterBlock(new Block(L"Torch", 50, 0, false));
     this->RegisterBlock(new Block(L"Fire", 51, 0, false));
     this->RegisterBlock(new Block(L"Monster Spawner", 52, 0, true));
-    this->RegisterBlock(new Block(L"Oak Wood Stairs", 53, 0, true));
+    this->RegisterBlock(new StairsBlock(L"Oak Wood Stairs", 53, 0));
     this->RegisterBlock(new Block(L"Chest", 54, 0, true));
     this->RegisterBlock(new Block(L"Redstone Wire", 55, 0, false));
     this->RegisterBlock(new Block(L"Diamond Ore", 56, 0, true));
@@ -422,22 +455,24 @@ void BlockRegistry::RegisterVanillaBlocks() {
     this->RegisterBlock(new Block(L"Dark Prismarine", 168, 2, true));
     this->RegisterBlock(new Block(L"Sea Lantern", 169, 0, true));
     this->RegisterBlock(new Block(L"Hay Bale", 170, 0, true));
-    this->RegisterBlock(new Block(L"White Carpet", 171, 0, false));
-    this->RegisterBlock(new Block(L"Orange Carpet", 171, 1, false));
-    this->RegisterBlock(new Block(L"Magenta Carpet", 171, 2, false));
-    this->RegisterBlock(new Block(L"Light Blue Carpet", 171, 3, false));
-    this->RegisterBlock(new Block(L"Yellow Carpet", 171, 4, false));
-    this->RegisterBlock(new Block(L"Lime Carpet", 171, 5, false));
-    this->RegisterBlock(new Block(L"Pink Carpet", 171, 6, false));
-    this->RegisterBlock(new Block(L"Gray Carpet", 171, 7, false));
-    this->RegisterBlock(new Block(L"Light Gray Carpet", 171, 8, false));
-    this->RegisterBlock(new Block(L"Cyan Carpet", 171, 9, false));
-    this->RegisterBlock(new Block(L"Purple Carpet", 171, 10, false));
-    this->RegisterBlock(new Block(L"Blue Carpet", 171, 11, false));
-    this->RegisterBlock(new Block(L"Brown Carpet", 171, 12, false));
-    this->RegisterBlock(new Block(L"Green Carpet", 171, 13, false));
-    this->RegisterBlock(new Block(L"Red Carpet", 171, 14, false));
-    this->RegisterBlock(new Block(L"Black Carpet", 171, 15, false));
+
+    this->RegisterBlock(new Block(L"White Carpet", 171, 0, true, CarpetBounds));
+    this->RegisterBlock(new Block(L"Orange Carpet", 171, 1, true, CarpetBounds));
+    this->RegisterBlock(new Block(L"Magenta Carpet", 171, 2, true, CarpetBounds));
+    this->RegisterBlock(new Block(L"Light Blue Carpet", 171, 3, true, CarpetBounds));
+    this->RegisterBlock(new Block(L"Yellow Carpet", 171, 4, true, CarpetBounds));
+    this->RegisterBlock(new Block(L"Lime Carpet", 171, 5, true, CarpetBounds));
+    this->RegisterBlock(new Block(L"Pink Carpet", 171, 6, true, CarpetBounds));
+    this->RegisterBlock(new Block(L"Gray Carpet", 171, 7, true, CarpetBounds));
+    this->RegisterBlock(new Block(L"Light Gray Carpet", 171, 8, true, CarpetBounds));
+    this->RegisterBlock(new Block(L"Cyan Carpet", 171, 9, true, CarpetBounds));
+    this->RegisterBlock(new Block(L"Purple Carpet", 171, 10, true, CarpetBounds));
+    this->RegisterBlock(new Block(L"Blue Carpet", 171, 11, true, CarpetBounds));
+    this->RegisterBlock(new Block(L"Brown Carpet", 171, 12, true, CarpetBounds));
+    this->RegisterBlock(new Block(L"Green Carpet", 171, 13, true, CarpetBounds));
+    this->RegisterBlock(new Block(L"Red Carpet", 171, 14, true, CarpetBounds));
+    this->RegisterBlock(new Block(L"Black Carpet", 171, 15, true, CarpetBounds));
+
     this->RegisterBlock(new Block(L"Hardened Clay", 172, 0, true));
     this->RegisterBlock(new Block(L"Block of Coal", 173, 0, true));
     this->RegisterBlock(new Block(L"Packed Ice", 174, 0, true));

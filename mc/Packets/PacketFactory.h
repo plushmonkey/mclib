@@ -10,7 +10,7 @@ namespace Packets {
 
 class PacketFactory {
 public:
-    static Packet* CreatePacket(Protocol::State state, DataBuffer& data, std::size_t length);
+    static Packet* CreatePacket(Protocol::State state, DataBuffer data, std::size_t length);
     static void FreePacket(Packet* packet);
 };
 

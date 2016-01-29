@@ -10,6 +10,8 @@
 #include "Yggdrasil.h"
 
 #include <string>
+#include <queue>
+#include <future>
 
 namespace Minecraft {
 
@@ -38,8 +40,11 @@ private:
     std::string m_Password;
     Minecraft::DataBuffer m_HandleBuffer;
 
+    std::queue<std::future<Minecraft::Packets::Packet*>> m_FuturePackets;
+
     void AuthenticateClient(const std::wstring& serverId, const std::string& sharedSecret, const std::string& pubkey);
-    Minecraft::Packets::Packet* CreatePacket(Minecraft::DataBuffer& buffer);
+    std::future<Minecraft::Packets::Packet*> CreatePacket(Minecraft::DataBuffer& buffer);
+    Minecraft::Packets::Packet* CreatePacketSync(Minecraft::DataBuffer& buffer);
 
 public:
     Connection(Minecraft::Packets::PacketDispatcher* dispatcher);

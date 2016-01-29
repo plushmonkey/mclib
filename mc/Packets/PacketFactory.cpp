@@ -205,7 +205,7 @@ Packet* PlayPacketFactory::CreatePacket(DataBuffer& data, std::size_t length) {
     return packet;
 }
 
-Packet* PacketFactory::CreatePacket(Protocol::State state, DataBuffer& data, std::size_t length) {
+Packet* PacketFactory::CreatePacket(Protocol::State state, DataBuffer data, std::size_t length) {
     switch (state) {
     case Protocol::State::Handshake:
         throw std::runtime_error("Packet received during handshake (wrong protocol state).");

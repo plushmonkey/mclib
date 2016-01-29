@@ -1076,6 +1076,32 @@ public:
     bool IsOnGround() const { return m_OnGround; }
 };
 
+class PlayerDiggingPacket : public OutboundPacket { // 0x7
+public:
+    enum Status {
+        StartedDigging, CancelledDigging, FinishedDigging, DropItemStack, DropItem, ShootArrow
+    };
+private:
+    Status m_Status;
+    Vector3i m_Position;
+    u8 m_Face;
+
+public:
+    PlayerDiggingPacket(Status status, Vector3i position, u8 face);
+    DataBuffer Serialize() const;
+};
+
+class PlayerBlockPlacementPacket : public OutboundPacket { // 0x08
+private:
+    Vector3i m_Position;
+    u8 m_Face;
+    Vector3i m_CursorPos;
+
+public:
+    PlayerBlockPlacementPacket(Vector3i position, u8 face, Vector3i cursorPos);
+    DataBuffer Serialize() const;
+};
+
 class CreativeInventoryActionPacket : public OutboundPacket { // 0x10
 private:
     s16 m_Slot;
@@ -1083,6 +1109,26 @@ private:
 
 public:
     CreativeInventoryActionPacket(s16 slot, Slot item);
+    DataBuffer Serialize() const;
+};
+
+class ClientSettingsPacket : public OutboundPacket { // 0x15
+public:
+    enum ChatMode { Enabled, Commands, Hidden };
+    enum SkinPartFlags { 
+        Cape = 0x1, Jacket = 0x2, 
+        LeftSleeve = 0x4, RightSleeve = 0x8, 
+        LeftPants = 0x10, RightPants = 0x20, 
+        Hat = 0x40
+    };
+private:
+    u8 m_ViewDistance;
+    ChatMode m_ChatMode;
+    bool m_ChatColors;
+    u8 m_SkinFlags;
+
+public:
+    ClientSettingsPacket(u8 viewDistance, ChatMode chatMode, bool chatColors, u8 skinFlags);
     DataBuffer Serialize() const;
 };
 

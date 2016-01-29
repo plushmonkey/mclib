@@ -4,11 +4,18 @@
 #include "Chunk.h"
 #include "Packets/PacketHandler.h"
 #include "Packets/PacketDispatcher.h"
+#include "ObserverSubject.h"
 #include <map>
 
 namespace Minecraft {
 
-class World : public Packets::PacketHandler {
+class WorldListener {
+public:
+    // yIndex is the chunk section index of the column, 0 means bottom chunk, 15 means top
+    virtual void OnChunkLoad(ChunkPtr chunk, const ChunkColumnMetadata& meta, u16 yIndex) = 0;
+};
+
+class World : public Packets::PacketHandler, public ObserverSubject<WorldListener> {
 private:
     typedef std::pair<s32, s32> ChunkCoord;
 

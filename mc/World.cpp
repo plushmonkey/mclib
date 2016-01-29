@@ -34,21 +34,33 @@ void World::HandlePacket(Packets::Inbound::ChunkDataPacket* packet) {
             ChunkPtr chunk = (*col)[i];        
 
             (*m_Chunks[key])[i] = chunk;
+
+            NotifyListeners(&WorldListener::OnChunkLoad, chunk, meta, i);
         }
     }
 }
 
 void World::HandlePacket(Packets::Inbound::MapChunkBulkPacket* packet) {
     const std::map<ChunkCoord, ChunkColumnPtr>& cols = packet->GetChunkColumns();
-
     for (const auto& kv : cols) {
         ChunkCoord key = kv.first;
         ChunkColumnPtr col = kv.second;
 
-        if (col->GetMetadata().continuous && col->GetMetadata().sectionmask == 0)
+        if (col->GetMetadata().continuous && col->GetMetadata().sectionmask == 0) {
             m_Chunks[key] = nullptr;
-        else
+        } else {
             m_Chunks[key] = col;
+
+            u16 mask = col->GetMetadata().sectionmask;
+
+            for (s16 i = 0; i < ChunkColumn::ChunksPerColumn; ++i) {
+                if (mask & (1 << i)) {
+                    ChunkPtr chunk = (*col)[i];
+
+                    NotifyListeners(&WorldListener::OnChunkLoad, chunk, col->GetMetadata(), i);
+                }
+            }
+        }
     }
 }
 

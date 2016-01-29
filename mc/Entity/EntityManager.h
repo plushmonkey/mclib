@@ -49,7 +49,9 @@ public:
     void HandlePacket(Packets::Inbound::EntityRelativeMovePacket* packet);
     void HandlePacket(Packets::Inbound::EntityLookAndRelativeMovePacket* packet);
     void HandlePacket(Packets::Inbound::EntityTeleportPacket* packet);
+    void HandlePacket(Packets::Inbound::EntityLookPacket* packet);
     void HandlePacket(Packets::Inbound::EntityHeadLookPacket* packet);
+    void HandlePacket(Packets::Inbound::EntityVelocityPacket* packet);
     void HandlePacket(Packets::Inbound::EntityMetadataPacket* packet);
     void HandlePacket(Packets::Inbound::EntityPropertiesPacket* packet);
     void HandlePacket(Packets::Inbound::DestroyEntitiesPacket* packet);

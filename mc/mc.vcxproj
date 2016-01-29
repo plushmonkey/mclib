@@ -95,8 +95,8 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>..\lib\zlib\include;..\lib\utf8\include;..\lib\libcurl\include;..\lib\OpenSSL\include;..\lib\jsoncpp\include;$(VC_IncludePath);$(WindowsSDK_IncludePath);</IncludePath>
-    <LibraryPath>..\lib\zlib\lib;..\lib\libcurl\lib;..\lib\OpenSSL\lib;..\lib\jsoncpp\lib;$(VC_LibraryPath_x86);$(WindowsSDK_LibraryPath_x86);</LibraryPath>
+    <IncludePath>..\lib\pdcurses\include;..\lib\zlib\include;..\lib\utf8\include;..\lib\libcurl\include;..\lib\OpenSSL\include;..\lib\jsoncpp\include;$(VC_IncludePath);$(WindowsSDK_IncludePath);</IncludePath>
+    <LibraryPath>..\lib\pdcurses\lib;..\lib\zlib\lib;..\lib\libcurl\lib;..\lib\OpenSSL\lib;..\lib\jsoncpp\lib;$(VC_LibraryPath_x86);$(WindowsSDK_LibraryPath_x86);</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
@@ -105,8 +105,8 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug-Fast|Win32'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>..\lib\zlib\include;..\lib\utf8\include;..\lib\libcurl\include;..\lib\OpenSSL\include;..\lib\jsoncpp\include;$(VC_IncludePath);$(WindowsSDK_IncludePath);</IncludePath>
-    <LibraryPath>..\lib\zlib\lib;..\lib\libcurl\lib;..\lib\OpenSSL\lib;..\lib\jsoncpp\lib;$(VC_LibraryPath_x86);$(WindowsSDK_LibraryPath_x86);</LibraryPath>
+    <IncludePath>..\lib\pdcurses\include;..\lib\zlib\include;..\lib\utf8\include;..\lib\libcurl\include;..\lib\OpenSSL\include;..\lib\jsoncpp\include;$(VC_IncludePath);$(WindowsSDK_IncludePath);</IncludePath>
+    <LibraryPath>..\lib\pdcurses\lib;..\lib\zlib\lib;..\lib\libcurl\lib;..\lib\OpenSSL\lib;..\lib\jsoncpp\lib;$(VC_LibraryPath_x86);$(WindowsSDK_LibraryPath_x86);</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug-Fast|x64'">
     <LinkIncremental>true</LinkIncremental>
@@ -115,8 +115,8 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
-    <IncludePath>..\lib\zlib\include;..\lib\utf8\include;..\lib\libcurl\include;..\lib\OpenSSL\include;..\lib\jsoncpp\include;$(VC_IncludePath);$(WindowsSDK_IncludePath);</IncludePath>
-    <LibraryPath>..\lib\zlib\lib;..\lib\libcurl\lib;..\lib\OpenSSL\lib;..\lib\jsoncpp\lib;$(VC_LibraryPath_x86);$(WindowsSDK_LibraryPath_x86);</LibraryPath>
+    <IncludePath>..\lib\pdcurses\include;..\lib\zlib\include;..\lib\utf8\include;..\lib\libcurl\include;..\lib\OpenSSL\include;..\lib\jsoncpp\include;$(VC_IncludePath);$(WindowsSDK_IncludePath);</IncludePath>
+    <LibraryPath>..\lib\pdcurses\lib;..\lib\zlib\lib;..\lib\libcurl\lib;..\lib\OpenSSL\lib;..\lib\jsoncpp\lib;$(VC_LibraryPath_x86);$(WindowsSDK_LibraryPath_x86);</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
