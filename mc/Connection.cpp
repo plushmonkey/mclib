@@ -300,9 +300,14 @@ void Connection::Login(const std::string& username, const std::string& password)
 
     m_Email = username;
 
-    m_Yggdrasil.Authenticate(username, password);
+    if (username.find("@") != std::string::npos) {
+        m_Yggdrasil.Authenticate(username, password);
 
-    m_Username = m_Yggdrasil.GetPlayerName();
+        m_Username = m_Yggdrasil.GetPlayerName();
+    } else {
+        m_Username = username;
+    }
+
     m_Password = password;
 
     Minecraft::Packets::Outbound::LoginStartPacket loginStart(m_Username);
