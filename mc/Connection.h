@@ -36,6 +36,7 @@ private:
     Minecraft::Yggdrasil m_Yggdrasil;
     std::string m_Server;
     u16 m_Port;
+    std::string m_Email;
     std::string m_Username;
     std::string m_Password;
     Minecraft::DataBuffer m_HandleBuffer;

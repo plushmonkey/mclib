@@ -68,7 +68,7 @@ void Connection::AuthenticateClient(const std::wstring& serverId, const std::str
     bool success = true;
     std::string error = "";
 
-    try {
+   /* try {
         if (!m_Yggdrasil.Authenticate(m_Username, m_Password)) {
             error = "Failed to authenticate";
             success = false;
@@ -76,7 +76,7 @@ void Connection::AuthenticateClient(const std::wstring& serverId, const std::str
     } catch (const Minecraft::YggdrasilException& e) {
         error = e.what();
         success = false;
-    }
+    }*/
 
     try {
         if (!m_Yggdrasil.JoinServer(serverId, sharedSecret, pubkey)) {
@@ -298,11 +298,15 @@ void Connection::Login(const std::string& username, const std::string& password)
     Minecraft::Packets::Outbound::HandshakePacket handshake(47, m_Server, m_Port, Minecraft::Protocol::State::Login);
     SendPacket(&handshake);
 
-    Minecraft::Packets::Outbound::LoginStartPacket loginStart(username);
-    SendPacket(&loginStart);
+    m_Email = username;
 
-    m_Username = username;
+    m_Yggdrasil.Authenticate(username, password);
+
+    m_Username = m_Yggdrasil.GetPlayerName();
     m_Password = password;
+
+    Minecraft::Packets::Outbound::LoginStartPacket loginStart(m_Username);
+    SendPacket(&loginStart);
 
     m_ProtocolState = Minecraft::Protocol::State::Login;
 }
