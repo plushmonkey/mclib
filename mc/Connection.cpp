@@ -68,15 +68,17 @@ void Connection::AuthenticateClient(const std::wstring& serverId, const std::str
     bool success = true;
     std::string error = "";
 
-   /* try {
-        if (!m_Yggdrasil.Authenticate(m_Username, m_Password)) {
-            error = "Failed to authenticate";
+    if (!m_Yggdrasil.IsAuthenticated()) {
+        try {
+            if (!m_Yggdrasil.Authenticate(m_Username, m_Password)) {
+                error = "Failed to authenticate";
+                success = false;
+            }
+        } catch (const Minecraft::YggdrasilException& e) {
+            error = e.what();
             success = false;
         }
-    } catch (const Minecraft::YggdrasilException& e) {
-        error = e.what();
-        success = false;
-    }*/
+    }
 
     try {
         if (!m_Yggdrasil.JoinServer(serverId, sharedSecret, pubkey)) {
