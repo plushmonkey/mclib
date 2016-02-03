@@ -64,6 +64,8 @@ public:
     const std::string& GetPlayerName() const { return m_PlayerName; }
     const std::string& GetProfileId() const { return m_ProfileId; }
 
+    bool IsAuthenticated() const { return !m_AccessToken.empty(); }
+
     /**
      * Receives an access token from the auth server.
      * @param username The player's account login (username for old accounts, email for migrated).
