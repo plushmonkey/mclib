@@ -87,17 +87,48 @@ public:
     bool MCLIB_API JoinServer(const std::wstring& serverId, const std::string& sharedSecret, const std::string& publicKey);
 
     /**
-    * Posts a new session to the session server.
-    * The server hash is a sha1 hex digest.
-    * First it's updated with the serverID string,
-    * then it's updated with the shared secret,
-    * finally it's updated with public key.
-    * @param serverHash the java-style hex digest
-    * @throws YggdrasilException if it can't connect to the server, or if it receives an error from the server.
-    */
+     * Posts a new session to the session server.
+     * The server hash is a sha1 hex digest.
+     * First it's updated with the serverID string,
+     * then it's updated with the shared secret,
+     * finally it's updated with public key.
+     * @param serverHash the java-style hex digest
+     * @throws YggdrasilException if it can't connect to the server, or if it receives an error from the server.
+     */
     bool MCLIB_API JoinServer(const std::string& serverHash);
 
-    // Todo: refresh, validate, signout
+    /**
+     * Refreshes an access token by creating a new one and invalidating the old one.
+     * Passwords should never be stored on file, so this is used to keep a stored access token valid.
+     * @param accessToken The access token to refresh.
+     * @param clientToken This should match the clientToken used to obtain the accessToken originally.
+     * @return The access token.
+     */
+    std::string MCLIB_API Refresh(const std::string& accessToken, const std::string& clientToken = 0);
+
+    /**
+     * Checks if an access token is usable for authentication. The token should be refreshed if it isn't valid.
+     * @param accessToken The access token to validate.
+     * @param clientToken This should match the clientToken used to obtain the accessToken originally.
+     * @return True if the token is usable for authentication, false otherwise.
+     */
+    bool MCLIB_API Validate(const std::string& accessToken, const std::string& clientToken = 0);
+
+    /**
+     * Invalidates the last used accessToken for an account using login credentials.
+     * Use Invalidate to do it with the accessToken.
+     * @param username Username for the account.
+     * @param password Password for the account.
+     */
+    void MCLIB_API Signout(const std::string& username, const std::string& password);
+
+    /**
+     * Invalidates the last used accessToken for an account using login credentials.
+     * Use Invalidate to do it with the accessToken.
+     * @param accessToken The access token to invalidate.
+     * @param clientToken This should match the clientToken used to obtain the accessToken originally.
+     */
+    void MCLIB_API Invalidate(const std::string& accessToken, const std::string& clientToken = 0);    
 
     UUID MCLIB_API GetPlayerUUID(const std::string& name);
     Json::Value MCLIB_API GetPlayerProfile(UUID& uuid);

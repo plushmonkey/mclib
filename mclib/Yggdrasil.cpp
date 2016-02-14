@@ -89,6 +89,60 @@ bool Yggdrasil::Authenticate(const std::string& username, const std::string& pas
     return true;
 }
 
+std::string Yggdrasil::Refresh(const std::string& accessToken, const std::string& clientToken) {
+    Json::Value payload;
+
+    payload["accessToken"] = accessToken;
+    payload["clientToken"] = clientToken.length() > 0 ? clientToken : DefaultClientToken;
+
+    HTTPResponse resp = m_Http->PostJSON(m_AuthUrl + "refresh", payload);
+
+    if (resp.status == 0)
+        throw YggdrasilException("No response received while refreshing access token.");
+
+    Json::Reader reader;
+    Json::Value result;
+
+    if (!reader.parse(resp.body, result))
+        throw YggdrasilException("Could not parse JSON response while refreshing access token.");
+    
+    if (!result["error"].isNull())
+        throw YggdrasilException(result["error"].asString(), result["errorMessage"].asString());
+
+    m_AccessToken = result["accessToken"].asString();
+
+    return m_AccessToken;
+}
+
+bool Yggdrasil::Validate(const std::string& accessToken, const std::string& clientToken) {
+    Json::Value payload;
+
+    payload["accessToken"] = accessToken;
+    payload["clientToken"] = clientToken.length() > 0 ? clientToken : DefaultClientToken;
+
+    HTTPResponse resp = m_Http->PostJSON(m_AuthUrl + "validate", payload);
+
+    return resp.status == 200 || resp.status == 204;
+}
+
+void Yggdrasil::Signout(const std::string& username, const std::string& password) {
+    Json::Value payload;
+
+    payload["username"] = username;
+    payload["password"] = password;
+
+    m_Http->PostJSON(m_AuthUrl + "signout", payload);
+}
+
+void Yggdrasil::Invalidate(const std::string& accessToken, const std::string& clientToken) {
+    Json::Value payload;
+
+    payload["accessToken"] = accessToken;
+    payload["clientToken"] = clientToken.length() > 0 ? clientToken : DefaultClientToken;
+
+    m_Http->PostJSON(m_AuthUrl + "invalidate", payload);
+}
+
 UUID Yggdrasil::GetPlayerUUID(const std::string& name) {
     std::string url = "https://api.mojang.com/users/profiles/minecraft/" + name;
 
