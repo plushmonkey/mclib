@@ -6,9 +6,15 @@
 #include "PlayerManager.h"
 #include "World.h"
 #include "Utility.h"
+#include "ObserverSubject.h"
 #include <thread>
 
-class Client : public Minecraft::ConnectionListener {
+class ClientListener {
+public:
+    virtual void OnTick() = 0;
+};
+
+class Client : public ObserverSubject<ClientListener>, public Minecraft::ConnectionListener {
 private:
     Minecraft::Packets::PacketDispatcher* m_Dispatcher;
     Minecraft::Connection m_Connection;
@@ -34,6 +40,7 @@ public:
     Minecraft::EntityManager* GetEntityManager() { return &m_EntityManager; }
     Minecraft::PlayerManager* GetPlayerManager() { return &m_PlayerManager; }
     Minecraft::World* GetWorld() { return &m_World; }
+    PlayerController* GetPlayerController() { return &m_PlayerController; }
 };
 
 #endif // CLIENT_H

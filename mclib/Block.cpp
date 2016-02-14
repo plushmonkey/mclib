@@ -137,6 +137,11 @@ public:
     }*/
 };
 
+BlockRegistry* BlockRegistry::GetInstance() {
+    static BlockRegistry registry;
+    return &registry;
+}
+
 void BlockRegistry::RegisterVanillaBlocks() {
     const AABB FullSolidBounds(Vector3d(0, 0, 0), Vector3d(1, 1, 1));
     const AABB LowerHalfBounds(Vector3d(0, 0, 0), Vector3d(1, 0.5, 1));

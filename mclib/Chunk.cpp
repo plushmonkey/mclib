@@ -11,7 +11,7 @@ Chunk::Chunk()
             for (s32 x = 0; x < 16; ++x) {
                 std::size_t index = y * 16 * 16 + z * 16 + x;
 
-                m_Blocks[index] = BlockRegistry::GetInstance().GetBlock(0, 0);
+                m_Blocks[index] = BlockRegistry::GetInstance()->GetBlock(0, 0);
             }
         }
     }
@@ -28,14 +28,14 @@ void Chunk::Load(DataBuffer& in, ChunkColumnMetadata* meta, s32 chunkIndex) {
 
                 std::size_t index = y * 16 * 16 + z * 16 + x;
 
-                m_Blocks[index] = BlockRegistry::GetInstance().GetBlock(data);
+                m_Blocks[index] = BlockRegistry::GetInstance()->GetBlock(data);
             }
         }
     }
 }
 
 BlockPtr Chunk::GetBlock(Vector3i chunkPosition) {
-    if (chunkPosition.y < 0) return BlockRegistry::GetInstance().GetBlock(0, 0);
+    if (chunkPosition.y < 0) return BlockRegistry::GetInstance()->GetBlock(0, 0);
 
     std::size_t index = (std::size_t)(chunkPosition.y * 16 * 16 + chunkPosition.z * 16 + chunkPosition.x);
     return m_Blocks[index];

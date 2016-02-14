@@ -84,7 +84,7 @@ void World::HandlePacket(Packets::Inbound::MultiBlockChangePacket* packet) {
             block = chunk->GetBlock(relative);
         }
         relative.y %= 16;
-        (*chunk)[index]->SetBlock(relative, BlockRegistry::GetInstance().GetBlock(change.blockData));
+        (*chunk)[index]->SetBlock(relative, BlockRegistry::GetInstance()->GetBlock(change.blockData));
     }
 }
 
@@ -116,7 +116,7 @@ void World::HandlePacket(Packets::Inbound::BlockChangePacket* packet) {
 
     s16 blockData = packet->GetBlockData();
     relative.y %= 16;
-    (*chunk)[index]->SetBlock(relative, BlockRegistry::GetInstance().GetBlock(blockData));
+    (*chunk)[index]->SetBlock(relative, BlockRegistry::GetInstance()->GetBlock(blockData));
 }
 
 ChunkColumnPtr World::GetChunk(Vector3i pos) const {
