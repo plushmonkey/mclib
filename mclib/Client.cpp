@@ -37,6 +37,8 @@ void Client::UpdateThread() {
 
        // m_Follower.Update();
         m_PlayerController.Update();
+
+        NotifyListeners(&ClientListener::OnTick);
     }
 }
 

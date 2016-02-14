@@ -2,6 +2,7 @@
 #define UTILITY_H
 
 #include <json/json.h>
+#include <fstream>
 #include <string>
 #include "PlayerManager.h"
 #include "Connection.h"
@@ -27,6 +28,7 @@ private:
     Vector3d m_TargetPos;
     bool m_Sprinting;
     bool m_LoadedIn;
+    bool m_HandleFall;
 
     double m_MoveSpeed;
 
@@ -63,7 +65,125 @@ public:
     void MCLIB_API LookAt(Vector3d target);
     void MCLIB_API SetMoveSpeed(double speed);
     void MCLIB_API SetTargetPosition(Vector3d target);
+    void MCLIB_API SetHandleFall(bool handle);
+};
 
+class IConsole {
+public:
+    virtual void Output(const std::string& str) = 0;
+    virtual void Output(const std::wstring& str) = 0;
+
+    virtual IConsole& operator<<(const std::string& str) = 0;
+    virtual IConsole& operator<<(const std::wstring& str) = 0;
+
+    template <typename T>
+    IConsole& operator<<(T data) {
+        using std::to_string;
+        using Minecraft::to_string;
+
+        Output(to_string(data));
+        return *this;
+    }
+
+    IConsole& operator<<(const char* data) {
+        Output(std::string(data));
+        return *this;
+    }
+
+    IConsole& operator<<(const wchar_t* data) {
+        Output(std::wstring(data));
+        return *this;
+    }
+};
+
+
+class Console {
+private:
+    IConsole* m_Impl;
+
+public:
+    Console() : m_Impl(nullptr) { }
+
+    // Doesn't take control of impl
+    void SetImpl(IConsole* impl) {
+        m_Impl = impl;
+    }
+
+    IConsole* GetImpl() const {
+        return m_Impl;
+    }
+
+    void Output(const std::string& str) {
+        if (m_Impl)
+            m_Impl->Output(str);
+    }
+
+    void Output(const std::wstring& str) {
+        if (m_Impl)
+            m_Impl->Output(str);
+    }
+
+    template <typename T>
+    Console& operator<<(const T& data) {
+        using std::to_string;
+        using Minecraft::to_string;
+        Output(to_string(data));
+        return *this;
+    }
+
+    template <>
+    Console& operator<<(const std::string& str) {
+        Output(str);
+        return *this;
+    }
+
+    template <>
+    Console& operator<<(const std::wstring& str) {
+        Output(str);
+        return *this;
+    }
+
+    Console& operator<<(const char* str) {
+        Output(std::string(str));
+        return *this;
+    }
+
+    Console& operator<<(const wchar_t* str) {
+        Output(std::wstring(str));
+        return *this;
+    }
+};
+
+class LoggerConsole : public IConsole {
+private:
+    std::ofstream m_Out;
+    std::string m_Filename;
+
+public:
+    LoggerConsole(const std::string& filename) {
+        m_Out.open(filename.c_str(), std::ios::out);
+    }
+
+    ~LoggerConsole() {
+        m_Out.close();
+    }
+
+    void Output(const std::string& str) {
+        m_Out << str << std::endl;
+    }
+
+    void Output(const std::wstring& str) {
+        m_Out << std::string(str.begin(), str.end()) << std::endl;
+    }
+
+    IConsole& operator<<(const std::string& str) {
+        Output(str);
+        return *this;
+    }
+    IConsole& operator<<(const std::wstring& str) {
+        Output(str);
+        return *this;
+    }
 };
 
 #endif // UTILITY_H

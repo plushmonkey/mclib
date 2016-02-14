@@ -61,11 +61,10 @@ DataBuffer& operator>>(DataBuffer& in, VarInt& var) {
     if (i >= in.GetSize())
         throw std::out_of_range("Failed reading VarInt from DataBuffer.");
     do {
-        value |= (u64)(in[i] & 0x7F) << shift;
-        shift += 7;
-
         if (i >= in.GetSize())
             throw std::out_of_range("Failed reading VarInt from DataBuffer.");
+        value |= (u64)(in[i] & 0x7F) << shift;
+        shift += 7;
     } while ((in[i++] & 0x80) != 0);
     in.SetReadOffset(i);
     if (value & (1 << 31))

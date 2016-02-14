@@ -77,10 +77,7 @@ private:
 
     BlockRegistry() { }
 public:
-    static BlockRegistry& GetInstance() {
-        static BlockRegistry registry;
-        return registry;
-    }
+    static MCLIB_API BlockRegistry* GetInstance();
 
     BlockPtr GetBlock(u16 data) const {
         auto iter = m_Blocks.find(data);

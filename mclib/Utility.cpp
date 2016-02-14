@@ -115,91 +115,6 @@ std::string ParseChatNode(Json::Value node) {
     return "";
 }
 
-class IConsole {
-public:
-    virtual void Output(const std::string& str) = 0;
-    virtual void Output(const std::wstring& str) = 0;
-
-    virtual IConsole& operator<<(const std::string& str) = 0;
-    virtual IConsole& operator<<(const std::wstring& str) = 0;
-
-    template <typename T>
-    IConsole& operator<<(T data) {
-        using std::to_string;
-        using Minecraft::to_string;
-
-        Output(to_string(data));
-        return *this;
-    }
-
-    IConsole& operator<<(const char* data) {
-        Output(std::string(data));
-        return *this;
-    }
-
-    IConsole& operator<<(const wchar_t* data) {
-        Output(std::wstring(data));
-        return *this;
-    }
-};
-
-
-class Console {
-private:
-    IConsole* m_Impl;
-
-public:
-    Console() : m_Impl(nullptr) { }
-
-    // Doesn't take control of impl
-    void SetImpl(IConsole* impl) {
-        m_Impl = impl;
-    }
-
-    IConsole* GetImpl() const {
-        return m_Impl;
-    }
-
-    void Output(const std::string& str) {
-        if (m_Impl)
-            m_Impl->Output(str);
-    }
-
-    void Output(const std::wstring& str) {
-        if (m_Impl)
-            m_Impl->Output(str);
-    }
-
-    template <typename T>
-    Console& operator<<(const T& data) {
-        using std::to_string;
-        using Minecraft::to_string;
-        Output(to_string(data));
-        return *this;
-    }
-
-    template <>
-    Console& operator<<(const std::string& str) {
-        Output(str);
-        return *this;
-    }
-
-    template <>
-    Console& operator<<(const std::wstring& str) {
-        Output(str);
-        return *this;
-    }
-
-    Console& operator<<(const char* str) {
-        Output(std::string(str));
-        return *this;
-    }
-
-    Console& operator<<(const wchar_t* str) {
-        Output(std::wstring(str));
-        return *this;
-    }
-};
 static Console console;
 
 class StandardConsole : public IConsole {
@@ -232,9 +147,12 @@ PlayerController::PlayerController(Minecraft::Connection* connection, Minecraft:
       m_LastUpdate(GetTime()),
       m_Sprinting(false),
       m_LoadedIn(false),
-      m_MoveSpeed(4.3)
+      m_MoveSpeed(4.3),
+      m_HandleFall(true)
 {
     m_PlayerManager.RegisterListener(this);
+
+    //console.SetImpl(new LoggerConsole("PlayerController.log"));
 }
 
 PlayerController::~PlayerController() {
@@ -437,6 +355,10 @@ void PlayerController::SetTargetPosition(Vector3d target) {
     m_TargetPos = target;
 }
 
+void PlayerController::SetHandleFall(bool handle) {
+    m_HandleFall = handle;
+}
+
 void PlayerController::UpdatePosition() {
     //static const double WalkingSpeed = 4.3; // m/s
     //static const double WalkingSpeed = 8.6; // m/s
@@ -452,7 +374,7 @@ void PlayerController::UpdatePosition() {
     static int counter = 0;
 
     if (++counter == 30) {
-        console << "Current pos: " << GetPosition() << "\n";
+        console << "Current pos: " << GetPosition();
         counter = 0;
     }
 
@@ -460,8 +382,8 @@ void PlayerController::UpdatePosition() {
     Vector3d toTarget = target - GetPosition();
     double dist = toTarget.Length();
 
-        if (!ClearPath(target))
-            return;
+    if (!ClearPath(target))
+        return;
 
     Vector3d n = Vector3Normalize(toTarget);
     double change = dt / 1000.0;
@@ -485,12 +407,28 @@ void PlayerController::Update() {
         bool onGround = true;
 
         if (HandleJump()) {
+            console << "Jumping\n";
             //std::wcout << L"Jumping\n";
         } else {
-            if (HandleFall()) {
+            if (!m_HandleFall) {
+                const float FullCircle = 2.0f * 3.14159f;
+                const float CheckWidth = (float)m_BoundingBox.max.x / 2.0f;
+                onGround = false;
+                for (float angle = 0.0f; angle < FullCircle; angle += FullCircle / 8) {
+                    Vector3d checkPos = m_Position + Vector3RotateAboutY(Vector3d(0, 0, CheckWidth), angle) - Vector3d(0, 1, 0);
+
+                    Minecraft::BlockPtr checkBlock = m_World.GetBlock(checkPos);
+                    if (checkBlock && checkBlock->IsSolid()) {
+                        onGround = true;
+                        break;
+                    }
+                }
+            } else if (HandleFall()) {
                 //std::wcout << L"Falling\n";
+                console << "Falling\n";
                 onGround = false;
             }
+            
         }
 
         u64 ticks = GetTime() - StartTime;
@@ -525,7 +463,7 @@ float PlayerController::GetYaw() const { return m_Yaw; }
 float PlayerController::GetPitch() const { return m_Pitch; }
 
 void PlayerController::Move(Vector3d delta) {
-    delta.y = 0;
+    //delta.y = 0;
 
     if (m_EntityId != -1) {
         Minecraft::PlayerPtr player = m_PlayerManager.GetPlayerByEntityId(m_EntityId);
@@ -1383,9 +1321,9 @@ public:
 
     void OnChunkLoad(Minecraft::ChunkPtr chunk, const Minecraft::ChunkColumnMetadata& meta, u16 yIndex) {
         static const std::vector<Minecraft::BlockPtr> trackBlocks = {
-            Minecraft::BlockRegistry::GetInstance().GetBlock(27, 0),
-            Minecraft::BlockRegistry::GetInstance().GetBlock(28, 0),
-            Minecraft::BlockRegistry::GetInstance().GetBlock(66, 0)
+            Minecraft::BlockRegistry::GetInstance()->GetBlock(27, 0),
+            Minecraft::BlockRegistry::GetInstance()->GetBlock(28, 0),
+            Minecraft::BlockRegistry::GetInstance()->GetBlock(66, 0)
         };
 
         s64 chunkX = meta.x * 16;
