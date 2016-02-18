@@ -9,12 +9,50 @@ World::World(Packets::PacketDispatcher* dispatcher)
     dispatcher->RegisterHandler(Protocol::State::Play, Protocol::Play::BlockChange, this);
     dispatcher->RegisterHandler(Protocol::State::Play, Protocol::Play::ChunkData, this);
     dispatcher->RegisterHandler(Protocol::State::Play, Protocol::Play::MapChunkBulk, this);
+    dispatcher->RegisterHandler(Protocol::State::Play, Protocol::Play::Explosion, this);
 }
 
 World::~World() {
     GetDispatcher()->UnregisterHandler(this);
 }
 
+bool World::SetBlock(Vector3i position, s16 blockData) {
+    ChunkColumnPtr chunk = GetChunk(position);
+    if (!chunk) return false;
+
+    Vector3i relative(position);
+
+    relative.x %= 16;
+    relative.z %= 16;
+
+    if (relative.x < 0)
+        relative.x += 16;
+    if (relative.z < 0)
+        relative.z += 16;
+
+    BlockPtr block = chunk->GetBlock(relative);
+
+    std::size_t index = (std::size_t)position.y / 16;
+    if (!block) {
+        ChunkPtr section = std::make_shared<Chunk>();
+
+        (*chunk)[index] = section;
+    }
+
+    relative.y %= 16;
+    (*chunk)[index]->SetBlock(relative, BlockRegistry::GetInstance()->GetBlock(blockData));
+    return true;
+}
+
+void World::HandlePacket(Packets::Inbound::ExplosionPacket* packet) {
+    Vector3d position = packet->GetPosition();
+    for (Vector3s offset : packet->GetAffectedBlocks()) {
+        Vector3d absolute = position + ToVector3d(offset);
+
+        // Set all affected blocks to air
+        SetBlock(ToVector3i(absolute), 0);
+    }
+}
 
 void World::HandlePacket(Packets::Inbound::ChunkDataPacket* packet) {
     ChunkColumnPtr col = packet->GetChunkColumn();
@@ -89,34 +127,7 @@ void World::HandlePacket(Packets::Inbound::MultiBlockChangePacket* packet) {
 }
 
 void World::HandlePacket(Packets::Inbound::BlockChangePacket* packet) {
-    Vector3i pos = packet->GetPosition();
-
-    ChunkColumnPtr chunk = GetChunk(pos);
-    if (!chunk) 
-        return;
-
-    Vector3i relative(pos);
-
-    relative.x %= 16;
-    relative.z %= 16;
-
-    if (relative.x < 0)
-        relative.x += 16;
-    if (relative.z < 0)
-        relative.z += 16;
-
-    BlockPtr block = chunk->GetBlock(relative);
-
-    std::size_t index = (std::size_t)pos.y / 16;
-    if (!block) {
-        ChunkPtr section = std::make_shared<Chunk>();
-        
-        (*chunk)[index] = section;
-    }
-
-    s16 blockData = packet->GetBlockData();
-    relative.y %= 16;
-    (*chunk)[index]->SetBlock(relative, BlockRegistry::GetInstance()->GetBlock(blockData));
+    SetBlock(packet->GetPosition(), packet->GetBlockData());
 }
 
 ChunkColumnPtr World::GetChunk(Vector3i pos) const {

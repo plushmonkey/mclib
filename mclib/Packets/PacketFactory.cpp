@@ -90,17 +90,29 @@ Packet* PlayPacketFactory::CreatePacket(DataBuffer& data, std::size_t length) {
     case Protocol::Play::HeldItemChange:
         packet = new Inbound::HeldItemChangePacket();
         break;
+    case Protocol::Play::UseBed:
+        packet = new Inbound::UseBedPacket();
+        break;
     case Protocol::Play::Animation:
         packet = new Inbound::AnimationPacket();
         break;
     case Protocol::Play::SpawnPlayer:
         packet = new Inbound::SpawnPlayerPacket();
         break;
+    case Protocol::Play::CollectItem:
+        packet = new Inbound::CollectItemPacket();
+        break;
     case Protocol::Play::SpawnObject:
         packet = new Inbound::SpawnObjectPacket();
         break;
     case Protocol::Play::SpawnMob:
         packet = new Inbound::SpawnMobPacket();
+        break;
+    case Protocol::Play::SpawnPainting:
+        packet = new Inbound::SpawnPaintingPacket();
+        break;
+    case Protocol::Play::SpawnExperienceOrb:
+        packet = new Inbound::SpawnExperienceOrbPacket();
         break;
     case Protocol::Play::EntityVelocity:
         packet = new Inbound::EntityVelocityPacket();
@@ -135,6 +147,12 @@ Packet* PlayPacketFactory::CreatePacket(DataBuffer& data, std::size_t length) {
     case Protocol::Play::EntityMetadata:
         packet = new Inbound::EntityMetadataPacket();
         break;
+    case Protocol::Play::EntityEffect:
+        packet = new Inbound::EntityEffectPacket();
+        break;
+    case Protocol::Play::RemoveEntityEffect:
+        packet = new Inbound::RemoveEntityEffectPacket();
+        break;
     case Protocol::Play::SetExperience:
         packet = new Inbound::SetExperiencePacket();
         break;
@@ -150,8 +168,17 @@ Packet* PlayPacketFactory::CreatePacket(DataBuffer& data, std::size_t length) {
     case Protocol::Play::BlockChange:
         packet = new Inbound::BlockChangePacket();
         break;
+    case Protocol::Play::BlockAction:
+        packet = new Inbound::BlockActionPacket();
+        break;
+    case Protocol::Play::BlockBreakAnimation:
+        packet = new Inbound::BlockBreakAnimationPacket();
+        break;
     case Protocol::Play::MapChunkBulk:
         packet = new Inbound::MapChunkBulkPacket();
+        break;
+    case Protocol::Play::Explosion:
+        packet = new Inbound::ExplosionPacket();
         break;
     case Protocol::Play::Effect:
         packet = new Inbound::EffectPacket();
@@ -159,8 +186,14 @@ Packet* PlayPacketFactory::CreatePacket(DataBuffer& data, std::size_t length) {
     case Protocol::Play::SoundEffect:
         packet = new Inbound::SoundEffectPacket();
         break;
+    case Protocol::Play::Particle:
+        packet = new Inbound::ParticlePacket();
+        break;
     case Protocol::Play::ChangeGameState:
         packet = new Inbound::ChangeGameStatePacket();
+        break;
+    case Protocol::Play::SpawnGlobalEntity:
+        packet = new Inbound::SpawnGlobalEntityPacket();
         break;
     case Protocol::Play::SetSlot:
         packet = new Inbound::SetSlotPacket();

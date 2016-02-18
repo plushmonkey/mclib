@@ -274,6 +274,20 @@ public:
     u8 GetSlot() const { return m_Slot; }
 };
 
+class UseBedPacket : public InboundPacket { // 0x0A
+private:
+    EntityId m_EntityId;
+    Vector3i m_Position;
+
+public:
+    MCLIB_API UseBedPacket();
+    bool MCLIB_API Deserialize(DataBuffer& data, std::size_t packetLength);
+    void MCLIB_API Dispatch(PacketHandler* handler);
+
+    EntityId GetEntityId() const { return m_EntityId; }
+    Vector3i GetPosition() const { return m_Position; }
+};
+
 class AnimationPacket : public InboundPacket { // 0x0B
 public:
     enum Animation { SwingArm, TakeDamage, LeaveBed, EatFood, CriticalEffect, MagicCriticalEffect };
@@ -317,6 +331,20 @@ public:
     u8 GetPitch() const { return m_Pitch; }
     s16 GetCurrentItem() const { return m_CurrentItem; }
     const EntityMetadata& GetMetadata() const { return m_Metadata; }
+};
+
+class CollectItemPacket : public InboundPacket { // 0x0D
+private:
+    EntityId m_Collector;
+    EntityId m_Collected;
+
+public:
+    MCLIB_API CollectItemPacket();
+    bool MCLIB_API Deserialize(DataBuffer& data, std::size_t packetLength);
+    void MCLIB_API Dispatch(PacketHandler* handler);
+
+    EntityId GetCollectorId() const { return m_Collector; }
+    EntityId GetCollectedId() const { return m_Collected; }
 };
 
 class SpawnObjectPacket : public InboundPacket { // 0x0E
@@ -380,6 +408,43 @@ public:
     s16 GetVelocityY() const { return m_VelocityY; }
     s16 GetVelocityZ() const { return m_VelocityZ; }
     const EntityMetadata& GetMetadata() const { return m_Metadata; }
+};
+
+class SpawnPaintingPacket : public InboundPacket { // 0x10
+private:
+    enum Direction {
+        North, West, South, East
+    };
+    EntityId m_EntityId;
+    std::wstring m_Title;
+    Vector3i m_Position;
+    Direction m_Direction;
+
+public:
+    MCLIB_API SpawnPaintingPacket();
+    bool MCLIB_API Deserialize(DataBuffer& data, std::size_t packetLength);
+    void MCLIB_API Dispatch(PacketHandler* handler);
+
+    EntityId GetEntityId() const { return m_EntityId; }
+    const std::wstring& GetTitle() const { return m_Title; }
+    Vector3i GetPosition() const { return m_Position; }
+    Direction GetDirection() const { return m_Direction; }
+};
+
+class SpawnExperienceOrbPacket : public InboundPacket { // 0x11
+private:
+    EntityId m_EntityId;
+    Vector3d m_Position;
+    u16 m_Count;
+
+public:
+    MCLIB_API SpawnExperienceOrbPacket();
+    bool MCLIB_API Deserialize(DataBuffer& data, std::size_t packetLength);
+    void MCLIB_API Dispatch(PacketHandler* handler);
+
+    EntityId GetEntityId() const { return m_EntityId; }
+    Vector3d GetPosition() const { return m_Position; }
+    u16 GetCount() const { return m_Count; }
 };
 
 class EntityVelocityPacket : public InboundPacket { // 0x12
@@ -559,6 +624,40 @@ public:
     const EntityMetadata& GetMetadata() const { return m_Metadata; }
 };
 
+class EntityEffectPacket : public InboundPacket { // 0x1D
+private:
+    EntityId m_EntityId;
+    u8 m_EffectId;
+    u8 m_Amplifier;
+    s32 m_Duration;
+    bool m_HideParticles;
+
+public:
+    MCLIB_API EntityEffectPacket();
+    bool MCLIB_API Deserialize(DataBuffer& data, std::size_t packetLength);
+    void MCLIB_API Dispatch(PacketHandler* handler);
+
+    EntityId GetEntityId() const { return m_EntityId; }
+    u8 GetEffectId() const { return m_EffectId; }
+    u8 GetAmplifier() const { return m_Amplifier; }
+    s32 GetDuration() const { return m_Duration; }
+    bool GetHideParticles() const { return m_HideParticles; }
+};
+
+class RemoveEntityEffectPacket : public InboundPacket { // 0x1E
+private:
+    EntityId m_EntityId;
+    u8 m_EffectId;
+
+public:
+    MCLIB_API RemoveEntityEffectPacket();
+    bool MCLIB_API Deserialize(DataBuffer& data, std::size_t packetLength);
+    void MCLIB_API Dispatch(PacketHandler* handler);
+
+    EntityId GetEntityId() const { return m_EntityId; }
+    u8 GetEffectId() const { return m_EffectId; }
+};
+
 class SetExperiencePacket : public InboundPacket { // 0x1F
 private:
     float m_ExperienceBar;
@@ -655,6 +754,44 @@ public:
     Vector3i GetPosition() const { return m_Position; }
 };
 
+class BlockActionPacket : public InboundPacket { // 0x24
+private:
+    Vector3i m_Position;
+    u8 m_Data1;
+    u8 m_Data2;
+    s32 m_BlockType;
+
+public:
+    MCLIB_API BlockActionPacket();
+    bool MCLIB_API Deserialize(DataBuffer& data, std::size_t packetLength);
+    void MCLIB_API Dispatch(PacketHandler* handler);
+
+    Vector3i GetPosition() const { return m_Position; }
+    u8 GetData1() const { return m_Data1; }
+    u8 GetData2() const { return m_Data2; }
+    // The block type ID for the block, not including metadata/damage value
+    s32 GetBlockType() const { return m_BlockType; }
+};
+
+class BlockBreakAnimationPacket : public InboundPacket { // 0x25
+private:
+    EntityId m_EntityId;
+    Vector3i m_Position;
+    u8 m_DestroyStage;
+
+public:
+    MCLIB_API BlockBreakAnimationPacket();
+    bool MCLIB_API Deserialize(DataBuffer& data, std::size_t packetLength);
+    void MCLIB_API Dispatch(PacketHandler* handler);
+
+    // EntityId for the break animation
+    EntityId GetEntityId() const { return m_EntityId; }
+    Vector3i GetPosition() const { return m_Position; }
+    // 0-9
+    u8 GetDestroyStage() const { return m_DestroyStage; }
+};
+
+
 class MapChunkBulkPacket : public InboundPacket { // 0x26
 private:
     bool m_SkyLight;
@@ -667,6 +804,27 @@ public:
     void MCLIB_API Dispatch(PacketHandler* handler);
 
     const std::map<std::pair<s32, s32>, ChunkColumnPtr>& GetChunkColumns() const { return m_ChunkColumns; }
+};
+
+class ExplosionPacket : public InboundPacket { // 0x27
+private:
+    Vector3d m_Position;
+    float m_Radius;
+    std::vector<Vector3s> m_AffectedBlocks;
+    Vector3d m_PlayerMotion;
+
+public:
+    MCLIB_API ExplosionPacket();
+    bool MCLIB_API Deserialize(DataBuffer& data, std::size_t packetLength);
+    void MCLIB_API Dispatch(PacketHandler* handler);
+
+    // Position of the center of the explosion
+    Vector3d GetPosition() const { return m_Position; }
+    float GetRadius() const { return m_Radius; }
+    // Offsets of affected blocks. All of the affected blocks should be set to air.
+    const std::vector<Vector3s>& GetAffectedBlocks() const { return m_AffectedBlocks; }
+    // velocity of the player being pushed by the explosion
+    Vector3d GetPlayerMotion() const { return m_PlayerMotion; }
 };
 
 class EffectPacket : public InboundPacket { // 0x28
@@ -705,6 +863,30 @@ public:
     u8 GetPitch() const { return m_Pitch; }
 };
 
+class ParticlePacket : public InboundPacket { // 0x2A
+private:
+    s32 m_ParticleId;
+    bool m_LongDistance;
+    Vector3d m_Position;
+    Vector3d m_MaxOffset;
+    float m_ParticleData;
+    s32 m_Count;
+    std::vector<s32> m_Data;
+
+public:
+    MCLIB_API ParticlePacket();
+    bool MCLIB_API Deserialize(DataBuffer& data, std::size_t packetLength);
+    void MCLIB_API Dispatch(PacketHandler* handler);
+
+    s32 GetParticleId() const { return m_ParticleId; }
+    bool IsLongDistance() const { return m_LongDistance; }
+    Vector3d GetPosition() const { return m_Position; }
+    Vector3d GetMaxOffset() const { return m_MaxOffset; }
+    float GetParticleData() const { return m_ParticleData; }
+    s32 GetCount() const { return m_Count; }
+    const std::vector<s32>& GetData() const { return m_Data; }
+};
+
 class ChangeGameStatePacket : public InboundPacket { // 0x2B
 public:
     enum Reason {
@@ -723,6 +905,23 @@ public:
 
     Reason GetReason() const { return m_Reason; }
     float GetValue() const { return m_Value; }
+};
+
+class SpawnGlobalEntityPacket : public InboundPacket { // 0x2C
+private:
+    EntityId m_EntityId;
+    u8 m_Type;
+    Vector3d m_Position;
+
+public:
+    MCLIB_API SpawnGlobalEntityPacket();
+    bool MCLIB_API Deserialize(DataBuffer& data, std::size_t packetLength);
+    void MCLIB_API Dispatch(PacketHandler* handler);
+
+    EntityId GetEntityId() const { return m_EntityId; }
+    // Always 1 (thunderbolt)
+    u8 GetType() const { return m_Type; }
+    Vector3d GetPosition() const { return m_Position; }
 };
 
 class SetSlotPacket : public InboundPacket { // 0x2F
@@ -976,7 +1175,7 @@ namespace Outbound {
 
 // Handshake packets
 
-class HandshakePacket : public OutboundPacket {
+class HandshakePacket : public OutboundPacket { // 0x00
 private:
     VarInt m_ProtocolVersion;
     MCString m_Server;
@@ -990,7 +1189,7 @@ public:
 
 // Login packets
 
-class LoginStartPacket : public OutboundPacket {
+class LoginStartPacket : public OutboundPacket { // 0x00
 private:
     MCString m_Name;
 
@@ -999,7 +1198,7 @@ public:
     DataBuffer MCLIB_API Serialize() const;
 };
 
-class EncryptionResponsePacket : public OutboundPacket {
+class EncryptionResponsePacket : public OutboundPacket { // 0x01
 private:
     std::string m_SharedSecret;
     std::string m_VerifyToken;
@@ -1025,7 +1224,7 @@ public:
     s64 GetKeepAliveId() const { return m_KeepAliveId; }
 };
 
-class ChatPacket : public OutboundPacket { // 0x00
+class ChatPacket : public OutboundPacket { // 0x01
 private:
     std::wstring m_Message;
 
@@ -1050,6 +1249,36 @@ public:
     DataBuffer MCLIB_API Serialize() const;
 
 
+};
+
+class PlayerPacket : public OutboundPacket { // 0x03
+private:
+    bool m_OnGround;
+
+public:
+    MCLIB_API PlayerPacket(bool onGround);
+    DataBuffer MCLIB_API Serialize() const;
+};
+
+class PlayerPositionPacket : public OutboundPacket { // 0x04
+private:
+    Vector3d m_Position;
+    bool m_OnGround;
+
+public:
+    MCLIB_API PlayerPositionPacket(Vector3d position, bool onGround);
+    DataBuffer MCLIB_API Serialize() const;
+};
+
+class PlayerLookPacket : public OutboundPacket { // 0x05
+private:
+    float m_Yaw;
+    float m_Pitch;
+    bool m_OnGround;
+
+public:
+    MCLIB_API PlayerLookPacket(float yaw, float pitch, bool onGround);
+    DataBuffer MCLIB_API Serialize() const;
 };
 
 
@@ -1095,10 +1324,48 @@ class PlayerBlockPlacementPacket : public OutboundPacket { // 0x08
 private:
     Vector3i m_Position;
     u8 m_Face;
+    Slot m_HeldItem;
     Vector3i m_CursorPos;
 
 public:
-    MCLIB_API PlayerBlockPlacementPacket(Vector3i position, u8 face, Vector3i cursorPos);
+    // Cursor position is the position of the crosshair on the block
+    MCLIB_API PlayerBlockPlacementPacket(Vector3i position, u8 face, Slot heldItem, Vector3i cursorPos);
+    DataBuffer MCLIB_API Serialize() const;
+};
+
+class HeldItemChangePacket : public OutboundPacket { // 0x09
+private:
+    u16 m_Slot;
+
+public:
+    // Slot should be between 0 and 8, representing hot bar left to right
+    MCLIB_API HeldItemChangePacket(u16 slot);
+    DataBuffer MCLIB_API Serialize() const;
+};
+
+// Send when the player's arm swings
+class AnimationPacket : public OutboundPacket { // 0x0A
+public:
+    MCLIB_API AnimationPacket();
+    DataBuffer MCLIB_API Serialize() const;
+};
+
+class EntityActionPacket : public OutboundPacket { // 0x0B
+public:
+    enum Action {
+        StartSneak, StopSneak,
+        LeaveBed,
+        StartSprint, StopSprint,
+        HorseJump, OpenRiddenHorseInventory
+    };
+private:
+    EntityId m_EntityId;
+    Action m_Action;
+    s32 m_ActionData;
+
+public:
+    // Action data is only used for HorseJump (0 to 100), 0 otherwise.
+    MCLIB_API EntityActionPacket(EntityId eid, Action action, s32 actionData = 0);
     DataBuffer MCLIB_API Serialize() const;
 };
 

@@ -44,8 +44,8 @@ class TagString : public Tag {
 private:
     std::wstring m_Value;
 
-    void Write(DataBuffer& buffer) const;
-    void Read(DataBuffer& buffer);
+    void MCLIB_API Write(DataBuffer& buffer) const;
+    void MCLIB_API Read(DataBuffer& buffer);
 
 public:
     MCLIB_API TagString() : Tag(L"") { }
@@ -62,8 +62,8 @@ class TagByteArray : public Tag {
 private:
     std::string m_Value;
 
-    void Write(DataBuffer& buffer) const;
-    void Read(DataBuffer& buffer);
+    void MCLIB_API Write(DataBuffer& buffer) const;
+    void MCLIB_API Read(DataBuffer& buffer);
 
 public:
     MCLIB_API TagByteArray() : Tag(L"") { }
@@ -80,8 +80,8 @@ class TagIntArray : public Tag {
 private:
     std::vector<s32> m_Value;
 
-    void Write(DataBuffer& buffer) const;
-    void Read(DataBuffer& buffer);
+    void MCLIB_API Write(DataBuffer& buffer) const;
+    void MCLIB_API Read(DataBuffer& buffer);
 
 public:
     MCLIB_API TagIntArray() : Tag(L"") { }
@@ -99,8 +99,8 @@ private:
     std::vector<TagPtr> m_Tags;
     TagType m_ListType;
 
-    void Write(DataBuffer& buffer) const;
-    void Read(DataBuffer& buffer);
+    void MCLIB_API Write(DataBuffer& buffer) const;
+    void MCLIB_API Read(DataBuffer& buffer);
 
 public:
     MCLIB_API TagList() : Tag(L""), m_ListType(TagType::End) { }
@@ -121,8 +121,9 @@ class TagCompound : public Tag {
 private:
     std::vector<TagPtr> m_Tags;
 
-    void Write(DataBuffer& buffer) const;
-    void Read(DataBuffer& buffer);
+    void MCLIB_API Write(DataBuffer& buffer) const;
+    void MCLIB_API Read(DataBuffer& buffer);
+
 public:
     MCLIB_API TagCompound() : Tag(L"") { }
     MCLIB_API TagCompound(const std::wstring& name) : Tag(name) { }
@@ -145,8 +146,8 @@ class TagByte : public Tag {
 private:
     u8 m_Value;
 
-    void Write(DataBuffer& buffer) const;
-    void Read(DataBuffer& buffer);
+    void MCLIB_API Write(DataBuffer& buffer) const;
+    void MCLIB_API Read(DataBuffer& buffer);
 
 public:
     MCLIB_API TagByte() : Tag(L""), m_Value(0) { }
@@ -162,8 +163,8 @@ class TagShort : public Tag {
 private:
     s16 m_Value;
 
-    void Write(DataBuffer& buffer) const;
-    void Read(DataBuffer& buffer);
+    void MCLIB_API Write(DataBuffer& buffer) const;
+    void MCLIB_API Read(DataBuffer& buffer);
 
 public:
     MCLIB_API TagShort() : Tag(L""), m_Value(0) { }
@@ -179,8 +180,8 @@ class TagInt : public Tag {
 private:
     s32 m_Value;
 
-    void Write(DataBuffer& buffer) const;
-    void Read(DataBuffer& buffer);
+    void MCLIB_API Write(DataBuffer& buffer) const;
+    void MCLIB_API Read(DataBuffer& buffer);
 
 public:
     MCLIB_API TagInt() : Tag(L""), m_Value(0) { }
@@ -196,8 +197,8 @@ class TagLong : public Tag {
 private:
     s64 m_Value;
 
-    void Write(DataBuffer& buffer) const;
-    void Read(DataBuffer& buffer);
+    void MCLIB_API Write(DataBuffer& buffer) const;
+    void MCLIB_API Read(DataBuffer& buffer);
 
 public:
     MCLIB_API TagLong() : Tag(L""), m_Value(0) { }
@@ -213,8 +214,8 @@ class TagFloat : public Tag {
 private:
     float m_Value;
 
-    void Write(DataBuffer& buffer) const;
-    void Read(DataBuffer& buffer);
+    void MCLIB_API Write(DataBuffer& buffer) const;
+    void MCLIB_API Read(DataBuffer& buffer);
 
 public:
     MCLIB_API TagFloat() : Tag(L""), m_Value(0.0f) { }
@@ -230,8 +231,8 @@ class TagDouble : public Tag {
 private:
     double m_Value;
 
-    void Write(DataBuffer& buffer) const;
-    void Read(DataBuffer& buffer);
+    void MCLIB_API Write(DataBuffer& buffer) const;
+    void MCLIB_API Read(DataBuffer& buffer);
 
 public:
     MCLIB_API TagDouble() : Tag(L""), m_Value(0.0) { }

@@ -44,6 +44,9 @@ public:
     void MCLIB_API HandlePacket(Packets::Inbound::JoinGamePacket* packet);
     void MCLIB_API HandlePacket(Packets::Inbound::PlayerPositionAndLookPacket* packet);
     void MCLIB_API HandlePacket(Packets::Inbound::SpawnPlayerPacket* packet);
+    void MCLIB_API HandlePacket(Packets::Inbound::SpawnPaintingPacket* packet);
+    void MCLIB_API HandlePacket(Packets::Inbound::SpawnExperienceOrbPacket* packet);
+    void MCLIB_API HandlePacket(Packets::Inbound::SpawnGlobalEntityPacket* packet);
     void MCLIB_API HandlePacket(Packets::Inbound::SpawnMobPacket* packet);
     void MCLIB_API HandlePacket(Packets::Inbound::SpawnObjectPacket* packet);
     void MCLIB_API HandlePacket(Packets::Inbound::EntityPacket* packet);

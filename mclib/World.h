@@ -12,7 +12,7 @@ namespace Minecraft {
 class MCLIB_API WorldListener {
 public:
     // yIndex is the chunk section index of the column, 0 means bottom chunk, 15 means top
-    virtual void OnChunkLoad(ChunkPtr chunk, const ChunkColumnMetadata& meta, u16 yIndex) = 0;
+    virtual void OnChunkLoad(ChunkPtr chunk, const ChunkColumnMetadata& meta, u16 yIndex) { };
 };
 
 class World : public Packets::PacketHandler, public ObserverSubject<WorldListener> {
@@ -20,6 +20,8 @@ private:
     typedef std::pair<s32, s32> ChunkCoord;
 
     std::map<ChunkCoord, ChunkColumnPtr> m_Chunks;
+
+    bool MCLIB_API SetBlock(Vector3i position, s16 blockData);
 
 public:
     MCLIB_API World(Packets::PacketDispatcher* dispatcher);
@@ -29,6 +31,7 @@ public:
     void MCLIB_API HandlePacket(Packets::Inbound::MapChunkBulkPacket* packet);
     void MCLIB_API HandlePacket(Packets::Inbound::MultiBlockChangePacket* packet);
     void MCLIB_API HandlePacket(Packets::Inbound::BlockChangePacket* packet);
+    void MCLIB_API HandlePacket(Packets::Inbound::ExplosionPacket* packet);
 
     /**
      * Pos can be any world position inside of the chunk

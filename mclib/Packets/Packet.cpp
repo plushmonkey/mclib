@@ -210,6 +210,27 @@ void HeldItemChangePacket::Dispatch(PacketHandler* handler) {
     handler->HandlePacket(this);
 }
 
+UseBedPacket::UseBedPacket() {
+    m_Id = 0x0A;
+}
+
+bool UseBedPacket::Deserialize(DataBuffer& data, std::size_t packetLength) {
+    VarInt eid;
+    Position location;
+
+    data >> eid >> location;
+
+    m_EntityId = eid.GetInt();
+    m_Position.x = location.GetX();
+    m_Position.y = location.GetY();
+    m_Position.z = location.GetZ();
+    return true;
+}
+
+void UseBedPacket::Dispatch(PacketHandler* handler) {
+    handler->HandlePacket(this);
+}
+
 AnimationPacket::AnimationPacket() {
     m_Id = 0x0B;
 }
@@ -258,6 +279,25 @@ bool SpawnPlayerPacket::Deserialize(DataBuffer& data, std::size_t packetLength) 
 }
 
 void SpawnPlayerPacket::Dispatch(PacketHandler* handler) {
+    handler->HandlePacket(this);
+}
+
+CollectItemPacket::CollectItemPacket() {
+    m_Id = 0x0D;
+}
+
+bool CollectItemPacket::Deserialize(DataBuffer& data, std::size_t packetLength) {
+    VarInt collector, collected;
+
+    data >> collected >> collector;
+
+    m_Collector = collector.GetInt();
+    m_Collected = collected.GetInt();
+
+    return true;
+}
+
+void CollectItemPacket::Dispatch(PacketHandler* handler) {
     handler->HandlePacket(this);
 }
 
@@ -328,9 +368,59 @@ void SpawnMobPacket::Dispatch(PacketHandler* handler) {
     handler->HandlePacket(this);
 }
 
+SpawnPaintingPacket::SpawnPaintingPacket() {
+    m_Id = 0x10;
+}
+
+bool SpawnPaintingPacket::Deserialize(DataBuffer& data, std::size_t packetLength) {
+    VarInt eid;
+    MCString title;
+    Position position;
+    u8 direction;
+
+    data >> eid >> title >> position >> direction;
+
+    m_EntityId = eid.GetInt();
+    m_Title = title.GetUTF16();
+    m_Position.x = position.GetX();
+    m_Position.y = position.GetY();
+    m_Position.z = position.GetZ();
+    m_Direction = (Direction)direction;
+
+    return true;
+}
+
+void SpawnPaintingPacket::Dispatch(PacketHandler* handler) {
+    handler->HandlePacket(this);
+}
+
+SpawnExperienceOrbPacket::SpawnExperienceOrbPacket() {
+    m_Id = 0x11;
+}
+
+bool SpawnExperienceOrbPacket::Deserialize(DataBuffer& data, std::size_t packetLength) {
+    VarInt eid;
+    FixedPointNumber<s32> x, y, z;
+    
+    data >> eid >> x >> y >> z >> m_Count;
+
+    m_EntityId = eid.GetInt();
+    m_Position.x = x.GetFloat();
+    m_Position.y = y.GetFloat();
+    m_Position.z = z.GetFloat();
+
+    return true;
+}
+
+void SpawnExperienceOrbPacket::Dispatch(PacketHandler* handler) {
+    handler->HandlePacket(this);
+}
+
+
 EntityVelocityPacket::EntityVelocityPacket() {
     m_Id = 0x12;
 }
+
 bool EntityVelocityPacket::Deserialize(DataBuffer& data, std::size_t packetLength) {
     VarInt eid;
     data >> eid;
@@ -348,6 +438,7 @@ void EntityVelocityPacket::Dispatch(PacketHandler* handler) {
 DestroyEntitiesPacket::DestroyEntitiesPacket() {
     m_Id = 0x13;
 }
+
 bool DestroyEntitiesPacket::Deserialize(DataBuffer& data, std::size_t packetLength) {
     VarInt count;
 
@@ -362,6 +453,7 @@ bool DestroyEntitiesPacket::Deserialize(DataBuffer& data, std::size_t packetLeng
     }
     return true;
 }
+
 void DestroyEntitiesPacket::Dispatch(PacketHandler* handler) {
     handler->HandlePacket(this);
 }
@@ -542,6 +634,38 @@ void EntityMetadataPacket::Dispatch(PacketHandler* handler) {
     handler->HandlePacket(this);
 }
 
+EntityEffectPacket::EntityEffectPacket() {
+    m_Id = 0x1D;
+}
+
+bool EntityEffectPacket::Deserialize(DataBuffer& data, std::size_t packetLength) {
+    VarInt eid, duration;
+    data >> eid >> m_EffectId >> m_Amplifier >> duration >> m_HideParticles;
+    m_EntityId = eid.GetInt();
+    m_Duration = duration.GetInt();
+    return true;
+}
+
+void EntityEffectPacket::Dispatch(PacketHandler* handler) {
+    handler->HandlePacket(this);
+}
+
+RemoveEntityEffectPacket::RemoveEntityEffectPacket() {
+    m_Id = 0x1D;
+}
+
+bool RemoveEntityEffectPacket::Deserialize(DataBuffer& data, std::size_t packetLength) {
+    VarInt eid;
+    data >> eid >> m_EffectId;
+    m_EntityId = eid.GetInt();
+    return true;
+}
+
+void RemoveEntityEffectPacket::Dispatch(PacketHandler* handler) {
+    handler->HandlePacket(this);
+}
+
+
 SetExperiencePacket::SetExperiencePacket() {
     m_Id = 0x1F;
 }
@@ -692,6 +816,50 @@ void BlockChangePacket::Dispatch(PacketHandler* handler) {
     handler->HandlePacket(this);
 }
 
+BlockActionPacket::BlockActionPacket() {
+    m_Id = 0x24;
+}
+
+bool BlockActionPacket::Deserialize(DataBuffer& data, std::size_t packetLength) {
+    Position position;
+    VarInt type;
+
+    data >> position >> m_Data1 >> m_Data2 >> type;
+
+    m_Position.x = position.GetX();
+    m_Position.y = position.GetY();
+    m_Position.z = position.GetZ();
+    m_BlockType = type.GetInt();
+
+    return true;
+}
+
+void BlockActionPacket::Dispatch(PacketHandler* handler) {
+    handler->HandlePacket(this);
+}
+
+BlockBreakAnimationPacket::BlockBreakAnimationPacket() {
+    m_Id = 0x25;
+}
+
+bool BlockBreakAnimationPacket::Deserialize(DataBuffer& data, std::size_t packetLength) {
+    VarInt eid;
+    Position position;
+
+    data >> eid >> position >> m_DestroyStage;
+
+    m_EntityId = eid.GetInt();
+    m_Position.x = position.GetX();
+    m_Position.y = position.GetY();
+    m_Position.z = position.GetZ();
+
+    return true;
+}
+
+void BlockBreakAnimationPacket::Dispatch(PacketHandler* handler) {
+    handler->HandlePacket(this);
+}
+
 MapChunkBulkPacket::MapChunkBulkPacket() {
     m_Id = 0x26;
 }
@@ -728,6 +896,40 @@ bool MapChunkBulkPacket::Deserialize(DataBuffer& data, std::size_t packetLength)
 }
 
 void MapChunkBulkPacket::Dispatch(PacketHandler* handler) {
+    handler->HandlePacket(this);
+}
+
+ExplosionPacket::ExplosionPacket() {
+    m_Id = 0x27;
+}
+
+bool ExplosionPacket::Deserialize(DataBuffer& data, std::size_t packetLength) {
+    float posX, posY, posZ;
+    s32 count;
+
+    data >> posX >> posY >> posZ;
+
+    m_Position = Vector3d(posX, posY, posZ);
+
+    data >> m_Radius;
+    data >> count;
+
+    for (s32 i = 0; i < count; ++i) {
+        u8 x, y, z;
+        data >> x >> y >> z;
+        m_AffectedBlocks.push_back(Vector3s(x, y, z));
+    }
+
+    float motionX, motionY, motionZ;
+
+    data >> motionX >> motionY >> motionZ;
+
+    m_PlayerMotion = Vector3d(motionX, motionY, motionZ);
+
+    return true;
+}
+
+void ExplosionPacket::Dispatch(PacketHandler* handler) {
     handler->HandlePacket(this);
 }
 
@@ -783,6 +985,42 @@ void SoundEffectPacket::Dispatch(PacketHandler* handler) {
     handler->HandlePacket(this);
 }
 
+ParticlePacket::ParticlePacket() {
+    m_Id = 0x2A;
+}
+
+bool ParticlePacket::Deserialize(DataBuffer& data, std::size_t packetLength) {
+    data >> m_ParticleId >> m_LongDistance;
+
+    float x, y, z;
+    data >> x >> y >> z;
+    m_Position = Vector3d(x, y, z);
+
+    float offsetX, offsetY, offsetZ;
+    data >> offsetX >> offsetY >> offsetZ;
+    m_MaxOffset = Vector3d(offsetX, offsetY, offsetZ);
+
+    data >> m_ParticleData >> m_Count;
+    
+    if (m_ParticleId == 36) { // iconcrack
+        for (s32 i = 0; i < 2; ++i) {
+            VarInt varData;
+            data >> varData;
+            m_Data.push_back(varData.GetInt());
+        }
+    } else if (m_ParticleId == 37 || m_ParticleId == 38) { // blockcrack || blockdust
+        VarInt varData;
+        data >> varData;
+        m_Data.push_back(varData.GetInt());
+    }
+
+    return true;
+}
+
+void ParticlePacket::Dispatch(PacketHandler* handler) {
+    handler->HandlePacket(this);
+}
+
 ChangeGameStatePacket::ChangeGameStatePacket() {
     m_Id = 0x2B;
 }
@@ -799,6 +1037,26 @@ bool ChangeGameStatePacket::Deserialize(DataBuffer& data, std::size_t packetLeng
 }
 
 void ChangeGameStatePacket::Dispatch(PacketHandler* handler) {
+    handler->HandlePacket(this);
+}
+
+SpawnGlobalEntityPacket::SpawnGlobalEntityPacket() {
+    m_Id = 0x2C;
+}
+
+bool SpawnGlobalEntityPacket::Deserialize(DataBuffer& data, std::size_t packetLength) {
+    VarInt eid;
+    FixedPointNumber<s32> x, y, z;
+
+    data >> eid >> m_Type;
+    
+    data >> x >> y >> z;
+    m_Position = Vector3d(x.GetFloat(), y.GetFloat(), z.GetFloat());
+
+    return true;
+}
+
+void SpawnGlobalEntityPacket::Dispatch(PacketHandler* handler) {
     handler->HandlePacket(this);
 }
 
@@ -1343,6 +1601,47 @@ DataBuffer UseEntityPacket::Serialize() const {
     return buffer;
 }
 
+PlayerPacket::PlayerPacket(bool onGround)
+    : m_OnGround(onGround)
+{
+    m_Id = 0x03;
+}
+
+DataBuffer PlayerPacket::Serialize() const {
+    DataBuffer buffer;
+    buffer << m_Id;
+    buffer << m_OnGround;
+    return buffer;
+}
+
+PlayerPositionPacket::PlayerPositionPacket(Vector3d position, bool onGround)
+    : m_Position(position), m_OnGround(onGround)
+{
+    m_Id = 0x04;
+}
+
+DataBuffer PlayerPositionPacket::Serialize() const {
+    DataBuffer buffer;
+    buffer << m_Id;
+    buffer << m_Position.x << m_Position.y << m_Position.z;
+    buffer << m_OnGround;
+    return buffer;
+}
+
+PlayerLookPacket::PlayerLookPacket(float yaw, float pitch, bool onGround)
+    : m_Yaw(yaw), m_Pitch(pitch), m_OnGround(onGround)
+{
+    m_Id = 0x05;
+}
+
+DataBuffer PlayerLookPacket::Serialize() const {
+    DataBuffer buffer;
+    buffer << m_Id;
+    buffer << m_Yaw << m_Pitch;
+    buffer << m_OnGround;
+    return buffer;
+}
+
 PlayerPositionAndLookPacket::PlayerPositionAndLookPacket(double x, double y, double z, float yaw, float pitch, bool onGround)
     : m_X(x), m_Y(y), m_Z(z), m_Yaw(yaw), m_Pitch(pitch), m_OnGround(onGround)
 {
@@ -1378,17 +1677,66 @@ DataBuffer PlayerDiggingPacket::Serialize() const {
     return buffer;
 }
 
-PlayerBlockPlacementPacket::PlayerBlockPlacementPacket(Vector3i position, u8 face, Vector3i cursorPos) 
-    : m_Position(position), m_Face(face), m_CursorPos(cursorPos)
+PlayerBlockPlacementPacket::PlayerBlockPlacementPacket(Vector3i position, u8 face, Slot heldItem, Vector3i cursorPos) 
+    : m_Position(position), m_Face(face), m_HeldItem(heldItem), m_CursorPos(cursorPos)
 {
     m_Id = 0x08;
 }
+
 DataBuffer PlayerBlockPlacementPacket::Serialize() const {
+    DataBuffer buffer;
+    Position location((s32)m_Position.x, (s32)m_Position.y, (s32)m_Position.z);
+
+    buffer << m_Id;
+    buffer << location.Encode64();
+    buffer << m_Face;
+    buffer << m_HeldItem;
+    buffer << (u8)m_CursorPos.x;
+    buffer << (u8)m_CursorPos.y;
+    buffer << (u8)m_CursorPos.z;
+
+    return buffer;
+}
+
+HeldItemChangePacket::HeldItemChangePacket(u16 slot)
+    : m_Slot(slot)
+{
+    m_Id = 0x09;
+}
+
+DataBuffer HeldItemChangePacket::Serialize() const {
     DataBuffer buffer;
 
     buffer << m_Id;
+    buffer << m_Slot;
 
+    return buffer;
+}
 
+AnimationPacket::AnimationPacket() {
+    m_Id = 0x0A;
+}
+
+DataBuffer AnimationPacket::Serialize() const {
+    DataBuffer buffer;
+    buffer << m_Id;
+    return buffer;
+}
+
+EntityActionPacket::EntityActionPacket(EntityId eid, Action action, s32 actionData) 
+    : m_EntityId(eid), m_Action(action), m_ActionData(actionData)
+{
+    m_Id = 0x0B;
+}
+
+DataBuffer EntityActionPacket::Serialize() const {
+    DataBuffer buffer;
+    VarInt eid(m_EntityId);
+    VarInt action((s32)m_Action);
+    VarInt actionData(m_ActionData);
+
+    buffer << m_Id; 
+    buffer << eid << action << actionData;
 
     return buffer;
 }
@@ -1416,6 +1764,7 @@ ClientSettingsPacket::ClientSettingsPacket(u8 viewDistance, ChatMode chatMode, b
 {
     m_Id = 0x15;
 }
+
 DataBuffer ClientSettingsPacket::Serialize() const {
     MCString locale(L"en_GB");
     DataBuffer buffer;
