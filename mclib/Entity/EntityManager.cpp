@@ -15,6 +15,9 @@ EntityManager::EntityManager(Packets::PacketDispatcher* dispatcher)
     GetDispatcher()->RegisterHandler(Protocol::State::Play, Protocol::Play::JoinGame, this);
     GetDispatcher()->RegisterHandler(Protocol::State::Play, Protocol::Play::PlayerPositionAndLook, this);
     GetDispatcher()->RegisterHandler(Protocol::State::Play, Protocol::Play::SpawnPlayer, this);
+    GetDispatcher()->RegisterHandler(Protocol::State::Play, Protocol::Play::SpawnPainting, this);
+    GetDispatcher()->RegisterHandler(Protocol::State::Play, Protocol::Play::SpawnExperienceOrb, this);
+    GetDispatcher()->RegisterHandler(Protocol::State::Play, Protocol::Play::SpawnGlobalEntity, this);
     GetDispatcher()->RegisterHandler(Protocol::State::Play, Protocol::Play::SpawnMob, this);
     GetDispatcher()->RegisterHandler(Protocol::State::Play, Protocol::Play::SpawnObject, this);
     GetDispatcher()->RegisterHandler(Protocol::State::Play, Protocol::Play::Entity, this);
@@ -73,7 +76,8 @@ void EntityManager::HandlePacket(Packets::Inbound::SpawnPlayerPacket* packet) {
     m_Entities[id] = entity;
     
     entity->SetPosition(Vector3d(packet->GetX(), packet->GetY(), packet->GetZ()));
-    // todo: other data
+    entity->SetYaw(packet->GetYaw());
+    entity->SetPitch(packet->GetPitch());
 
     UUID uuid = packet->GetUUID();
 
@@ -82,23 +86,46 @@ void EntityManager::HandlePacket(Packets::Inbound::SpawnPlayerPacket* packet) {
 }
 
 void EntityManager::HandlePacket(Packets::Inbound::SpawnObjectPacket* packet) {
-    EntityId id = packet->GetEntityId();
+    EntityId eid = packet->GetEntityId();
+    EntityPtr entity = std::make_shared<Entity>(eid);
 
-    EntityPtr entity = std::make_shared<Entity>(id);
-
-    m_Entities[id] = entity;
+    m_Entities[eid] = entity;
     entity->SetPosition(ToVector3d(packet->GetPosition()));
-    //
+    entity->SetYaw(packet->GetYaw());
+    entity->SetPitch(packet->GetPitch());
 
     NotifyListeners(&EntityListener::OnObjectSpawn, entity);
 }
 
+void EntityManager::HandlePacket(Packets::Inbound::SpawnPaintingPacket* packet) {
+    EntityId eid = packet->GetEntityId();
+    EntityPtr entity = std::make_shared<Entity>(eid);
+
+    m_Entities[eid] = entity;
+    entity->SetPosition(ToVector3d(packet->GetPosition()));
+}
+
+void EntityManager::HandlePacket(Packets::Inbound::SpawnExperienceOrbPacket* packet) {
+    EntityId eid = packet->GetEntityId();
+    EntityPtr entity = std::make_shared<Entity>(eid);
+
+    m_Entities[eid] = entity;
+    entity->SetPosition(packet->GetPosition());
+}
+
+void EntityManager::HandlePacket(Packets::Inbound::SpawnGlobalEntityPacket* packet) {
+    EntityId eid = packet->GetEntityId();
+    EntityPtr entity = std::make_shared<Entity>(eid);
+
+    m_Entities[eid] = entity;
+    entity->SetPosition(packet->GetPosition());
+}
+
 void EntityManager::HandlePacket(Packets::Inbound::SpawnMobPacket* packet) {
-    EntityId id = packet->GetEntityId();
+    EntityId eid = packet->GetEntityId();
+    EntityPtr entity = std::make_shared<Entity>(eid);
 
-    EntityPtr entity = std::make_shared<Entity>(id);
-
-    m_Entities[id] = entity;
+    m_Entities[eid] = entity;
     entity->SetPosition(Vector3d(packet->GetX(), packet->GetY(), packet->GetZ()));
 
     NotifyListeners(&EntityListener::OnEntitySpawn, entity);
