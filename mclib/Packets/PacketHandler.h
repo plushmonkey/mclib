@@ -42,10 +42,14 @@ public:
     virtual void HandlePacket(Inbound::RespawnPacket* packet) { } // 0x07
     virtual void HandlePacket(Inbound::PlayerPositionAndLookPacket* packet) { } // 0x08
     virtual void HandlePacket(Inbound::HeldItemChangePacket* packet) { } // 0x09
+    virtual void HandlePacket(Inbound::UseBedPacket* packet) { } // 0x0A
     virtual void HandlePacket(Inbound::AnimationPacket* packet) { } // 0x0B
     virtual void HandlePacket(Inbound::SpawnPlayerPacket* packet) { } // 0x0C
+    virtual void HandlePacket(Inbound::CollectItemPacket* packet) { } // 0x0D
     virtual void HandlePacket(Inbound::SpawnObjectPacket* packet) { } // 0x0E
     virtual void HandlePacket(Inbound::SpawnMobPacket* packet) { } // 0x0F
+    virtual void HandlePacket(Inbound::SpawnPaintingPacket* packet) { } // 0x10
+    virtual void HandlePacket(Inbound::SpawnExperienceOrbPacket* packet) { } // 0x11
     virtual void HandlePacket(Inbound::EntityVelocityPacket* packet) { } // 0x12
     virtual void HandlePacket(Inbound::DestroyEntitiesPacket* packet) { } // 0x13
     virtual void HandlePacket(Inbound::EntityPacket* packet) { } // 0x14
@@ -57,15 +61,22 @@ public:
     virtual void HandlePacket(Inbound::EntityStatusPacket* packet) { } // 0x1A
     virtual void HandlePacket(Inbound::AttachEntityPacket* packet) { } // 0x1B
     virtual void HandlePacket(Inbound::EntityMetadataPacket* packet) { } // 0x1C
+    virtual void HandlePacket(Inbound::EntityEffectPacket* packet) { } // 0x1D
+    virtual void HandlePacket(Inbound::RemoveEntityEffectPacket* packet) { } // 0x1E
     virtual void HandlePacket(Inbound::SetExperiencePacket* packet) { } // 0x1F
     virtual void HandlePacket(Inbound::EntityPropertiesPacket* packet) { } // 0x20
     virtual void HandlePacket(Inbound::ChunkDataPacket* packet) { } // 0x21
     virtual void HandlePacket(Inbound::MultiBlockChangePacket* packet) { } // 0x22
     virtual void HandlePacket(Inbound::BlockChangePacket* packet) { } // 0x23
+    virtual void HandlePacket(Inbound::BlockActionPacket* packet) { } // 0x24
+    virtual void HandlePacket(Inbound::BlockBreakAnimationPacket* packet) { } // 0x25
     virtual void HandlePacket(Inbound::MapChunkBulkPacket* packet) { } // 0x26
+    virtual void HandlePacket(Inbound::ExplosionPacket* packet) { } // 0x27
     virtual void HandlePacket(Inbound::EffectPacket* packet) { } // 0x28
     virtual void HandlePacket(Inbound::SoundEffectPacket* packet) { } // 0x29
+    virtual void HandlePacket(Inbound::ParticlePacket* packet) { } // 0x2A
     virtual void HandlePacket(Inbound::ChangeGameStatePacket* packet) { } // 0x2B
+    virtual void HandlePacket(Inbound::SpawnGlobalEntityPacket* packet) { } // 0x2C
     virtual void HandlePacket(Inbound::SetSlotPacket* packet) { } // 0x2F
     virtual void HandlePacket(Inbound::WindowItemsPacket* packet) { } // 0x30
     virtual void HandlePacket(Inbound::UpdateBlockEntityPacket* packet) { } // 0x35
