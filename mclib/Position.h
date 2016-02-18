@@ -17,7 +17,7 @@ private:
 
 public:
     Position() : m_X(0), m_Y(0), m_Z(0) { }
-    Position(s32 x, s32 y, s32 z);
+    MCLIB_API Position(s32 x, s32 y, s32 z);
     s64 MCLIB_API Encode64() const;
 
     s64 GetX() const { return m_X; }

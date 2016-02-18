@@ -51,6 +51,8 @@ public:
     MCLIB_API Connection(Minecraft::Packets::PacketDispatcher* dispatcher);
     MCLIB_API ~Connection();
 
+    Minecraft::Yggdrasil* GetYggdrasil() { return m_Yggdrasil.get(); }
+
     void MCLIB_API HandlePacket(Minecraft::Packets::Inbound::KeepAlivePacket* packet);
     void MCLIB_API HandlePacket(Minecraft::Packets::Inbound::PlayerPositionAndLookPacket* packet);
     void MCLIB_API HandlePacket(Minecraft::Packets::Inbound::DisconnectPacket* packet);
