@@ -9,6 +9,7 @@
 
 #include <future>
 #include <thread>
+#include <memory>
 
 namespace Minecraft {
 
@@ -145,7 +146,7 @@ bool Connection::Connect(const std::string& server, u16 port) {
 
     m_Socket = std::make_shared<Network::TCPSocket>();
     m_Socket->SetBlocking(false);
-    m_Yggdrasil = std::make_unique<Yggdrasil>();
+    m_Yggdrasil = std::unique_ptr<Yggdrasil>(new Yggdrasil());
     m_ProtocolState = Protocol::State::Handshake;
 
 

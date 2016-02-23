@@ -4,6 +4,7 @@
 #include "Types.h"
 #include "mclib.h"
 #include <iosfwd>
+#include <string>
 
 namespace Minecraft {
 

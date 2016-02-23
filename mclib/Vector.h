@@ -5,6 +5,7 @@
 #include <cmath>
 #include <limits>
 #include <ostream>
+#include <sstream>
 
 template <typename VecType>
 class Vector3 {
