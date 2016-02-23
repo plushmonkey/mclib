@@ -68,6 +68,18 @@ public:
     void MCLIB_API SetHandleFall(bool handle);
 };
 
+namespace Minecraft {
+
+inline std::string to_string(const std::string& str) {
+    return str;
+}
+
+inline std::string to_string(const std::wstring& str) {
+    return std::string(str.begin(), str.end());
+}
+
+}
+
 class IConsole {
 public:
     virtual void Output(const std::string& str) = 0;
@@ -131,13 +143,13 @@ public:
         return *this;
     }
 
-    template <>
+    template <typename T>
     Console& operator<<(const std::string& str) {
         Output(str);
         return *this;
     }
 
-    template <>
+    template <typename T>
     Console& operator<<(const std::wstring& str) {
         Output(str);
         return *this;
