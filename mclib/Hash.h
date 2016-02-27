@@ -5,6 +5,8 @@
 #include <string>
 #include "mclib.h"
 
+std::string MCLIB_API Base64Decode(const std::string& message);
+
 namespace Sha {
 
 #define DIGEST_LENGTH 20
