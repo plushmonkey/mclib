@@ -19,7 +19,9 @@ void Yggdrasil::Initialize() {
 bool Yggdrasil::JoinServer(const std::wstring& serverId, const std::string& sharedSecret, const std::string& publicKey) {
     SHA_CTX shaCtx;
     SHA1_Init(&shaCtx);
-    SHA1_Update(&shaCtx, serverId.c_str(), serverId.size());
+    
+    std::string serverId8(serverId.begin(), serverId.end());
+    SHA1_Update(&shaCtx, serverId8.c_str(), serverId8.size());
     SHA1_Update(&shaCtx, sharedSecret.c_str(), sharedSecret.length());
     SHA1_Update(&shaCtx, publicKey.c_str(), publicKey.length());
 
