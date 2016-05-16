@@ -54,6 +54,7 @@ public:
     void MCLIB_API UpdatePosition();
     void MCLIB_API Update();
 
+    bool MCLIB_API InLoadedChunk() const;
     Vector3d MCLIB_API GetPosition() const;
     Vector3d MCLIB_API GetHeading() const;
     float MCLIB_API GetYaw() const;

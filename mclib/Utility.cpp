@@ -232,7 +232,7 @@ void PlayerController::OnClientSpawn(Minecraft::PlayerPtr player) {
     m_Pitch = player->GetEntity()->GetPitch();
     m_Position = player->GetEntity()->GetPosition();
     m_LoadedIn = true;
-
+    m_TargetPos = m_Position;
     auto entity = player->GetEntity();
     if (entity) {
         Minecraft::EntityId eid = entity->GetEntityId();
@@ -307,7 +307,7 @@ bool PlayerController::HandleFall() {
     double bestDist = FallSpeed;
     Minecraft::BlockPtr bestBlock = nullptr;
 
-    if (!m_World.GetChunk(ToVector3i(m_Position)))
+    if (!InLoadedChunk())
         return false;
 
     for (float angle = 0.0f; angle < FullCircle; angle += FullCircle / 8) {
@@ -408,7 +408,6 @@ void PlayerController::Update() {
 
         if (HandleJump()) {
             console << "Jumping\n";
-            //std::wcout << L"Jumping\n";
         } else {
             if (!m_HandleFall) {
                 const float FullCircle = 2.0f * 3.14159f;
@@ -424,22 +423,11 @@ void PlayerController::Update() {
                     }
                 }
             } else if (HandleFall()) {
-                //std::wcout << L"Falling\n";
                 console << "Falling\n";
                 onGround = false;
             }
             
         }
-
-        u64 ticks = GetTime() - StartTime;
-
-        //m_Pitch = (((float)std::sin(ticks * 0.5 * 3.14 / 1000) * 0.5f + 0.5f) * 360.0f) - 180.0f;
-        m_Pitch = (((float)std::sin(ticks * 3 * 3.14 / 1000) * 0.5f + 0.5f) * 360.0f) - 180.0f;
-        m_Pitch /= 5.5;
-
-        //m_Pitch = (((float)std::sin(ticks * 0.5 * 3.14 / 1000) * 0.5f + 0.5f)  * 360.0f) - 180.0f;
-
-        //m_Yaw = (((float)std::cos(ticks * 0.5 * 3.14 / 1000) * 0.5f + 0.5f)  * 360.0f) - 180.0f;
 
         Minecraft::Packets::Outbound::PlayerPositionAndLookPacket response(m_Position.x, m_Position.y, m_Position.z,
             m_Yaw, m_Pitch, onGround);
@@ -450,6 +438,10 @@ void PlayerController::Update() {
 
         lastSend = GetTime();
     }
+}
+
+bool PlayerController::InLoadedChunk() const {
+    return m_World.GetChunk(ToVector3i(m_Position)) != nullptr;
 }
 
 Vector3d PlayerController::GetPosition() const { return m_Position; }

@@ -181,13 +181,54 @@ public:
     }
 };
 
+class SneakEnforcer : public Minecraft::PlayerListener, public ClientListener {
+private:
+    Client* m_Client;
+    Minecraft::PlayerManager* m_PlayerManager;
+    Minecraft::Connection* m_Connection;
+    s64 m_StartTime;
+
+public:
+    SneakEnforcer(Client* client) 
+        : m_Client(client), 
+          m_PlayerManager(client->GetPlayerManager()), 
+          m_Connection(client->GetConnection()),
+          m_StartTime(GetTime())
+    {
+        m_PlayerManager->RegisterListener(this);
+        m_Client->RegisterListener(this);
+    }
+
+    ~SneakEnforcer() {
+        m_PlayerManager->UnregisterListener(this);
+        m_Client->UnregisterListener(this);
+    }
+
+    void OnTick() override {
+        s64 ticks = GetTime() - m_StartTime;
+        float pitch = (((float)std::sin(ticks * 3 * 3.14 / 1000) * 0.5f + 0.5f) * 360.0f) - 180.0f;
+        pitch = (pitch / 5.5f) + 130.0f;
+
+        m_Client->GetPlayerController()->SetPitch(pitch);
+    }
+
+    void OnClientSpawn(Minecraft::PlayerPtr player) override {
+        using namespace Minecraft::Packets::Outbound;
+        EntityActionPacket::Action action = EntityActionPacket::Action::StartSneak;
+
+        EntityActionPacket packet(player->GetEntity()->GetEntityId(), action);
+        m_Connection->SendPacket(&packet);
+    }
+};
+
 int main(void) {
     Minecraft::BlockRegistry::GetInstance()->RegisterVanillaBlocks();
     Minecraft::Packets::PacketDispatcher dispatcher;
-    TextureGrabber grabber(&dispatcher);
+    //TextureGrabber grabber(&dispatcher);
 
     Client client(&dispatcher);
    // BlockPlacer blockPlacer(&dispatcher, &client, client.GetPlayerController(), client.GetWorld());
+    SneakEnforcer sneakEnforcer(&client);
 
     try {
         client.Login("192.168.2.202", 25565, "testplayer", "");
