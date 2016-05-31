@@ -27,6 +27,11 @@ PlayerManager::iterator PlayerManager::end() {
 }
 
 void PlayerManager::OnPlayerSpawn(PlayerEntityPtr entity, UUID uuid) {
+    auto iter = m_Players.find(uuid);
+
+    if (iter == m_Players.end())
+        m_Players[uuid] = std::make_shared<Player>(uuid, L"");
+
     m_Players[uuid]->SetEntity(entity);
 
     NotifyListeners(&PlayerListener::OnPlayerSpawn, m_Players[uuid]);
