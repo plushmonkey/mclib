@@ -172,6 +172,25 @@ inline Vector3<T> Vector3Normalize(const Vector3<T>& v1) {
     return copy;
 }
 
+template <typename T>
+inline bool operator<(const Vector3<T>& lhs, const Vector3<T>& rhs) {
+    if (lhs.z < rhs.z) {
+        return true;
+    } else if (lhs.z > rhs.z) {
+        return false;
+    }
+
+    if (lhs.y < rhs.y) {
+        return true;
+    } else if (lhs.y > rhs.y) {
+        return false;
+    }
+    if (lhs.x < rhs.x) {
+        return true;
+    }
+    return false;
+}
+
 // Todo: rotation matrix
 template <typename T>
 inline Vector3<T> Vector3RotateAboutY(Vector3<T> vec, double rads) {
