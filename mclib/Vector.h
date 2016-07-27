@@ -33,7 +33,7 @@ public:
     }
 
     bool operator==(const Vector3& rhs) const {
-        VecType epsilon = 0.00001;
+        double epsilon = 0.00001;
         return std::fabs((double)x - rhs.x) < epsilon && 
                std::fabs((double)y - rhs.y) < epsilon &&
                std::fabs((double)z - rhs.z) < epsilon;
