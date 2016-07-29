@@ -57,7 +57,7 @@ BlockPtr ChunkColumn::GetBlock(Vector3i position) {
     s32 chunkIndex = (s32)(position.y / 16);
     Vector3i relativePosition(position.x, position.y % 16, position.z);
 
-    if (!m_Chunks[chunkIndex]) return nullptr;
+    if (!m_Chunks[chunkIndex]) return BlockRegistry::GetInstance()->GetBlock(0, 0);
 
     return m_Chunks[chunkIndex]->GetBlock(relativePosition);
 }
