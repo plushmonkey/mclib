@@ -29,6 +29,10 @@ public:
     {
 
     }
+	
+	bool operator==(const Block& other) {
+		return m_Data == other.m_Data;
+	}
 
     virtual std::wstring GetName() const { return m_Name; }
 

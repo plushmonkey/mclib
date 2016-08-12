@@ -20,7 +20,9 @@ protected:
     Vector3s m_Velocity;
     EntityId m_EntityId;
     EntityMetadata m_Metadata;
-    u8 m_Yaw, m_Pitch, m_HeadPitch;
+
+    // Stored in radians
+    float m_Yaw, m_Pitch, m_HeadPitch;
 
     EntityId m_VehicleId;
 
@@ -32,16 +34,16 @@ public:
     EntityId GetVehicleId() const { return m_VehicleId; }
     const Vector3d& GetPosition() const { return m_Position; }
     const Vector3s& GetVelocity() const { return m_Velocity; }
-    u8 GetYaw() const { return m_Yaw; }
-    u8 GetPitch() const { return m_Pitch; }
-    u8 GetHeadPitch() const { return m_HeadPitch; }
+    float GetYaw() const { return m_Yaw; }
+    float GetPitch() const { return m_Pitch; }
+    float GetHeadPitch() const { return m_HeadPitch; }
 
     const EntityMetadata& GetMetadata() const { return m_Metadata; }
 
     void SetPosition(const Vector3d& pos) { m_Position = pos; }
     void SetVelocity(const Vector3s& vel) { m_Velocity = vel; }
-    void SetYaw(u8 yaw) { m_Yaw = yaw; }
-    void SetPitch(u8 pitch) { m_Pitch = pitch; }
+    void SetYaw(float yaw) { m_Yaw = yaw; }
+    void SetPitch(float pitch) { m_Pitch = pitch; }
     void SetVehicleId(EntityId vid) { m_VehicleId = vid; }
 };
 

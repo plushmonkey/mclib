@@ -17,6 +17,7 @@ public:
         struct {
             VecType pitch, yaw, roll;
         };
+        VecType values[3];
     };
 
     typedef VecType value_type;
@@ -39,11 +40,15 @@ public:
                std::fabs((double)z - rhs.z) < epsilon;
     }
 
+    VecType operator[](std::size_t index) {
+        return values[index];
+    }
+
     bool operator!=(const Vector3& rhs) const {
         return !(*this == rhs);
     }
 
-    Vector3 operator-() {
+    Vector3 operator-() const {
         return Vector3(-x, -y, -z);
     }
 
@@ -89,35 +94,35 @@ public:
         return *this;
     }
 
-    inline Vector3 operator+(const Vector3& v) {
+    inline Vector3 operator+(const Vector3& v) const {
         return Vector3(x + v.x, y + v.y, z + v.z);
     }
 
-    inline Vector3 operator-(const Vector3& v) {
+    inline Vector3 operator-(const Vector3& v) const {
         return Vector3(x - v.x, y - v.y, z - v.z);
     }
 
-    inline Vector3 operator/(const Vector3& v) {
+    inline Vector3 operator/(const Vector3& v) const {
         return Vector3(x / v.x, y / v.y, z / v.z);
     }
 
-    inline Vector3 operator+(VecType v) {
+    inline Vector3 operator+(VecType v) const {
         return Vector3(x + v, y + v, z + v);
     }
 
-    inline Vector3 operator-(VecType v) {
+    inline Vector3 operator-(VecType v) const {
         return Vector3(x - v, y - v, z - v);
     }
 
-    inline Vector3 operator*(VecType v) {
+    inline Vector3 operator*(VecType v) const {
         return Vector3(x * v, y * v, z * v);
     }
 
-    inline Vector3 operator/(VecType v) {
+    inline Vector3 operator/(VecType v) const {
         return Vector3(x / v, y / v, z / v);
     }
 
-    inline double operator*(const Vector3& rhs) {
+    inline double operator*(const Vector3& rhs) const {
         return Dot(rhs);
     }
 
@@ -150,6 +155,14 @@ public:
 
     inline double Distance(const Vector3& other) const {
         return Vector3(*this - other).Length();
+    }
+
+    inline Vector3& Truncate(double length) {
+        if (LengthSq() > length * length) {
+            Normalize();
+            *this *= length;
+        }
+        return *this;
     }
 };
 

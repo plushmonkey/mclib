@@ -30,10 +30,8 @@ bool World::SetBlock(Vector3i position, s16 blockData) {
     if (relative.z < 0)
         relative.z += 16;
 
-    BlockPtr block = chunk->GetBlock(relative);
-
     std::size_t index = (std::size_t)position.y / 16;
-    if (!block) {
+    if ((*chunk)[index] == nullptr) {
         ChunkPtr section = std::make_shared<Chunk>();
 
         (*chunk)[index] = section;
@@ -112,14 +110,12 @@ void World::HandlePacket(Packets::Inbound::MultiBlockChangePacket* packet) {
     const auto& changes = packet->GetBlockChanges();
     for (const auto& change : changes) {
         Vector3i relative(change.x, change.y, change.z);
-        BlockPtr block = chunk->GetBlock(relative);
 
         std::size_t index = change.y / 16;
-        if (!block) {
+        if ((*chunk)[index] == nullptr) {
             ChunkPtr section = std::make_shared<Chunk>();
 
             (*chunk)[index] = section;
-            block = chunk->GetBlock(relative);
         }
         relative.y %= 16;
         (*chunk)[index]->SetBlock(relative, BlockRegistry::GetInstance()->GetBlock(change.blockData));

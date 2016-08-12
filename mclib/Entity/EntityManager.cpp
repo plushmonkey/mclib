@@ -5,6 +5,9 @@
 
 // todo: Use factories to create the entities
 
+#define TAU 3.14159f * 2.0f
+#define DEG_TO_RAD 3.14159f / 180.0f
+
 namespace Minecraft {
 
 EntityManager::EntityManager(Packets::PacketDispatcher* dispatcher)
@@ -64,8 +67,11 @@ void EntityManager::HandlePacket(Packets::Inbound::PlayerPositionAndLookPacket* 
     if (iter == m_Entities.end()) return;
 
     auto entity = iter->second;
-    if (entity)
+    if (entity) {
         entity->SetPosition(Vector3d(packet->GetX(), packet->GetY(), packet->GetZ()));
+        entity->SetYaw(packet->GetYaw() * DEG_TO_RAD);
+        entity->SetPitch(packet->GetPitch() * DEG_TO_RAD);
+    }
 }
 
 void EntityManager::HandlePacket(Packets::Inbound::SpawnPlayerPacket* packet) {
@@ -76,8 +82,8 @@ void EntityManager::HandlePacket(Packets::Inbound::SpawnPlayerPacket* packet) {
     m_Entities[id] = entity;
     
     entity->SetPosition(Vector3d(packet->GetX(), packet->GetY(), packet->GetZ()));
-    entity->SetYaw(packet->GetYaw());
-    entity->SetPitch(packet->GetPitch());
+    entity->SetYaw(packet->GetYaw() / 256.0f * TAU);
+    entity->SetPitch(packet->GetPitch() / 256.0f * TAU);
 
     UUID uuid = packet->GetUUID();
 
@@ -91,8 +97,8 @@ void EntityManager::HandlePacket(Packets::Inbound::SpawnObjectPacket* packet) {
 
     m_Entities[eid] = entity;
     entity->SetPosition(ToVector3d(packet->GetPosition()));
-    entity->SetYaw(packet->GetYaw());
-    entity->SetPitch(packet->GetPitch());
+    entity->SetYaw(packet->GetYaw() / 256.0f * TAU);
+    entity->SetPitch(packet->GetPitch() / 256.0f * TAU);
 
     NotifyListeners(&EntityListener::OnObjectSpawn, entity);
 }
@@ -155,7 +161,7 @@ void EntityManager::HandlePacket(Packets::Inbound::EntityPacket* packet) {
 
 void EntityManager::HandlePacket(Packets::Inbound::EntityVelocityPacket* packet) {
     Minecraft::EntityId eid = packet->GetEntityId();
-
+    
     auto iter = m_Entities.find(eid);
     if (iter == m_Entities.end()) return;
 
@@ -202,8 +208,8 @@ void EntityManager::HandlePacket(Packets::Inbound::EntityLookAndRelativeMovePack
         Vector3d newPos = entity->GetPosition() + delta;
 
         entity->SetPosition(newPos);
-        entity->SetYaw(packet->GetYaw());
-        entity->SetPitch(packet->GetPitch());
+        entity->SetYaw(packet->GetYaw() / 256.0f * TAU);
+        entity->SetPitch(packet->GetPitch() / 256.0f * TAU);
 
         NotifyListeners(&EntityListener::OnEntityMove, entity, oldPos, newPos);
     }
@@ -222,16 +228,14 @@ void EntityManager::HandlePacket(Packets::Inbound::EntityTeleportPacket* packet)
         Vector3d newPos = ToVector3d(packet->GetPosition());
 
         entity->SetPosition(newPos);
-        entity->SetYaw(packet->GetYaw());
-        entity->SetPitch(packet->GetPitch());
+        entity->SetYaw(packet->GetYaw() / 256.0f * TAU);
+        entity->SetPitch(packet->GetPitch() / 256.0f * TAU);
 
         NotifyListeners(&EntityListener::OnEntityMove, entity, oldPos, newPos);
     }
 }
 
 void EntityManager::HandlePacket(Packets::Inbound::EntityLookPacket* packet) {
-    u8 pitch = packet->GetPitch();
-    u8 yaw = packet->GetYaw();
     Minecraft::EntityId eid = packet->GetEntityId();
 
     auto iter = m_Entities.find(eid);
@@ -239,13 +243,12 @@ void EntityManager::HandlePacket(Packets::Inbound::EntityLookPacket* packet) {
 
     auto entity = iter->second;
     if (entity) {
-        entity->SetYaw(yaw);
-        entity->SetPitch(pitch);
+        entity->SetYaw(packet->GetYaw() / 256.0f * TAU);
+        entity->SetPitch(packet->GetPitch() / 256.0f * TAU);
     }
 }
 
 void EntityManager::HandlePacket(Packets::Inbound::EntityHeadLookPacket* packet) {
-    u8 yaw = packet->GetYaw();
     Minecraft::EntityId eid = packet->GetEntityId();
 
     auto iter = m_Entities.find(eid);
@@ -253,7 +256,7 @@ void EntityManager::HandlePacket(Packets::Inbound::EntityHeadLookPacket* packet)
 
     auto entity = iter->second;
     if (entity)
-        entity->SetYaw(yaw);
+        entity->SetYaw(packet->GetYaw() / 256.0f * TAU);
 }
 
 void EntityManager::HandlePacket(Packets::Inbound::EntityMetadataPacket* packet) {

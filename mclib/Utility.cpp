@@ -303,7 +303,7 @@ bool PlayerController::HandleFall() {
     // Ray cast downards FallSpeed magnitude, use collision spot as new height
     const float FullCircle = 2.0f * 3.14159f;
     const float CheckWidth = (float)m_BoundingBox.max.x / 2.0f;
-    const float RayCastStep = 0.05;
+    const float RayCastStep = 0.05f;
     double bestDist = FallSpeed;
     Minecraft::BlockPtr bestBlock = nullptr;
 
@@ -430,7 +430,7 @@ void PlayerController::Update() {
         }
 
         Minecraft::Packets::Outbound::PlayerPositionAndLookPacket response(m_Position.x, m_Position.y, m_Position.z,
-            m_Yaw, m_Pitch, onGround);
+            m_Yaw * 180.0f / 3.14159f, m_Pitch * 180.0f / 3.14159f, onGround);
 
         m_Connection->SendPacket(&response);
 
@@ -446,10 +446,11 @@ bool PlayerController::InLoadedChunk() const {
 
 Vector3d PlayerController::GetPosition() const { return m_Position; }
 Vector3d PlayerController::GetHeading() const {
-    double x = std::cos(GetYaw()) * std::cos(GetPitch());
-    double y = std::sin(GetYaw()) * std::cos(GetPitch());
-    double z = std::sin(GetPitch());
-    return Vector3d(x, y, z);
+    return Vector3d(
+        -std::cosf(GetPitch()) * std::sinf(GetYaw()),
+        -std::sinf(GetPitch()),
+        std::cosf(GetPitch()) * std::cosf(GetYaw())
+    );
 }
 float PlayerController::GetYaw() const { return m_Yaw; }
 float PlayerController::GetPitch() const { return m_Pitch; }
@@ -481,8 +482,8 @@ void PlayerController::LookAt(Vector3d target) {
     double pitch = -std::atan2(toTarget.y, dist);
     double yaw = -std::atan2(toTarget.x, toTarget.z);
 
-    SetYaw((float)(yaw * 180 / 3.14));
-    SetPitch((float)(pitch * 180 / 3.14));
+    SetYaw((float)yaw);
+    SetPitch((float)pitch);
 }
 
 class EventLogger : public Minecraft::PlayerListener, public Minecraft::ConnectionListener, public Minecraft::Packets::PacketHandler {
