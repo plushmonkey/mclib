@@ -3,3 +3,4 @@ Release
 *.opensdf
 *.sdf
 *.suo
+lib
