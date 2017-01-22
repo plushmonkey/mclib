@@ -80,6 +80,18 @@ PlayerPtr PlayerManager::GetPlayerByEntityId(EntityId eid) const {
     return nullptr;
 }
 
+PlayerPtr PlayerManager::GetPlayerByName(const std::wstring& name) const {
+    auto iter = std::find_if(m_Players.begin(), m_Players.end(), [name](std::pair<UUID, PlayerPtr> kv) {
+        PlayerPtr player = kv.second;
+        return player->GetName().compare(name) == 0;
+    });
+
+    if (iter != m_Players.end())
+        return iter->second;
+
+    return nullptr;
+}
+
 void PlayerManager::HandlePacket(Packets::Inbound::LoginSuccessPacket* packet) {
     m_ClientUUID = UUID::FromString(packet->GetUUID());
 }

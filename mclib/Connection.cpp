@@ -47,7 +47,7 @@ void Connection::HandlePacket(Minecraft::Packets::Inbound::PlayerPositionAndLook
     using namespace Minecraft::Packets;
 
     // Used to verify position
-    Outbound::PlayerPositionAndLookPacket response(packet->GetX(), packet->GetY(), packet->GetZ(),
+    Outbound::PlayerPositionAndLookPacket response(packet->GetPosition(),
         packet->GetYaw(), packet->GetPitch(), true);
 
     SendPacket(&response);
@@ -122,15 +122,15 @@ void Connection::HandlePacket(Minecraft::Packets::Inbound::LoginSuccessPacket* p
         std::this_thread::sleep_for(std::chrono::seconds(5));
 
         u8 skinFlags = 0;
-        skinFlags |= ClientSettingsPacket::SkinPartFlags::Cape;
-        skinFlags |= ClientSettingsPacket::SkinPartFlags::Jacket;
-        skinFlags |= ClientSettingsPacket::SkinPartFlags::LeftSleeve;
-        skinFlags |= ClientSettingsPacket::SkinPartFlags::RightSleeve;
-        skinFlags |= ClientSettingsPacket::SkinPartFlags::LeftPants;
-        skinFlags |= ClientSettingsPacket::SkinPartFlags::RightPants;
-        skinFlags |= ClientSettingsPacket::SkinPartFlags::Hat;
+        skinFlags |= (int)ClientSettingsPacket::SkinPartFlags::Cape;
+        skinFlags |= (int)ClientSettingsPacket::SkinPartFlags::Jacket;
+        skinFlags |= (int)ClientSettingsPacket::SkinPartFlags::LeftSleeve;
+        skinFlags |= (int)ClientSettingsPacket::SkinPartFlags::RightSleeve;
+        skinFlags |= (int)ClientSettingsPacket::SkinPartFlags::LeftPants;
+        skinFlags |= (int)ClientSettingsPacket::SkinPartFlags::RightPants;
+        skinFlags |= (int)ClientSettingsPacket::SkinPartFlags::Hat;
 
-        ClientSettingsPacket clientSettings(32, ClientSettingsPacket::ChatMode::Enabled, true, skinFlags);
+        ClientSettingsPacket clientSettings(L"en-GB", (u8)32, ClientSettingsPacket::ChatMode::Enabled, true, skinFlags, ClientSettingsPacket::MainHand::Right);
 
         SendPacket(&clientSettings);
     });
@@ -317,8 +317,9 @@ void Connection::CreatePacket() {
 }
 
 void Connection::Login(const std::string& username, const std::string& password) {
-    Minecraft::Packets::Outbound::HandshakePacket handshake(47, m_Server, m_Port, Minecraft::Protocol::State::Login);
+    Minecraft::Packets::Outbound::HandshakePacket handshake(315, m_Server, m_Port, Minecraft::Protocol::State::Login);
     SendPacket(&handshake);
+    m_ProtocolState = Minecraft::Protocol::State::Login;
 
     m_Email = username;
 
@@ -334,8 +335,6 @@ void Connection::Login(const std::string& username, const std::string& password)
 
     Minecraft::Packets::Outbound::LoginStartPacket loginStart(m_Username);
     SendPacket(&loginStart);
-
-    m_ProtocolState = Minecraft::Protocol::State::Login;
 }
 
 void Connection::SendPacket(Minecraft::Packets::Packet* packet) {

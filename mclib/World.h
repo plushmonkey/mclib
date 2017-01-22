@@ -28,7 +28,6 @@ public:
     MCLIB_API ~World();
 
     void MCLIB_API HandlePacket(Packets::Inbound::ChunkDataPacket* packet);
-    void MCLIB_API HandlePacket(Packets::Inbound::MapChunkBulkPacket* packet);
     void MCLIB_API HandlePacket(Packets::Inbound::MultiBlockChangePacket* packet);
     void MCLIB_API HandlePacket(Packets::Inbound::BlockChangePacket* packet);
     void MCLIB_API HandlePacket(Packets::Inbound::ExplosionPacket* packet);

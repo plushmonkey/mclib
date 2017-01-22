@@ -68,7 +68,7 @@ void EntityManager::HandlePacket(Packets::Inbound::PlayerPositionAndLookPacket* 
 
     auto entity = iter->second;
     if (entity) {
-        entity->SetPosition(Vector3d(packet->GetX(), packet->GetY(), packet->GetZ()));
+        entity->SetPosition(packet->GetPosition());
         entity->SetYaw(packet->GetYaw() * DEG_TO_RAD);
         entity->SetPitch(packet->GetPitch() * DEG_TO_RAD);
     }
@@ -81,7 +81,7 @@ void EntityManager::HandlePacket(Packets::Inbound::SpawnPlayerPacket* packet) {
 
     m_Entities[id] = entity;
     
-    entity->SetPosition(Vector3d(packet->GetX(), packet->GetY(), packet->GetZ()));
+    entity->SetPosition(packet->GetPosition());
     entity->SetYaw(packet->GetYaw() / 256.0f * TAU);
     entity->SetPitch(packet->GetPitch() / 256.0f * TAU);
 
@@ -132,7 +132,7 @@ void EntityManager::HandlePacket(Packets::Inbound::SpawnMobPacket* packet) {
     EntityPtr entity = std::make_shared<Entity>(eid);
 
     m_Entities[eid] = entity;
-    entity->SetPosition(Vector3d(packet->GetX(), packet->GetY(), packet->GetZ()));
+    entity->SetPosition(packet->GetPosition());
 
     NotifyListeners(&EntityListener::OnEntitySpawn, entity);
 }
@@ -176,7 +176,7 @@ void EntityManager::HandlePacket(Packets::Inbound::EntityVelocityPacket* packet)
 void EntityManager::HandlePacket(Packets::Inbound::EntityRelativeMovePacket* packet) {
     EntityId eid = packet->GetEntityId();
 
-    Vector3d delta(packet->GetDeltaX(), packet->GetDeltaY(), packet->GetDeltaZ());
+    Vector3d delta = ToVector3d(packet->GetDelta()) / (32.0 * 128.0);
 
     auto iter = m_Entities.find(eid);
     if (iter == m_Entities.end()) return;
@@ -196,7 +196,7 @@ void EntityManager::HandlePacket(Packets::Inbound::EntityRelativeMovePacket* pac
 void EntityManager::HandlePacket(Packets::Inbound::EntityLookAndRelativeMovePacket* packet) {
     EntityId eid = packet->GetEntityId();
 
-    Vector3d delta = ToVector3d(packet->GetDeltaPosition());
+    Vector3d delta = ToVector3d(packet->GetDelta()) / (32.0 * 128.0);
 
     auto iter = m_Entities.find(eid);
     if (iter == m_Entities.end()) return;
@@ -225,7 +225,7 @@ void EntityManager::HandlePacket(Packets::Inbound::EntityTeleportPacket* packet)
 
     if (entity) {
         Vector3d oldPos = entity->GetPosition();
-        Vector3d newPos = ToVector3d(packet->GetPosition());
+        Vector3d newPos = packet->GetPosition();
 
         entity->SetPosition(newPos);
         entity->SetYaw(packet->GetYaw() / 256.0f * TAU);

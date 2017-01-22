@@ -429,7 +429,7 @@ void PlayerController::Update() {
             
         }
 
-        Minecraft::Packets::Outbound::PlayerPositionAndLookPacket response(m_Position.x, m_Position.y, m_Position.z,
+        Minecraft::Packets::Outbound::PlayerPositionAndLookPacket response(m_Position,
             m_Yaw * 180.0f / 3.14159f, m_Pitch * 180.0f / 3.14159f, onGround);
 
         m_Connection->SendPacket(&response);
@@ -518,7 +518,6 @@ public:
         dispatcher->RegisterHandler(State::Play, Play::EntityMetadata, this);
         dispatcher->RegisterHandler(State::Play, Play::SetExperience, this);
         dispatcher->RegisterHandler(State::Play, Play::EntityProperties, this);
-        dispatcher->RegisterHandler(State::Play, Play::MapChunkBulk, this);
         dispatcher->RegisterHandler(State::Play, Play::ChunkData, this);
         dispatcher->RegisterHandler(State::Play, Play::SetSlot, this);
         dispatcher->RegisterHandler(State::Play, Play::WindowItems, this);
@@ -536,12 +535,7 @@ public:
     }
 
     void HandlePacket(Minecraft::Packets::Inbound::PlayerPositionAndLookPacket* packet) {
-        s32 x = (s32)packet->GetX();
-        s32 y = (s32)packet->GetY();
-        s32 z = (s32)packet->GetZ();
-        Minecraft::Position pos(x, y, z);
-
-        console << L"Pos: " << pos << "\n";
+        
     }
 
     void HandlePacket(Minecraft::Packets::Inbound::ChunkDataPacket* packet) {
@@ -565,10 +559,7 @@ public:
     }
 
     void HandlePacket(Minecraft::Packets::Inbound::EntityRelativeMovePacket* packet) {
-        if (packet->GetDeltaX() != 0 || packet->GetDeltaY() != 0 || packet->GetDeltaZ() != 0) {
-            //std::wcout << "Entity " << packet->GetEntityId() << " relative move: (";
-            //std::wcout << packet->GetDeltaX() << ", " << packet->GetDeltaY() << ", " << packet->GetDeltaZ() << ")" << std::endl;
-        }
+
     }
 
     void HandlePacket(Minecraft::Packets::Inbound::SpawnPlayerPacket* packet) {
@@ -639,10 +630,6 @@ public:
         //std::wcout << "Received SpawnMobPacket" << std::endl;
     }
 
-    void HandlePacket(Minecraft::Packets::Inbound::MapChunkBulkPacket* packet) {
-        console << "Received MapChunkBulkPacket" << "\n";
-    }
-
     void HandlePacket(Minecraft::Packets::Inbound::SetSlotPacket* packet) {
         Minecraft::Slot slot = packet->GetSlot();
         int window = packet->GetWindowId();
@@ -676,7 +663,7 @@ public:
         switch (action) {
         case WorldBorderPacket::Action::Initialize:
         {
-            console << "World border radius: " << packet->GetRadius() << "\n";
+            console << "World border radius: " << (packet->GetDiameter() / 2.0) << "\n";
             console << "World border center: " << packet->GetX() << ", " << packet->GetZ() << "\n";
             console << "World border warning time: " << packet->GetWarningTime() << " seconds, blocks: " << packet->GetWarningBlocks() << " meters" << "\n";
         }
@@ -711,7 +698,7 @@ public:
     }
 
     void HandlePacket(Minecraft::Packets::Inbound::PlayerAbilitiesPacket* packet) {
-        console << "Abilities: " << (int)packet->GetFlags() << ", " << packet->GetFlyingSpeed() << ", " << packet->GetWalkingSpeed() << "\n";
+        console << "Abilities: " << (int)packet->GetFlags() << ", " << packet->GetFlyingSpeed() << ", " << packet->GetFOVModifier() << "\n";
     }
 
     void HandlePacket(Minecraft::Packets::Inbound::SpawnPositionPacket* packet) {
@@ -813,7 +800,7 @@ public:
 
         float yaw = (entity->GetYaw() / 256.0f) * 360.0f;
         float pitch = (entity->GetPitch() / 256.0f) * 360.0f;
-        const float toRads = 3.14159/180;
+        const float toRads = 3.14159f / 180.0f;
 
         if ((yaw += 90) >= 360.0) yaw -= 360;
 

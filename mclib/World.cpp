@@ -8,7 +8,6 @@ World::World(Packets::PacketDispatcher* dispatcher)
     dispatcher->RegisterHandler(Protocol::State::Play, Protocol::Play::MultiBlockChange, this);
     dispatcher->RegisterHandler(Protocol::State::Play, Protocol::Play::BlockChange, this);
     dispatcher->RegisterHandler(Protocol::State::Play, Protocol::Play::ChunkData, this);
-    dispatcher->RegisterHandler(Protocol::State::Play, Protocol::Play::MapChunkBulk, this);
     dispatcher->RegisterHandler(Protocol::State::Play, Protocol::Play::Explosion, this);
 }
 
@@ -76,30 +75,6 @@ void World::HandlePacket(Packets::Inbound::ChunkDataPacket* packet) {
     }
 }
 
-void World::HandlePacket(Packets::Inbound::MapChunkBulkPacket* packet) {
-    const std::map<ChunkCoord, ChunkColumnPtr>& cols = packet->GetChunkColumns();
-    for (const auto& kv : cols) {
-        ChunkCoord key = kv.first;
-        ChunkColumnPtr col = kv.second;
-
-        if (col->GetMetadata().continuous && col->GetMetadata().sectionmask == 0) {
-            m_Chunks[key] = nullptr;
-        } else {
-            m_Chunks[key] = col;
-
-            u16 mask = col->GetMetadata().sectionmask;
-
-            for (s16 i = 0; i < ChunkColumn::ChunksPerColumn; ++i) {
-                if (mask & (1 << i)) {
-                    ChunkPtr chunk = (*col)[i];
-
-                    NotifyListeners(&WorldListener::OnChunkLoad, chunk, col->GetMetadata(), i);
-                }
-            }
-        }
-    }
-}
-
 void World::HandlePacket(Packets::Inbound::MultiBlockChangePacket* packet) {
     Vector3i chunkStart(packet->GetChunkX() * 16, 0, packet->GetChunkZ() * 16);
 
@@ -123,7 +98,7 @@ void World::HandlePacket(Packets::Inbound::MultiBlockChangePacket* packet) {
 }
 
 void World::HandlePacket(Packets::Inbound::BlockChangePacket* packet) {
-    SetBlock(packet->GetPosition(), packet->GetBlockData());
+    SetBlock(packet->GetPosition(), packet->GetBlockId());
 }
 
 ChunkColumnPtr World::GetChunk(Vector3i pos) const {

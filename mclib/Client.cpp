@@ -30,7 +30,7 @@ void Client::UpdateThread() {
         try {
             m_Connection.CreatePacket();
         } catch (std::exception& e) {
-            //std::wcout << e.what() << std::endl;
+            std::wcout << e.what() << std::endl;
         }
 
         std::this_thread::sleep_for(std::chrono::milliseconds(10));

@@ -36,6 +36,10 @@ public:
 
     virtual std::wstring GetName() const { return m_Name; }
 
+    u16 GetData() const {
+        return m_Data;
+    }
+
     u16 GetType() const {
         return m_Data >> 4;
     }
