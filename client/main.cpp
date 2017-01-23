@@ -270,10 +270,38 @@ public:
         Minecraft::EntityPtr entity = player->GetEntity();
         if (!entity) return;
 
-        Vector3d check = entity->GetPosition() - Vector3d(0, 1, 0);
-        Minecraft::BlockPtr block = m_Client->GetWorld()->GetBlock(check);
-        if (block)
-            std::cout << check << " = " << block->GetData() << std::endl;
+        //Vector3d check = entity->GetPosition() + Vector3d(3, 0, 0);
+        //Minecraft::BlockPtr block = m_Client->GetWorld()->GetBlock(check);
+        //if (block)
+            //std::cout << check << " = " << block->GetData() << std::endl;
+        struct BlockAssertion {
+            Vector3d pos;
+            std::wstring type;
+            BlockAssertion(Vector3d p, std::wstring t)
+                : pos(p), type(t) { }
+        };
+
+        std::vector<BlockAssertion> assertions = {
+            BlockAssertion(Vector3d(67, 72, 244), L"Air"),
+            BlockAssertion(Vector3d(67, 71, 244), L"Grass"),
+            BlockAssertion(Vector3d(67, 72, 243), L"Grass"),
+            BlockAssertion(Vector3d(54, 72, 244), L"Air"),
+            BlockAssertion(Vector3d(54, 61, 251), L"Granite"),
+            BlockAssertion(Vector3d(6, 11, 85), L"Still Water"),
+            BlockAssertion(Vector3d(9, 11, 85), L"Still Water"),
+        };
+
+        for (int i = 0; i < 20; ++i) {
+            Minecraft::BlockPtr block = m_Client->GetWorld()->GetBlock(Vector3i(6 + i, 11, 85));
+        }
+
+        for (BlockAssertion assertion : assertions) {
+            Minecraft::BlockPtr block = m_Client->GetWorld()->GetBlock(assertion.pos);
+            if (!block) continue;
+            if (block->GetName().compare(assertion.type) != 0) {
+                std::wcout << L"Block at " << assertion.pos << L" is not " << assertion.type << L" instead is " << block->GetName() << std::endl;
+            }
+        }
     }
 };
 

@@ -8,7 +8,6 @@ namespace Minecraft {
 Chunk::Chunk()
 {
     m_BitsPerBlock = 4;
-    m_Palette.push_back(0);
 }
 
 Chunk::Chunk(const Chunk& other) {
@@ -60,19 +59,20 @@ BlockPtr Chunk::GetBlock(Vector3i chunkPosition) {
     if (chunkPosition.y < 0 || chunkPosition.y > 15) return BlockRegistry::GetInstance()->GetBlock(0, 0);
 
     std::size_t index = (std::size_t)(chunkPosition.y * 16 * 16 + chunkPosition.z * 16 + chunkPosition.x);
-    std::size_t entryIndex = (index * m_BitsPerBlock) / 64;
-    std::size_t endIndex = (((index + 1) * m_BitsPerBlock) - 1) / 64;
-    std::size_t bitIndex = 64 - m_BitsPerBlock - (index * m_BitsPerBlock) % 64;
-    
-    s64 maxValue = (1 << m_BitsPerBlock) - 1;
-    std::size_t value;
+    s32 bitIndex = index * m_BitsPerBlock;
+    s32 startIndex = bitIndex / 64;
+    s32 endIndex = (((index + 1) * m_BitsPerBlock) - 1) / 64;
+    s32 startSubIndex = bitIndex % 64;
 
-    if (entryIndex == endIndex) {
-        value = (std::size_t)((m_Data[entryIndex] >> (64 - bitIndex - m_BitsPerBlock)) & maxValue);
+    s64 maxValue = (1 << m_BitsPerBlock) - 1;
+    u32 value;
+
+    if (startIndex == endIndex) {
+        value = (u32)((m_Data[startIndex] >> startSubIndex) & maxValue);
     } else {
-        u64 startMask = ((1 << (64 - bitIndex)) - 1);
-        u64 endBits = m_BitsPerBlock - (64 - bitIndex);
-        value = (std::size_t)(((m_Data[entryIndex] & startMask) << endBits) | (m_Data[endIndex] >> (64 - endBits)));
+        s32 endSubIndex = 64 - startSubIndex;
+
+        value = (u32)(((m_Data[startIndex] >> startSubIndex) | (m_Data[endIndex] << endSubIndex)) & maxValue);
     }
 
     u16 blockType;
@@ -87,9 +87,10 @@ BlockPtr Chunk::GetBlock(Vector3i chunkPosition) {
 
 void Chunk::SetBlock(Vector3i chunkPosition, BlockPtr block) {
     std::size_t index = (std::size_t)(chunkPosition.y * 16 * 16 + chunkPosition.z * 16 + chunkPosition.x);
-    std::size_t entryIndex = (index * m_BitsPerBlock) / 64;
-    std::size_t endIndex = (((index + 1) * m_BitsPerBlock) - 1) / 64;
-    std::size_t bitIndex = 64 - m_BitsPerBlock - (index * m_BitsPerBlock) % 64;
+    s32 bitIndex = index * m_BitsPerBlock;
+    s32 startIndex = bitIndex / 64;
+    s32 endIndex = (((index + 1) * m_BitsPerBlock) - 1) / 64;
+    s32 startSubIndex = bitIndex % 64;
 
     s64 maxValue = (1 << m_BitsPerBlock) - 1;
     u16 blockType = block ? block->GetData() : 0;
@@ -99,7 +100,8 @@ void Chunk::SetBlock(Vector3i chunkPosition, BlockPtr block) {
     }
 
     if (m_Data.empty()) {
-        s64 size = (16 * 16 * 16) * m_BitsPerBlock / 64;
+        m_Palette.push_back(0);
+        u32 size = (16 * 16 * 16) * m_BitsPerBlock / 64;
 
         m_Data.resize(size);
         memset(&m_Data[0], 0, size * sizeof(m_Data[0]));
@@ -112,16 +114,16 @@ void Chunk::SetBlock(Vector3i chunkPosition, BlockPtr block) {
     if (iter == m_Palette.end())
         iter = m_Palette.insert(m_Palette.end(), blockType);
 
-    u16 value = std::distance(m_Palette.begin(), iter);
+    s32 value = std::distance(m_Palette.begin(), iter);
 
     // Erase old value in data entry and OR with new data
-    m_Data[entryIndex] = (m_Data[entryIndex] & ~(maxValue << (64 - m_BitsPerBlock - bitIndex))) | (((s64)value & maxValue) << (64 - m_BitsPerBlock - bitIndex));
+    m_Data[startIndex] = (m_Data[startIndex] & ~(maxValue << startSubIndex)) | (((s64)value & maxValue) << startSubIndex);
 
-    if (entryIndex != endIndex) {
+    if (startIndex != endIndex) {
+        s32 endSubIndex = 64 - startSubIndex;
+
         // Erase beginning of data and then OR with new data
-        u64 endMask = (1 << (m_BitsPerBlock - 64 - bitIndex)) - 1;
-        u64 endBits = m_BitsPerBlock - (64 - bitIndex);
-        m_Data[endIndex] = (m_Data[endIndex] & ~(endMask << (64 - endBits))) | (((s64)value & endMask) << (64 - endBits));
+        m_Data[endIndex] = (m_Data[endIndex] >> endSubIndex << endSubIndex) | ((s64)value & maxValue) >> endSubIndex;
     }
 }
 

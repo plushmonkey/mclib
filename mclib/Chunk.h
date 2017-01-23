@@ -26,7 +26,7 @@ struct ChunkColumnMetadata {
 class Chunk {
 private:
     std::vector<u16> m_Palette;
-    std::vector<s64> m_Data;
+    std::vector<u64> m_Data;
     u8 m_BitsPerBlock;
 
 public:
