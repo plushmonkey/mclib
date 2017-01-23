@@ -79,6 +79,8 @@ public:
     // Gets a player by their EntityId. Somewhat slow method, has to loop through player map to find the player with that eid.
     // It should still be pretty fast though since there aren't many players on a server usually.
     PlayerPtr MCLIB_API GetPlayerByEntityId(EntityId eid) const;
+    // Gets a player by their username.
+    PlayerPtr MCLIB_API GetPlayerByName(const std::wstring& name) const;
 
     void MCLIB_API OnPlayerSpawn(PlayerEntityPtr entity, UUID uuid);
     void MCLIB_API OnEntityDestroy(EntityPtr entity);

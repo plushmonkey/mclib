@@ -1,49 +1,128 @@
 #include "Chunk.h"
 #include "DataBuffer.h"
 #include <algorithm>
+#include <iostream>
 
 namespace Minecraft {
 
 Chunk::Chunk()
 {
-    for (s32 y = 0; y < 16; ++y) {
-        for (s32 z = 0; z < 16; ++z) {
-            for (s32 x = 0; x < 16; ++x) {
-                std::size_t index = y * 16 * 16 + z * 16 + x;
+    m_BitsPerBlock = 4;
+    m_Palette.push_back(0);
+}
 
-                m_Blocks[index] = BlockRegistry::GetInstance()->GetBlock(0, 0);
-            }
-        }
-    }
+Chunk::Chunk(const Chunk& other) {
+    m_Data = other.m_Data;
+    m_BitsPerBlock = other.m_BitsPerBlock;
 }
 
 void Chunk::Load(DataBuffer& in, ChunkColumnMetadata* meta, s32 chunkIndex) {
-    for (s32 y = 0; y < 16; ++y) {
-        for (s32 z = 0; z < 16; ++z) {
-            for (s32 x = 0; x < 16; ++x) {
-                s16 data;                
+    in >> m_BitsPerBlock;
 
-                in >> data;
-                std::reverse((u8*)&data, (u8*)&data + sizeof(s16));
+    VarInt paletteLength;
+    in >> paletteLength;
 
-                std::size_t index = y * 16 * 16 + z * 16 + x;
+    s32 abc = paletteLength.GetInt();
 
-                m_Blocks[index] = BlockRegistry::GetInstance()->GetBlock(data);
-            }
-        }
+    for (s32 i = 0; i < paletteLength.GetInt(); ++i) {
+        VarInt paletteValue;
+        in >> paletteValue;
+        m_Palette.push_back((u16)paletteValue.GetInt());
+    }
+
+    VarInt dataArrayLength;
+    in >> dataArrayLength;
+    s32 arrayLen = dataArrayLength.GetInt();
+
+    m_Data.resize(dataArrayLength.GetInt());
+    
+    for (s32 i = 0; i < dataArrayLength.GetInt(); ++i) {
+        u64 data;
+        in >> data;
+        m_Data[i] = data;
+    }
+
+    static const s64 lightSize = 16 * 16 * 16 / 2;
+
+    // Block light data
+    in.SetReadOffset(in.GetReadOffset() + lightSize);
+
+    // todo: check if in overworld
+    meta->skylight = true;
+
+    // Sky Light
+    if (meta->skylight) {
+        in.SetReadOffset(in.GetReadOffset() + lightSize);
     }
 }
 
 BlockPtr Chunk::GetBlock(Vector3i chunkPosition) {
-    if (chunkPosition.y < 0) return BlockRegistry::GetInstance()->GetBlock(0, 0);
+    if (chunkPosition.y < 0 || chunkPosition.y > 15) return BlockRegistry::GetInstance()->GetBlock(0, 0);
 
     std::size_t index = (std::size_t)(chunkPosition.y * 16 * 16 + chunkPosition.z * 16 + chunkPosition.x);
-    return m_Blocks[index];
+    std::size_t entryIndex = (index * m_BitsPerBlock) / 64;
+    std::size_t endIndex = (((index + 1) * m_BitsPerBlock) - 1) / 64;
+    std::size_t bitIndex = 64 - m_BitsPerBlock - (index * m_BitsPerBlock) % 64;
+    
+    s64 maxValue = (1 << m_BitsPerBlock) - 1;
+    std::size_t value;
+
+    if (entryIndex == endIndex) {
+        value = (std::size_t)((m_Data[entryIndex] >> (64 - bitIndex - m_BitsPerBlock)) & maxValue);
+    } else {
+        u64 startMask = ((1 << (64 - bitIndex)) - 1);
+        u64 endBits = m_BitsPerBlock - (64 - bitIndex);
+        value = (std::size_t)(((m_Data[entryIndex] & startMask) << endBits) | (m_Data[endIndex] >> (64 - endBits)));
+    }
+
+    u16 blockType;
+
+    if (m_BitsPerBlock < 9) {
+        blockType = m_Palette[value];
+    } else {
+        blockType = value;
+    }
+    return BlockRegistry::GetInstance()->GetBlock(blockType);
 }
 
 void Chunk::SetBlock(Vector3i chunkPosition, BlockPtr block) {
     std::size_t index = (std::size_t)(chunkPosition.y * 16 * 16 + chunkPosition.z * 16 + chunkPosition.x);
-    m_Blocks[index] = block;
+    std::size_t entryIndex = (index * m_BitsPerBlock) / 64;
+    std::size_t endIndex = (((index + 1) * m_BitsPerBlock) - 1) / 64;
+    std::size_t bitIndex = 64 - m_BitsPerBlock - (index * m_BitsPerBlock) % 64;
+
+    s64 maxValue = (1 << m_BitsPerBlock) - 1;
+    u16 blockType = block ? block->GetData() : 0;
+
+    if (m_BitsPerBlock == 0) {
+        m_BitsPerBlock = 4;
+    }
+
+    if (m_Data.empty()) {
+        s64 size = (16 * 16 * 16) * m_BitsPerBlock / 64;
+
+        m_Data.resize(size);
+        memset(&m_Data[0], 0, size * sizeof(m_Data[0]));
+    }
+
+    auto iter = std::find_if(m_Palette.begin(), m_Palette.end(), [blockType](u16 ptype) {
+        return ptype == blockType;
+    });
+
+    if (iter == m_Palette.end())
+        iter = m_Palette.insert(m_Palette.end(), blockType);
+
+    u16 value = std::distance(m_Palette.begin(), iter);
+
+    // Erase old value in data entry and OR with new data
+    m_Data[entryIndex] = (m_Data[entryIndex] & ~(maxValue << (64 - m_BitsPerBlock - bitIndex))) | (((s64)value & maxValue) << (64 - m_BitsPerBlock - bitIndex));
+
+    if (entryIndex != endIndex) {
+        // Erase beginning of data and then OR with new data
+        u64 endMask = (1 << (m_BitsPerBlock - 64 - bitIndex)) - 1;
+        u64 endBits = m_BitsPerBlock - (64 - bitIndex);
+        m_Data[endIndex] = (m_Data[endIndex] & ~(endMask << (64 - endBits))) | (((s64)value & endMask) << (64 - endBits));
+    }
 }
 
 ChunkColumn::ChunkColumn(ChunkColumnMetadata metadata)
@@ -76,25 +155,6 @@ DataBuffer& operator>>(DataBuffer& in, ChunkColumn& column) {
             column.m_Chunks[i] = nullptr;
         }
     }
-
-    static const s64 lightSize = 16 * 16 * 16 / 2;
-
-    for (s16 i = 0; i < ChunkColumn::ChunksPerColumn; ++i) {
-        // Block light data
-        if (meta->sectionmask & (1 << i))
-            in.SetReadOffset(in.GetReadOffset() + lightSize);
-    }
-
-    if (meta->skylight) {
-        for (s16 i = 0; i < ChunkColumn::ChunksPerColumn; ++i) {
-            // Skylight data
-            if (meta->sectionmask & (1 << i))
-                in.SetReadOffset(in.GetReadOffset() + lightSize);
-        }
-    }
-
-    if (meta->continuous)
-        in.SetReadOffset(in.GetReadOffset() + 256);
 
     return in;
 }

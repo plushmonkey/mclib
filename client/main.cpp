@@ -1,6 +1,7 @@
 #include "../mclib/Common.h"
 #include "../mclib/Client.h"
 #include "../mclib/Hash.h"
+#include "../mclib/Utility.h"
 #include <thread>
 #include <iostream>
 #include <chrono>
@@ -79,7 +80,7 @@ public:
             Minecraft::BlockPtr block = m_World->GetBlock(m_Target + Vector3i(0, 1, 0));
             
             if (!block || block->GetType() == 0) {
-                Minecraft::Packets::Outbound::PlayerBlockPlacementPacket blockPlacePacket(m_Target, (u8)Face::Top, m_HeldItem, Vector3i(8, 0, 8));
+                Minecraft::Packets::Outbound::PlayerBlockPlacementPacket blockPlacePacket(m_Target, (u8)Face::Top, Minecraft::Hand::Main, Vector3f(0.5, 0, 0.5));
 
                 m_Client->GetConnection()->SendPacket(&blockPlacePacket);
                 std::wcout << "Placing block" << std::endl;
@@ -221,17 +222,73 @@ public:
     }
 };
 
+class Logger : public Minecraft::Packets::PacketHandler, public ClientListener {
+private:
+    Client* m_Client;
+
+public:
+    Logger(Client* client, Minecraft::Packets::PacketDispatcher* dispatcher)
+        : Minecraft::Packets::PacketHandler(dispatcher), m_Client(client)
+    {
+        using namespace Minecraft::Protocol;
+
+        m_Client->RegisterListener(this);
+
+        dispatcher->RegisterHandler(State::Play, Play::Chat, this);
+        dispatcher->RegisterHandler(State::Play, Play::EntityLookAndRelativeMove, this);
+        dispatcher->RegisterHandler(State::Play, Play::BlockChange, this);
+    }
+
+    ~Logger() {
+        GetDispatcher()->UnregisterHandler(this);
+        m_Client->UnregisterListener(this);
+    }
+
+    void HandlePacket(Minecraft::Packets::Inbound::ChatPacket* packet) {
+        std::string message = ParseChatNode(packet->GetChatData());
+
+        std::cout << message << std::endl;
+    }
+
+    void HandlePacket(Minecraft::Packets::Inbound::EntityLookAndRelativeMovePacket* packet) {
+        Vector3d delta = ToVector3d(packet->GetDelta()) / (128.0 * 32.0);
+
+        //std::cout << delta << std::endl;
+    }
+
+    void HandlePacket(Minecraft::Packets::Inbound::BlockChangePacket* packet) {
+        Vector3i pos = packet->GetPosition();
+        s32 blockId = packet->GetBlockId();
+
+        std::cout << "Block changed at " << pos << " to " << blockId << std::endl;
+    }
+
+    void OnTick() override {
+        Minecraft::PlayerPtr player = m_Client->GetPlayerManager()->GetPlayerByName(L"testplayer");
+        if (!player) return;
+
+        Minecraft::EntityPtr entity = player->GetEntity();
+        if (!entity) return;
+
+        Vector3d check = entity->GetPosition() - Vector3d(0, 1, 0);
+        Minecraft::BlockPtr block = m_Client->GetWorld()->GetBlock(check);
+        if (block)
+            std::cout << check << " = " << block->GetData() << std::endl;
+    }
+};
+
 int main(void) {
     Minecraft::BlockRegistry::GetInstance()->RegisterVanillaBlocks();
     Minecraft::Packets::PacketDispatcher dispatcher;
-    //TextureGrabber grabber(&dispatcher);
 
     Client client(&dispatcher);
-   // BlockPlacer blockPlacer(&dispatcher, &client, client.GetPlayerController(), client.GetWorld());
+    client.GetPlayerController()->SetHandleFall(true);
+
+    Logger logger(&client, &dispatcher);
     SneakEnforcer sneakEnforcer(&client);
 
     try {
-        client.Login("192.168.2.202", 25565, "testplayer", "");
+        client.Login("127.0.0.1", 25565, "testplayer", "");
     } catch (std::exception& e) {
         std::wcout << e.what() << std::endl;
         return 1;

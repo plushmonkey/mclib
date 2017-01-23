@@ -174,9 +174,6 @@ Packet* PlayPacketFactory::CreatePacket(DataBuffer& data, std::size_t length) {
     case Protocol::Play::BlockBreakAnimation:
         packet = new Inbound::BlockBreakAnimationPacket();
         break;
-    case Protocol::Play::MapChunkBulk:
-        packet = new Inbound::MapChunkBulkPacket();
-        break;
     case Protocol::Play::Explosion:
         packet = new Inbound::ExplosionPacket();
         break;

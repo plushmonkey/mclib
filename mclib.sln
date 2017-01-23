@@ -1,11 +1,14 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 2013
-VisualStudioVersion = 12.0.30501.0
+VisualStudioVersion = 12.0.40629.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "mclib", "mclib\mclib.vcxproj", "{2A6A98AE-F46F-4C53-8E64-003289FEB7E7}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "client", "client\client.vcxproj", "{7B297A7F-71E7-4C85-B840-5A6832D4A34A}"
+	ProjectSection(ProjectDependencies) = postProject
+		{2A6A98AE-F46F-4C53-8E64-003289FEB7E7} = {2A6A98AE-F46F-4C53-8E64-003289FEB7E7}
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
