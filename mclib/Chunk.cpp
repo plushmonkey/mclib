@@ -45,9 +45,8 @@ void Chunk::Load(DataBuffer& in, ChunkColumnMetadata* meta, s32 chunkIndex) {
     m_Data.resize(dataArrayLength.GetInt());
     
     for (s32 i = 0; i < dataArrayLength.GetInt(); ++i) {
-        s64 data;
+        u64 data;
         in >> data;
-
         m_Data[i] = data;
     }
 
@@ -56,6 +55,7 @@ void Chunk::Load(DataBuffer& in, ChunkColumnMetadata* meta, s32 chunkIndex) {
     // Block light data
     in.SetReadOffset(in.GetReadOffset() + lightSize);
 
+    // todo: check if in overworld
     meta->skylight = true;
 
     // Sky Light
@@ -70,20 +70,26 @@ BlockPtr Chunk::GetBlock(Vector3i chunkPosition) {
     std::size_t index = (std::size_t)(chunkPosition.y * 16 * 16 + chunkPosition.z * 16 + chunkPosition.x);
     std::size_t entryIndex = (index * m_BitsPerBlock) / 64;
     std::size_t endIndex = (((index + 1) * m_BitsPerBlock) - 1) / 64;
-    std::size_t bitIndex = (index * m_BitsPerBlock) % 64;
+    std::size_t bitIndex = 64 - m_BitsPerBlock - (index * m_BitsPerBlock) % 64;
     
     s64 maxValue = (1 << m_BitsPerBlock) - 1;
-    u16 value;
+    std::size_t value;
 
     if (entryIndex == endIndex) {
-        value = (m_Data[entryIndex] >> (64 - bitIndex - m_BitsPerBlock)) & maxValue;
+        value = (std::size_t)((m_Data[entryIndex] >> (64 - bitIndex - m_BitsPerBlock)) & maxValue);
     } else {
         u64 startMask = ((1 << (64 - bitIndex)) - 1);
         u64 endBits = m_BitsPerBlock - (64 - bitIndex);
-        value = ((m_Data[entryIndex] & startMask) << endBits) | (m_Data[endIndex] >> (64 - endBits));
+        value = (std::size_t)(((m_Data[entryIndex] & startMask) << endBits) | (m_Data[endIndex] >> (64 - endBits)));
     }
 
-    u16 blockType = m_Palette[value];
+    u16 blockType;
+
+    if (m_BitsPerBlock < 9) {
+        blockType = m_Palette[value];
+    } else {
+        blockType = value;
+    }
     return BlockRegistry::GetInstance()->GetBlock(blockType);
 }
 
@@ -91,7 +97,7 @@ void Chunk::SetBlock(Vector3i chunkPosition, BlockPtr block) {
     std::size_t index = (std::size_t)(chunkPosition.y * 16 * 16 + chunkPosition.z * 16 + chunkPosition.x);
     std::size_t entryIndex = (index * m_BitsPerBlock) / 64;
     std::size_t endIndex = (((index + 1) * m_BitsPerBlock) - 1) / 64;
-    std::size_t bitIndex = (index * m_BitsPerBlock) % 64;
+    std::size_t bitIndex = 64 - m_BitsPerBlock - (index * m_BitsPerBlock) % 64;
 
     s64 maxValue = (1 << m_BitsPerBlock) - 1;
     u16 blockType = block->GetData();
@@ -135,32 +141,17 @@ BlockPtr ChunkColumn::GetBlock(Vector3i position) {
 DataBuffer& operator>>(DataBuffer& in, ChunkColumn& column) {
     ChunkColumnMetadata* meta = &column.m_Metadata;
 
-  /*  if (meta->continuous) {
-        auto chunk = std::make_shared<Chunk>();
-        chunk->Load(in, meta, 0);
+    for (s16 i = 0; i < ChunkColumn::ChunksPerColumn; ++i) {
+        // The section mask says whether or not there is data in this chunk.
+        if (meta->sectionmask & (1 << i)) {
+            column.m_Chunks[i] = std::make_shared<Chunk>();
 
-        for (s16 i = 0; i < ChunkColumn::ChunksPerColumn; ++i) {
-            // The section mask says whether or not there is data in this chunk.
-            if (meta->sectionmask & (1 << i)) {
-                column.m_Chunks[i] = std::make_shared<Chunk>(*chunk);
-            } else {
-                // Air section, leave null
-                column.m_Chunks[i] = nullptr;
-            }
+            column.m_Chunks[i]->Load(in, meta, i);
+        } else {
+            // Air section, leave null
+            column.m_Chunks[i] = nullptr;
         }
-    } else {*/
-        for (s16 i = 0; i < ChunkColumn::ChunksPerColumn; ++i) {
-            // The section mask says whether or not there is data in this chunk.
-            if (meta->sectionmask & (1 << i)) {
-                column.m_Chunks[i] = std::make_shared<Chunk>();
-
-                column.m_Chunks[i]->Load(in, meta, i);
-            } else {
-                // Air section, leave null
-                column.m_Chunks[i] = nullptr;
-            }
-        }
-  //  }
+    }
 
     return in;
 }

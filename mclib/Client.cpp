@@ -35,8 +35,13 @@ void Client::UpdateThread() {
 
         std::this_thread::sleep_for(std::chrono::milliseconds(10));
 
-       // m_Follower.Update();
         m_PlayerController.Update();
+        
+        Minecraft::EntityPtr playerEntity = m_EntityManager.GetPlayerEntity();
+        if (playerEntity) {
+            // Keep entity manager and player controller in sync
+            playerEntity->SetPosition(m_PlayerController.GetPosition());
+        }
 
         NotifyListeners(&ClientListener::OnTick);
     }

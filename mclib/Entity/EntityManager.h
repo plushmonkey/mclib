@@ -33,7 +33,12 @@ public:
     MCLIB_API EntityManager(Packets::PacketDispatcher* dispatcher);
     MCLIB_API ~EntityManager();
 
-    std::shared_ptr<PlayerEntity> GetPlayerEntity() const { return std::dynamic_pointer_cast<PlayerEntity>(m_Entities.at(m_EntityId)); }
+    std::shared_ptr<PlayerEntity> GetPlayerEntity() const { 
+        auto iter = m_Entities.find(m_EntityId);
+        if (iter == m_Entities.end()) return nullptr;
+
+        return std::dynamic_pointer_cast<PlayerEntity>(iter->second);
+    }
 
     EntityPtr GetEntity(EntityId eid) const { 
         auto iter = m_Entities.find(eid);

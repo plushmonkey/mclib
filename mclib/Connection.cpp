@@ -47,6 +47,9 @@ void Connection::HandlePacket(Minecraft::Packets::Inbound::PlayerPositionAndLook
     using namespace Minecraft::Packets;
 
     // Used to verify position
+    Packets::Outbound::TeleportConfirmPacket confirmation(packet->GetTeleportId());
+    SendPacket(&confirmation);
+
     Outbound::PlayerPositionAndLookPacket response(packet->GetPosition(),
         packet->GetYaw(), packet->GetPitch(), true);
 

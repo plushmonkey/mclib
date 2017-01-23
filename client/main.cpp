@@ -264,28 +264,28 @@ public:
     }
 
     void OnTick() override {
-        Minecraft::PlayerPtr player = m_Client->GetPlayerManager()->GetPlayerByName(L"plushmonkey");
+        Minecraft::PlayerPtr player = m_Client->GetPlayerManager()->GetPlayerByName(L"testplayer");
         if (!player) return;
 
         Minecraft::EntityPtr entity = player->GetEntity();
         if (!entity) return;
 
-        Minecraft::BlockPtr block = m_Client->GetWorld()->GetBlock(Vector3i(81, 71, 248));
-        std::cout << "81, 71, 248 = " << block->GetData() << std::endl;
-        //std::cout << "pos: " << entity->GetPosition() << std::endl;
+        Vector3d check = entity->GetPosition() - Vector3d(0, 1, 0);
+        Minecraft::BlockPtr block = m_Client->GetWorld()->GetBlock(check);
+        if (block)
+            std::cout << check << " = " << block->GetData() << std::endl;
     }
 };
 
 int main(void) {
     Minecraft::BlockRegistry::GetInstance()->RegisterVanillaBlocks();
     Minecraft::Packets::PacketDispatcher dispatcher;
-    //TextureGrabber grabber(&dispatcher);
 
     Client client(&dispatcher);
+    client.GetPlayerController()->SetHandleFall(true);
+
     Logger logger(&client, &dispatcher);
-   // BlockPlacer blockPlacer(&dispatcher, &client, client.GetPlayerController(), client.GetWorld());
     SneakEnforcer sneakEnforcer(&client);
-    
 
     try {
         client.Login("127.0.0.1", 25565, "testplayer", "");
