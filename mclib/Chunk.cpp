@@ -7,16 +7,8 @@ namespace Minecraft {
 
 Chunk::Chunk()
 {
-    m_BitsPerBlock = 0;
-    /*for (s32 y = 0; y < 16; ++y) {
-        for (s32 z = 0; z < 16; ++z) {
-            for (s32 x = 0; x < 16; ++x) {
-                std::size_t index = y * 16 * 16 + z * 16 + x;
-
-                m_Blocks[index] = BlockRegistry::GetInstance()->GetBlock(0, 0);
-            }
-        }
-    }*/
+    m_BitsPerBlock = 4;
+    m_Palette.push_back(0);
 }
 
 Chunk::Chunk(const Chunk& other) {
@@ -100,7 +92,18 @@ void Chunk::SetBlock(Vector3i chunkPosition, BlockPtr block) {
     std::size_t bitIndex = 64 - m_BitsPerBlock - (index * m_BitsPerBlock) % 64;
 
     s64 maxValue = (1 << m_BitsPerBlock) - 1;
-    u16 blockType = block->GetData();
+    u16 blockType = block ? block->GetData() : 0;
+
+    if (m_BitsPerBlock == 0) {
+        m_BitsPerBlock = 4;
+    }
+
+    if (m_Data.empty()) {
+        s64 size = (16 * 16 * 16) * m_BitsPerBlock / 64;
+
+        m_Data.resize(size);
+        memset(&m_Data[0], 0, size * sizeof(m_Data[0]));
+    }
 
     auto iter = std::find_if(m_Palette.begin(), m_Palette.end(), [blockType](u16 ptype) {
         return ptype == blockType;
