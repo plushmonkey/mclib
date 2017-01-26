@@ -6,6 +6,7 @@
 #include "../Position.h"
 #include "../Protocol.h"
 #include "../Chunk.h"
+#include "../BlockEntity.h"
 #include <map>
 #include <json/json.h>
 
@@ -311,7 +312,7 @@ public:
 private:
     Vector3i m_Position;
     Action m_Action;
-    NBT::NBT m_NBT;
+    BlockEntityPtr m_BlockEntity;
 
 public:
     MCLIB_API UpdateBlockEntityPacket();
@@ -320,7 +321,7 @@ public:
 
     Vector3i GetPosition() const { return m_Position; }
     Action GetAction() const { return m_Action; }
-    const NBT::NBT& GetNBT() const { return m_NBT; }
+    BlockEntityPtr GetBlockEntity() { return m_BlockEntity; }
 };
 
 class BlockActionPacket : public InboundPacket { // 0x0A
@@ -700,7 +701,7 @@ public:
 class ChunkDataPacket : public InboundPacket { // 0x20
 private:
     ChunkColumnPtr m_ChunkColumn;
-    std::vector<NBT::NBT> m_BlockEntities;
+    std::vector<BlockEntityPtr> m_BlockEntities;
 
 public:
     MCLIB_API ChunkDataPacket();
@@ -708,7 +709,7 @@ public:
     void MCLIB_API Dispatch(PacketHandler* handler);
 
     ChunkColumnPtr GetChunkColumn() const { return m_ChunkColumn; }
-    const std::vector<NBT::NBT>& GetBlockEntities() const { return m_BlockEntities; }
+    const std::vector<BlockEntityPtr>& GetBlockEntities() const { return m_BlockEntities; }
 };
 
 class EffectPacket : public InboundPacket { // 0x21

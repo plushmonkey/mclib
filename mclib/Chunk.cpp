@@ -143,6 +143,21 @@ BlockPtr ChunkColumn::GetBlock(Vector3i position) {
     return m_Chunks[chunkIndex]->GetBlock(relativePosition);
 }
 
+BlockEntityPtr ChunkColumn::GetBlockEntity(Vector3i worldPos) {
+    auto iter = m_BlockEntities.find(worldPos);
+    if (iter == m_BlockEntities.end()) return nullptr;
+    return iter->second;
+}
+
+std::vector<BlockEntityPtr> ChunkColumn::GetBlockEntities() {
+    std::vector<BlockEntityPtr> blockEntities;
+
+    for (auto iter = m_BlockEntities.begin(); iter != m_BlockEntities.end(); ++iter)
+        blockEntities.push_back(iter->second);
+
+    return blockEntities;
+}
+
 DataBuffer& operator>>(DataBuffer& in, ChunkColumn& column) {
     ChunkColumnMetadata* meta = &column.m_Metadata;
 

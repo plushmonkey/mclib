@@ -134,9 +134,8 @@ void World::HandlePacket(Packets::Inbound::UpdateBlockEntityPacket* packet) {
 
     col->RemoveBlockEntity(pos);
 
-    if (packet->GetNBT().HasData()) {
-        col->AddBlockEntity(pos, packet->GetNBT());
-    }
+    BlockEntityPtr entity = packet->GetBlockEntity();
+    col->AddBlockEntity(entity);
 }
 
 void World::HandlePacket(Packets::Inbound::UnloadChunkPacket* packet) {
@@ -189,12 +188,24 @@ BlockPtr World::GetBlock(Vector3i pos) const {
     return col->GetBlock(Vector3i(x, pos.y, z));
 }
 
-const NBT::NBT* World::GetBlockEntity(Vector3i pos) const {
+BlockEntityPtr World::GetBlockEntity(Vector3i pos) const {
     ChunkColumnPtr col = GetChunk(pos);
 
     if (!col) return nullptr;
 
     return col->GetBlockEntity(pos);
+}
+
+std::vector<BlockEntityPtr> World::GetBlockEntities() const {
+    std::vector<BlockEntityPtr> blockEntities;
+
+    for (auto iter = m_Chunks.begin(); iter != m_Chunks.end(); ++iter) {
+        std::vector<BlockEntityPtr> chunkBlockEntities = iter->second->GetBlockEntities();
+
+        blockEntities.insert(blockEntities.end(), chunkBlockEntities.begin(), chunkBlockEntities.end());
+    }
+
+    return blockEntities;
 }
 
 }

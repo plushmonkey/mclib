@@ -85,6 +85,7 @@
   <ItemGroup>
     <ClInclude Include="AABB.h" />
     <ClInclude Include="Block.h" />
+    <ClInclude Include="BlockEntity.h" />
     <ClInclude Include="Chunk.h" />
     <ClInclude Include="Client.h" />
     <ClInclude Include="Common.h" />
@@ -130,6 +131,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Block.cpp" />
+    <ClCompile Include="BlockEntity.cpp" />
     <ClCompile Include="Chunk.cpp" />
     <ClCompile Include="Client.cpp" />
     <ClCompile Include="Compression.cpp" />

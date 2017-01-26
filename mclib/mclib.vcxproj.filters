@@ -165,6 +165,9 @@
     <ClInclude Include="mclib.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="BlockEntity.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Block.cpp">
@@ -256,6 +259,9 @@
     </ClCompile>
     <ClCompile Include="Packets\PacketHandler.cpp">
       <Filter>Source Files\Packets</Filter>
+    </ClCompile>
+    <ClCompile Include="BlockEntity.cpp">
+      <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

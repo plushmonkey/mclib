@@ -45,7 +45,9 @@ public:
     BlockPtr MCLIB_API GetBlock(Vector3f pos) const;
     BlockPtr MCLIB_API GetBlock(Vector3i pos) const;
 
-    MCLIB_API const NBT::NBT* GetBlockEntity(Vector3i pos) const;
+    MCLIB_API BlockEntityPtr GetBlockEntity(Vector3i pos) const;
+    // Gets all of the known block entities in loaded chunks
+    MCLIB_API std::vector<BlockEntityPtr> GetBlockEntities() const;
 
     const std::map<ChunkCoord, ChunkColumnPtr>::const_iterator begin() const { return m_Chunks.begin(); }
     const std::map<ChunkCoord, ChunkColumnPtr>::const_iterator end() const { return m_Chunks.end(); }

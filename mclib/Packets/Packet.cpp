@@ -279,8 +279,11 @@ bool UpdateBlockEntityPacket::Deserialize(DataBuffer& data, std::size_t packetLe
 
     data >> pos;
     data >> action;
-    data >> m_NBT;
 
+    NBT::NBT nbt;
+    data >> nbt;
+
+    m_BlockEntity = BlockEntity::CreateFromNBT(&nbt);
     m_Position = Vector3i(pos.GetX(), pos.GetY(), pos.GetZ());
     m_Action = (Action)action;
 
@@ -787,21 +790,10 @@ bool ChunkDataPacket::Deserialize(DataBuffer& data, std::size_t packetLength) {
 
         data >> nbt;
 
-        m_BlockEntities.push_back(nbt);
+        BlockEntityPtr blockEntity = BlockEntity::CreateFromNBT(&nbt);
 
-        auto root = nbt.GetRoot();
-        Vector3i entityPos;
-
-        for (auto iter = root.begin(); iter != root.end(); ++iter) {
-            if ((*iter)->GetName().compare(L"x") == 0)
-                entityPos.x = ((NBT::TagInt*)iter->get())->GetValue();
-            if ((*iter)->GetName().compare(L"y") == 0)
-                entityPos.y = ((NBT::TagInt*)iter->get())->GetValue();
-            if ((*iter)->GetName().compare(L"z") == 0)
-                entityPos.z = ((NBT::TagInt*)iter->get())->GetValue();
-        }
-
-        m_ChunkColumn->AddBlockEntity(entityPos, nbt);
+        m_BlockEntities.push_back(blockEntity);
+        m_ChunkColumn->AddBlockEntity(blockEntity);
     }
 
     return true;
