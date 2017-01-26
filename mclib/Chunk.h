@@ -3,8 +3,10 @@
 
 #include "Types.h"
 #include "Block.h"
+#include "NBT.h"
 
 #include <array>
+#include <map>
 #include <memory>
 
 namespace Minecraft {
@@ -65,6 +67,7 @@ public:
 private:
     std::array<ChunkPtr, ChunksPerColumn> m_Chunks;
     ChunkColumnMetadata m_Metadata;
+    std::map<Vector3i, NBT::NBT> m_BlockEntities;
 
 public:
     MCLIB_API ChunkColumn(ChunkColumnMetadata metadata);
@@ -81,11 +84,25 @@ public:
         return m_Chunks[index];
     }
 
+    void MCLIB_API AddBlockEntity(Vector3i pos, NBT::NBT blockEntity) {
+        m_BlockEntities.insert(std::make_pair(pos, blockEntity));
+    }
+
+    void RemoveBlockEntity(Vector3i pos) {
+        m_BlockEntities.erase(pos);
+    }
+
     /**
      * Position is relative to this ChunkColumn position.
      */
     BlockPtr MCLIB_API GetBlock(Vector3i position);
     const ChunkColumnMetadata& GetMetadata() const { return m_Metadata; }
+
+    const NBT::NBT MCLIB_API *GetBlockEntity(Vector3i worldPos) {
+        auto iter = m_BlockEntities.find(worldPos);
+        if (iter == m_BlockEntities.end()) return nullptr;
+        return &iter->second;
+    }
 
     friend MCLIB_API DataBuffer& operator>>(DataBuffer& in, ChunkColumn& column);
 };

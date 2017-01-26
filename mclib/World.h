@@ -12,7 +12,8 @@ namespace Minecraft {
 class MCLIB_API WorldListener {
 public:
     // yIndex is the chunk section index of the column, 0 means bottom chunk, 15 means top
-    virtual void OnChunkLoad(ChunkPtr chunk, const ChunkColumnMetadata& meta, u16 yIndex) { };
+    virtual void OnChunkLoad(ChunkPtr chunk, const ChunkColumnMetadata& meta, u16 yIndex) { }
+    virtual void OnBlockChange(Vector3i position, BlockPtr newBlock, BlockPtr oldBlock) { }
 };
 
 class World : public Packets::PacketHandler, public ObserverSubject<WorldListener> {
@@ -31,6 +32,7 @@ public:
     void MCLIB_API HandlePacket(Packets::Inbound::MultiBlockChangePacket* packet);
     void MCLIB_API HandlePacket(Packets::Inbound::BlockChangePacket* packet);
     void MCLIB_API HandlePacket(Packets::Inbound::ExplosionPacket* packet);
+    void MCLIB_API HandlePacket(Packets::Inbound::UpdateBlockEntityPacket* packet);
 
     /**
      * Pos can be any world position inside of the chunk
@@ -40,6 +42,11 @@ public:
     BlockPtr MCLIB_API GetBlock(Vector3d pos) const;
     BlockPtr MCLIB_API GetBlock(Vector3f pos) const;
     BlockPtr MCLIB_API GetBlock(Vector3i pos) const;
+
+    MCLIB_API const NBT::NBT* GetBlockEntity(Vector3i pos) const;
+
+    const std::map<ChunkCoord, ChunkColumnPtr>::const_iterator begin() const { return m_Chunks.begin(); }
+    const std::map<ChunkCoord, ChunkColumnPtr>::const_iterator end() const { return m_Chunks.end(); }
 };
 
 } // ns Minecraft

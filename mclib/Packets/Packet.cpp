@@ -1,5 +1,6 @@
 #include "Packet.h"
 #include "PacketHandler.h"
+#include <iostream>
 
 namespace {
 
@@ -787,6 +788,20 @@ bool ChunkDataPacket::Deserialize(DataBuffer& data, std::size_t packetLength) {
         data >> nbt;
 
         m_BlockEntities.push_back(nbt);
+
+        auto root = nbt.GetRoot();
+        Vector3i entityPos;
+
+        for (auto iter = root.begin(); iter != root.end(); ++iter) {
+            if ((*iter)->GetName().compare(L"x") == 0)
+                entityPos.x = ((NBT::TagInt*)iter->get())->GetValue();
+            if ((*iter)->GetName().compare(L"y") == 0)
+                entityPos.y = ((NBT::TagInt*)iter->get())->GetValue();
+            if ((*iter)->GetName().compare(L"z") == 0)
+                entityPos.z = ((NBT::TagInt*)iter->get())->GetValue();
+        }
+
+        m_ChunkColumn->AddBlockEntity(entityPos, nbt);
     }
 
     return true;

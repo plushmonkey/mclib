@@ -302,6 +302,27 @@ public:
                 std::wcout << L"Block at " << assertion.pos << L" is not " << assertion.type << L" instead is " << block->GetName() << std::endl;
             }
         }
+
+        Vector3i signPos(67, 72, 246);
+        const Minecraft::NBT::NBT* blockEntity = m_Client->GetWorld()->GetBlockEntity(signPos);
+        if (!blockEntity) {
+            std::cout << "No sign at " << signPos << std::endl;
+        } else {
+            auto& root = blockEntity->GetRoot();
+
+            std::wstring text[4];
+
+            for (auto iter = root.begin(); iter != root.end(); ++iter) {
+                if ((*iter)->GetName().find(L"Text") == 0) {
+                    int index = (*iter)->GetName()[4] - L'0' - 1;
+                    text[index] = ((Minecraft::NBT::TagString*)iter->get())->GetValue();
+                }
+            }
+
+            for (std::wstring signText : text) {
+                std::wcout << signText << std::endl;
+            }
+        }
     }
 };
 
