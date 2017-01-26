@@ -8,6 +8,7 @@ World::World(Packets::PacketDispatcher* dispatcher)
     dispatcher->RegisterHandler(Protocol::State::Play, Protocol::Play::MultiBlockChange, this);
     dispatcher->RegisterHandler(Protocol::State::Play, Protocol::Play::BlockChange, this);
     dispatcher->RegisterHandler(Protocol::State::Play, Protocol::Play::ChunkData, this);
+    dispatcher->RegisterHandler(Protocol::State::Play, Protocol::Play::UnloadChunk, this);
     dispatcher->RegisterHandler(Protocol::State::Play, Protocol::Play::Explosion, this);
     dispatcher->RegisterHandler(Protocol::State::Play, Protocol::Play::UpdateBlockEntity, this);
 }
@@ -134,11 +135,21 @@ void World::HandlePacket(Packets::Inbound::UpdateBlockEntityPacket* packet) {
     col->RemoveBlockEntity(pos);
 
     if (packet->GetNBT().HasData()) {
-        std::cout << "Has data" << std::endl;
         col->AddBlockEntity(pos, packet->GetNBT());
-    } else {
-        std::cout << "No data" << std::endl;
     }
+}
+
+void World::HandlePacket(Packets::Inbound::UnloadChunkPacket* packet) {
+    ChunkCoord coord(packet->GetChunkX(), packet->GetChunkZ());
+
+    auto iter = m_Chunks.find(coord);
+
+    if (iter == m_Chunks.end()) return;
+
+    ChunkColumnPtr chunk = iter->second;
+    NotifyListeners(&WorldListener::OnChunkUnload, chunk);
+
+    m_Chunks.erase(iter);
 }
 
 ChunkColumnPtr World::GetChunk(Vector3i pos) const {

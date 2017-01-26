@@ -13,6 +13,7 @@ class MCLIB_API WorldListener {
 public:
     // yIndex is the chunk section index of the column, 0 means bottom chunk, 15 means top
     virtual void OnChunkLoad(ChunkPtr chunk, const ChunkColumnMetadata& meta, u16 yIndex) { }
+    virtual void OnChunkUnload(ChunkColumnPtr chunk) { }
     virtual void OnBlockChange(Vector3i position, BlockPtr newBlock, BlockPtr oldBlock) { }
 };
 
@@ -29,6 +30,7 @@ public:
     MCLIB_API ~World();
 
     void MCLIB_API HandlePacket(Packets::Inbound::ChunkDataPacket* packet);
+    void MCLIB_API HandlePacket(Packets::Inbound::UnloadChunkPacket* packet);
     void MCLIB_API HandlePacket(Packets::Inbound::MultiBlockChangePacket* packet);
     void MCLIB_API HandlePacket(Packets::Inbound::BlockChangePacket* packet);
     void MCLIB_API HandlePacket(Packets::Inbound::ExplosionPacket* packet);

@@ -225,6 +225,9 @@ Packet* PlayPacketFactory::CreatePacket(DataBuffer& data, std::size_t length) {
     case Protocol::Play::WorldBorder:
         packet = new Inbound::WorldBorderPacket();
         break;
+    case Protocol::Play::UnloadChunk:
+        packet = new Inbound::UnloadChunkPacket();
+        break;
     default:
         throw Protocol::UnfinishedProtocolException(vid, Protocol::State::Play);
     }
