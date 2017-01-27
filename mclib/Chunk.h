@@ -39,12 +39,12 @@ public:
     /**
      * Position is relative to this chunk position
      */
-    BlockPtr MCLIB_API GetBlock(Vector3i chunkPosition);
+    BlockState MCLIB_API GetBlock(Vector3i chunkPosition);
 
     /**
     * Position is relative to this chunk position
     */
-    void MCLIB_API SetBlock(Vector3i chunkPosition, BlockPtr block);
+    void MCLIB_API SetBlock(Vector3i chunkPosition, BlockState blockState);
 
     /**
      * chunkIndex is the index (0-16) of this chunk in the ChunkColumn
@@ -96,7 +96,7 @@ public:
     /**
      * Position is relative to this ChunkColumn position.
      */
-    BlockPtr MCLIB_API GetBlock(Vector3i position);
+    BlockState MCLIB_API GetBlock(Vector3i position);
     const ChunkColumnMetadata& GetMetadata() const { return m_Metadata; }
 
     MCLIB_API BlockEntityPtr GetBlockEntity(Vector3i worldPos);

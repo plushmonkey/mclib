@@ -184,14 +184,14 @@ bool PlayerController::ClearPath(Vector3d target) {
     auto check = [&](Vector3d start, Vector3d delta) {
         Vector3d checkAbove = start + delta + Vector3d(0, 1, 0);
         Vector3d checkBelow = start + delta + Vector3d(0, 0, 0);
-        Minecraft::BlockPtr aboveBlock = m_World.GetBlock(checkAbove);
-        Minecraft::BlockPtr belowBlock = m_World.GetBlock(checkBelow);
+        Minecraft::BlockPtr aboveBlock = m_World.GetBlock(checkAbove).GetBlock();
+        Minecraft::BlockPtr belowBlock = m_World.GetBlock(checkBelow).GetBlock();
 
         if (aboveBlock && aboveBlock->IsSolid())
             return false;
 
         if (belowBlock && belowBlock->IsSolid()) {
-            Minecraft::BlockPtr twoAboveBlock = m_World.GetBlock(checkAbove + Vector3d(0, 1, 0));
+            Minecraft::BlockPtr twoAboveBlock = m_World.GetBlock(checkAbove + Vector3d(0, 1, 0)).GetBlock();
             // Bad path if there isn't a two high gap in it
             if (twoAboveBlock && twoAboveBlock->IsSolid())
                 return false;
@@ -210,9 +210,9 @@ bool PlayerController::ClearPath(Vector3d target) {
         if (!check(position - side * CheckWidth, delta)) return false;
 
         Vector3d checkFloor = position + delta + Vector3d(0, -1, 0);
-        Minecraft::BlockPtr floorBlock = m_World.GetBlock(checkFloor);
+        Minecraft::BlockPtr floorBlock = m_World.GetBlock(checkFloor).GetBlock();
         if (floorBlock && !floorBlock->IsSolid()) {
-            Minecraft::BlockPtr belowFloorBlock = m_World.GetBlock(checkFloor - Vector3d(0, 1, 0));
+            Minecraft::BlockPtr belowFloorBlock = m_World.GetBlock(checkFloor - Vector3d(0, 1, 0)).GetBlock();
 
             // Fail if there is a two block drop
             if (belowFloorBlock && !belowFloorBlock->IsSolid())
@@ -279,7 +279,7 @@ bool PlayerController::HandleJump() {
     for (float angle = 0.0f; angle < FullCircle; angle += FullCircle / 8) {
         Vector3d checkPos = m_Position + Vector3RotateAboutY(Vector3d(0, 0, CheckWidth), angle);
 
-        Minecraft::BlockPtr checkBlock = m_World.GetBlock(checkPos);
+        Minecraft::BlockPtr checkBlock = m_World.GetBlock(checkPos).GetBlock();
         if (checkBlock && checkBlock->IsSolid()) {
             Vector3i pos = ToVector3i(checkPos);
             /*AABB bounds = checkBlock->GetBoundingBox(pos);
@@ -318,7 +318,7 @@ bool PlayerController::HandleFall() {
         for (dist = 0.0f; dist < FallSpeed; dist += RayCastStep) {
             checkPos.y = m_Position.y - dist;
 
-            checkBlock = m_World.GetBlock(checkPos);
+            checkBlock = m_World.GetBlock(checkPos).GetBlock();
             if (checkBlock && checkBlock->IsSolid()) {
                 AABB blockBounds = checkBlock->GetBoundingBox();
                 Vector3d point = checkPos - ToVector3d(ToVector3i(checkPos));
@@ -332,7 +332,7 @@ bool PlayerController::HandleFall() {
 
         if (dist < bestDist) {
             bestDist = dist;
-            bestBlock = m_World.GetBlock(checkPos);
+            bestBlock = m_World.GetBlock(checkPos).GetBlock();
         }
     }
 
@@ -416,7 +416,7 @@ void PlayerController::Update() {
                 for (float angle = 0.0f; angle < FullCircle; angle += FullCircle / 8) {
                     Vector3d checkPos = m_Position + Vector3RotateAboutY(Vector3d(0, 0, CheckWidth), angle) - Vector3d(0, 1, 0);
 
-                    Minecraft::BlockPtr checkBlock = m_World.GetBlock(checkPos);
+                    Minecraft::BlockPtr checkBlock = m_World.GetBlock(checkPos).GetBlock();
                     if (checkBlock && checkBlock->IsSolid()) {
                         onGround = true;
                         break;
@@ -1314,7 +1314,7 @@ public:
         for (u16 y = 0; y < 16; ++y) {
             for (u16 z = 0; z < 16; ++z) {
                 for (u16 x = 0; x < 16; ++x) {
-                    Minecraft::BlockPtr block = chunk->GetBlock(Vector3i(x, y, z));
+                    Minecraft::BlockPtr block = chunk->GetBlock(Vector3i(x, y, z)).GetBlock();
 
                     for (Minecraft::BlockPtr findBlock : trackBlocks) {
                         u16 blockId = findBlock->GetType();
@@ -1381,7 +1381,7 @@ public:
         for (u16 y = 0; y < 16; ++y) {
             for (u16 z = 0; z < 16; ++z) {
                 for (u16 x = 0; x < 16; ++x) {
-                    Minecraft::BlockPtr block = chunk->GetBlock(Vector3i(x, y, z));
+                    Minecraft::BlockPtr block = chunk->GetBlock(Vector3i(x, y, z)).GetBlock();
 
                     if (block && m_BlockId == block->GetType() && m_BlockMeta == block->GetMeta()) {
                         s64 blockX = chunkX + x;

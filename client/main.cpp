@@ -77,7 +77,7 @@ public:
         m_PlayerController->LookAt(ToVector3d(m_Target));
 
         if (m_HeldItem.GetItemId() != -1) {
-            Minecraft::BlockPtr block = m_World->GetBlock(m_Target + Vector3i(0, 1, 0));
+            Minecraft::BlockPtr block = m_World->GetBlock(m_Target + Vector3i(0, 1, 0)).GetBlock();
             
             if (!block || block->GetType() == 0) {
                 Minecraft::Packets::Outbound::PlayerBlockPlacementPacket blockPlacePacket(m_Target, (u8)Face::Top, Minecraft::Hand::Main, Vector3f(0.5, 0, 0.5));

@@ -14,7 +14,7 @@ public:
     // yIndex is the chunk section index of the column, 0 means bottom chunk, 15 means top
     virtual void OnChunkLoad(ChunkPtr chunk, const ChunkColumnMetadata& meta, u16 yIndex) { }
     virtual void OnChunkUnload(ChunkColumnPtr chunk) { }
-    virtual void OnBlockChange(Vector3i position, BlockPtr newBlock, BlockPtr oldBlock) { }
+    virtual void OnBlockChange(Vector3i position, BlockState newBlock, BlockState oldBlock) { }
 };
 
 class World : public Packets::PacketHandler, public ObserverSubject<WorldListener> {
@@ -41,9 +41,9 @@ public:
      */
     ChunkColumnPtr MCLIB_API GetChunk(Vector3i pos) const;
 
-    BlockPtr MCLIB_API GetBlock(Vector3d pos) const;
-    BlockPtr MCLIB_API GetBlock(Vector3f pos) const;
-    BlockPtr MCLIB_API GetBlock(Vector3i pos) const;
+    BlockState MCLIB_API GetBlock(Vector3d pos) const;
+    BlockState MCLIB_API GetBlock(Vector3f pos) const;
+    BlockState MCLIB_API GetBlock(Vector3i pos) const;
 
     MCLIB_API BlockEntityPtr GetBlockEntity(Vector3i pos) const;
     // Gets all of the known block entities in loaded chunks

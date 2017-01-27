@@ -39,18 +39,18 @@ bool World::SetBlock(Vector3i position, s16 blockData) {
     }
 
     relative.y %= 16;
-    (*chunk)[index]->SetBlock(relative, BlockRegistry::GetInstance()->GetBlock(blockData));
+    (*chunk)[index]->SetBlock(relative, BlockState(BlockRegistry::GetInstance()->GetBlock(blockData), blockData));
     return true;
 }
 
 void World::HandlePacket(Packets::Inbound::ExplosionPacket* packet) {
     Vector3d position = packet->GetPosition();
-    BlockPtr newBlock = BlockRegistry::GetInstance()->GetBlock(0);
+    BlockState newBlock = BlockState(BlockRegistry::GetInstance()->GetBlock(0), 0);
 
     for (Vector3s offset : packet->GetAffectedBlocks()) {
         Vector3d absolute = position + ToVector3d(offset);
     
-        auto oldBlock = GetBlock(absolute);
+        BlockState oldBlock = GetBlock(absolute);
 
         // Set all affected blocks to air
         SetBlock(ToVector3i(absolute), 0);
@@ -101,19 +101,19 @@ void World::HandlePacket(Packets::Inbound::MultiBlockChangePacket* packet) {
             (*chunk)[index] = section;
         }
 
-        BlockPtr newBlock = BlockRegistry::GetInstance()->GetBlock(change.blockData);
-        auto oldBlock = chunk->GetBlock(relative);
+        BlockState newBlock = BlockState(BlockRegistry::GetInstance()->GetBlock(change.blockData), change.blockData);
+        BlockState oldBlock = chunk->GetBlock(relative);
         Vector3i blockChangePos = chunkStart + relative;
 
         relative.y %= 16;
-        (*chunk)[index]->SetBlock(relative, BlockRegistry::GetInstance()->GetBlock(change.blockData));
+        (*chunk)[index]->SetBlock(relative, BlockState(BlockRegistry::GetInstance()->GetBlock(change.blockData), change.blockData));
         NotifyListeners(&WorldListener::OnBlockChange, blockChangePos, newBlock, oldBlock);
     }
 }
 
 void World::HandlePacket(Packets::Inbound::BlockChangePacket* packet) {
-    BlockPtr newBlock = BlockRegistry::GetInstance()->GetBlock((u16)packet->GetBlockId());
-    BlockPtr oldBlock = GetBlock(packet->GetPosition());
+    BlockState newBlock = BlockState(BlockRegistry::GetInstance()->GetBlock((u16)packet->GetBlockId()), (u16)packet->GetBlockId());
+    BlockState oldBlock = GetBlock(packet->GetPosition());
 
     SetBlock(packet->GetPosition(), packet->GetBlockId());
 
@@ -164,18 +164,18 @@ ChunkColumnPtr World::GetChunk(Vector3i pos) const {
     return iter->second;
 }
 
-BlockPtr World::GetBlock(Vector3f pos) const {
+BlockState World::GetBlock(Vector3f pos) const {
     return GetBlock(Vector3i((s64)std::floor(pos.x), (s64)std::floor(pos.y), (s64)std::floor(pos.z)));
 }
 
-BlockPtr World::GetBlock(Vector3d pos) const {
+BlockState World::GetBlock(Vector3d pos) const {
     return GetBlock(Vector3i((s64)std::floor(pos.x), (s64)std::floor(pos.y), (s64)std::floor(pos.z)));
 }
 
-BlockPtr World::GetBlock(Vector3i pos) const {
+BlockState World::GetBlock(Vector3i pos) const {
     ChunkColumnPtr col = GetChunk(pos);
 
-    if (!col) return nullptr;
+    if (!col) return BlockState(nullptr, 0);
 
     s64 x = pos.x % 16;
     s64 z = pos.z % 16;

@@ -79,6 +79,18 @@ public:
 };
 typedef Block* BlockPtr;
 
+class BlockState {
+private:
+    BlockPtr m_Block;
+    u16 m_Data;
+
+public:
+    BlockState(BlockPtr block, u16 data) : m_Block(block), m_Data(data) { }
+
+    BlockPtr GetBlock() const { return m_Block; }
+    u16 GetData() const { return m_Data; }
+};
+
 class BlockRegistry {
 private:
     std::unordered_map<u16, BlockPtr> m_Blocks;

@@ -55,8 +55,8 @@ void Chunk::Load(DataBuffer& in, ChunkColumnMetadata* meta, s32 chunkIndex) {
     }
 }
 
-BlockPtr Chunk::GetBlock(Vector3i chunkPosition) {
-    if (chunkPosition.y < 0 || chunkPosition.y > 15) return BlockRegistry::GetInstance()->GetBlock(0, 0);
+BlockState Chunk::GetBlock(Vector3i chunkPosition) {
+    if (chunkPosition.y < 0 || chunkPosition.y > 15) return BlockState(BlockRegistry::GetInstance()->GetBlock(0, 0), 0);
 
     std::size_t index = (std::size_t)(chunkPosition.y * 16 * 16 + chunkPosition.z * 16 + chunkPosition.x);
     s32 bitIndex = index * m_BitsPerBlock;
@@ -82,10 +82,10 @@ BlockPtr Chunk::GetBlock(Vector3i chunkPosition) {
     } else {
         blockType = value;
     }
-    return BlockRegistry::GetInstance()->GetBlock(blockType);
+    return BlockState(BlockRegistry::GetInstance()->GetBlock(blockType), blockType);
 }
 
-void Chunk::SetBlock(Vector3i chunkPosition, BlockPtr block) {
+void Chunk::SetBlock(Vector3i chunkPosition, BlockState blockState) {
     std::size_t index = (std::size_t)(chunkPosition.y * 16 * 16 + chunkPosition.z * 16 + chunkPosition.x);
     s32 bitIndex = index * m_BitsPerBlock;
     s32 startIndex = bitIndex / 64;
@@ -93,7 +93,7 @@ void Chunk::SetBlock(Vector3i chunkPosition, BlockPtr block) {
     s32 startSubIndex = bitIndex % 64;
 
     s64 maxValue = (1 << m_BitsPerBlock) - 1;
-    u16 blockType = block ? block->GetData() : 0;
+    u16 blockType = blockState.GetData();
 
     if (m_BitsPerBlock == 0) {
         m_BitsPerBlock = 4;
@@ -134,11 +134,11 @@ ChunkColumn::ChunkColumn(ChunkColumnMetadata metadata)
         m_Chunks[i] = nullptr;
 }
 
-BlockPtr ChunkColumn::GetBlock(Vector3i position) {
+BlockState ChunkColumn::GetBlock(Vector3i position) {
     s32 chunkIndex = (s32)(position.y / 16);
     Vector3i relativePosition(position.x, position.y % 16, position.z);
 
-    if (!m_Chunks[chunkIndex]) return BlockRegistry::GetInstance()->GetBlock(0, 0);
+    if (!m_Chunks[chunkIndex]) return BlockState(BlockRegistry::GetInstance()->GetBlock(0, 0), 0);
 
     return m_Chunks[chunkIndex]->GetBlock(relativePosition);
 }
