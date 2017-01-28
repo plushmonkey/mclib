@@ -83,8 +83,10 @@ void World::HandlePacket(Packets::Inbound::ChunkDataPacket* packet) {
 
 void World::HandlePacket(Packets::Inbound::MultiBlockChangePacket* packet) {
     Vector3i chunkStart(packet->GetChunkX() * 16, 0, packet->GetChunkZ() * 16);
-
-    ChunkColumnPtr chunk = GetChunk(chunkStart);
+    auto iter = m_Chunks.find(ChunkCoord(packet->GetChunkX(), packet->GetChunkZ()));
+    if (iter == m_Chunks.end()) return;
+    
+    ChunkColumnPtr chunk = iter->second;
     if (!chunk)
         return;
 
@@ -95,14 +97,17 @@ void World::HandlePacket(Packets::Inbound::MultiBlockChangePacket* packet) {
         chunk->RemoveBlockEntity(chunkStart + relative);
 
         std::size_t index = change.y / 16;
+        BlockState oldBlock(0, 0);
         if ((*chunk)[index] == nullptr) {
             ChunkPtr section = std::make_shared<Chunk>();
 
             (*chunk)[index] = section;
+        } else {
+            oldBlock = chunk->GetBlock(relative);
         }
 
         BlockState newBlock = BlockState(BlockRegistry::GetInstance()->GetBlock(change.blockData), change.blockData);
-        BlockState oldBlock = chunk->GetBlock(relative);
+        
         Vector3i blockChangePos = chunkStart + relative;
 
         relative.y %= 16;
@@ -135,7 +140,8 @@ void World::HandlePacket(Packets::Inbound::UpdateBlockEntityPacket* packet) {
     col->RemoveBlockEntity(pos);
 
     BlockEntityPtr entity = packet->GetBlockEntity();
-    col->AddBlockEntity(entity);
+    if (entity)
+        col->AddBlockEntity(entity);
 }
 
 void World::HandlePacket(Packets::Inbound::UnloadChunkPacket* packet) {
@@ -200,8 +206,9 @@ std::vector<BlockEntityPtr> World::GetBlockEntities() const {
     std::vector<BlockEntityPtr> blockEntities;
 
     for (auto iter = m_Chunks.begin(); iter != m_Chunks.end(); ++iter) {
+        if (iter->second == nullptr) continue;
         std::vector<BlockEntityPtr> chunkBlockEntities = iter->second->GetBlockEntities();
-
+        if (chunkBlockEntities.empty()) continue;
         blockEntities.insert(blockEntities.end(), chunkBlockEntities.begin(), chunkBlockEntities.end());
     }
 

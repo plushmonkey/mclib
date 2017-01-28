@@ -133,7 +133,12 @@ void Connection::HandlePacket(Minecraft::Packets::Inbound::LoginSuccessPacket* p
         skinFlags |= (int)ClientSettingsPacket::SkinPartFlags::RightPants;
         skinFlags |= (int)ClientSettingsPacket::SkinPartFlags::Hat;
 
-        ClientSettingsPacket clientSettings(L"en-GB", (u8)32, ClientSettingsPacket::ChatMode::Enabled, true, skinFlags, ClientSettingsPacket::MainHand::Right);
+        u8 viewDistance = 32;
+
+#ifdef _DEBUG
+        viewDistance = 4;
+#endif
+        ClientSettingsPacket clientSettings(L"en-GB", viewDistance, ClientSettingsPacket::ChatMode::Enabled, true, skinFlags, ClientSettingsPacket::MainHand::Right);
 
         SendPacket(&clientSettings);
     });

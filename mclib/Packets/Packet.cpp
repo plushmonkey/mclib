@@ -686,7 +686,7 @@ bool ExplosionPacket::Deserialize(DataBuffer& data, std::size_t packetLength) {
     data >> count;
 
     for (s32 i = 0; i < count; ++i) {
-        u8 x, y, z;
+        s8 x, y, z;
         data >> x >> y >> z;
         m_AffectedBlocks.push_back(Vector3s(x, y, z));
     }
@@ -791,6 +791,8 @@ bool ChunkDataPacket::Deserialize(DataBuffer& data, std::size_t packetLength) {
         data >> nbt;
 
         BlockEntityPtr blockEntity = BlockEntity::CreateFromNBT(&nbt);
+
+        if (blockEntity == nullptr) continue;
 
         m_BlockEntities.push_back(blockEntity);
         m_ChunkColumn->AddBlockEntity(blockEntity);

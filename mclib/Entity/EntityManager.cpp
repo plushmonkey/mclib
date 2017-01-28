@@ -168,7 +168,8 @@ void EntityManager::HandlePacket(Packets::Inbound::EntityVelocityPacket* packet)
     auto entity = iter->second;
 
     if (entity) {
-        Vector3s velocity = packet->GetVelocity();
+        Vector3d velocity = ToVector3d(packet->GetVelocity()) / 8000.0;
+       
         entity->SetVelocity(velocity);
     }
 }

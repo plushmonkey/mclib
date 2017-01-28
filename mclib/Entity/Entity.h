@@ -17,7 +17,7 @@ protected:
     /**
      * Velocity is in units of 1/8000 of a block per tick. (-1343 would move -1343/8000 = -0.167875 blocks per tick)
      */
-    Vector3s m_Velocity;
+    Vector3d m_Velocity;
     EntityId m_EntityId;
     EntityMetadata m_Metadata;
 
@@ -33,7 +33,7 @@ public:
     EntityId GetEntityId() const { return m_EntityId; }
     EntityId GetVehicleId() const { return m_VehicleId; }
     const Vector3d& GetPosition() const { return m_Position; }
-    const Vector3s& GetVelocity() const { return m_Velocity; }
+    const Vector3d& GetVelocity() const { return m_Velocity; }
     float GetYaw() const { return m_Yaw; }
     float GetPitch() const { return m_Pitch; }
     float GetHeadPitch() const { return m_HeadPitch; }
@@ -41,7 +41,7 @@ public:
     const EntityMetadata& GetMetadata() const { return m_Metadata; }
 
     void SetPosition(const Vector3d& pos) { m_Position = pos; }
-    void SetVelocity(const Vector3s& vel) { m_Velocity = vel; }
+    void SetVelocity(const Vector3d& vel) { m_Velocity = vel; }
     void SetYaw(float yaw) { m_Yaw = yaw; }
     void SetPitch(float pitch) { m_Pitch = pitch; }
     void SetVehicleId(EntityId vid) { m_VehicleId = vid; }
