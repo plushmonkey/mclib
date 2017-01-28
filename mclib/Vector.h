@@ -131,7 +131,7 @@ public:
     }
 
     inline double LengthSq() const {
-        return x * x + y * y + z * z;
+        return (double)x * x + y * y + z * z;
     }
 
     inline void Normalize() {
@@ -155,6 +155,10 @@ public:
 
     inline double Distance(const Vector3& other) const {
         return Vector3(*this - other).Length();
+    }
+
+    inline double DistanceSq(const Vector3& other) const {
+        return Vector3(*this - other).LengthSq();
     }
 
     inline Vector3& Truncate(double length) {

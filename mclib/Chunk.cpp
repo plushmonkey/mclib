@@ -138,7 +138,7 @@ BlockState ChunkColumn::GetBlock(Vector3i position) {
     s32 chunkIndex = (s32)(position.y / 16);
     Vector3i relativePosition(position.x, position.y % 16, position.z);
 
-    if (!m_Chunks[chunkIndex]) return BlockState(BlockRegistry::GetInstance()->GetBlock(0, 0), 0);
+    if (chunkIndex < 0 || chunkIndex > 15 || !m_Chunks[chunkIndex]) return BlockState(BlockRegistry::GetInstance()->GetBlock(0, 0), 0);
 
     return m_Chunks[chunkIndex]->GetBlock(relativePosition);
 }
