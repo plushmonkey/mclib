@@ -54,9 +54,6 @@ void Connection::HandlePacket(Minecraft::Packets::Inbound::PlayerPositionAndLook
         packet->GetYaw(), packet->GetPitch(), true);
 
     SendPacket(&response);
-
-    Outbound::ClientStatusPacket status(Outbound::ClientStatusPacket::Action::PerformRespawn);
-    SendPacket(&status);
 }
 
 void Connection::HandlePacket(Minecraft::Packets::Inbound::DisconnectPacket* packet) {
