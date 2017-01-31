@@ -64,9 +64,14 @@ void EntityManager::HandlePacket(Packets::Inbound::JoinGamePacket* packet) {
 
 void EntityManager::HandlePacket(Packets::Inbound::PlayerPositionAndLookPacket* packet) {
     auto iter = m_Entities.find(m_EntityId);
-    if (iter == m_Entities.end()) return;
+    EntityPtr entity;
 
-    auto entity = iter->second;
+    if (iter == m_Entities.end()) {
+        entity = std::make_shared<PlayerEntity>(m_EntityId);
+    } else {
+        entity = iter->second;
+    }
+
     if (entity) {
         entity->SetPosition(packet->GetPosition());
         entity->SetYaw(packet->GetYaw() * DEG_TO_RAD);

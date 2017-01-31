@@ -57,8 +57,12 @@ struct AABB {
     }
 
     bool MCLIB_API Intersects(const AABB& other) const {
-        return !(max.x <= other.min.x || max.y <= other.min.y || max.z <= other.min.z ||
-               min.x >= other.max.x || min.y >= other.max.y || min.z >= other.max.z);
+        return (max.x > other.min.x &&
+                min.x < other.max.x &&
+                max.y > other.min.y &&
+                min.y < other.max.y &&
+                max.z > other.min.z &&
+                min.z < other.max.z);
     }
 
     bool MCLIB_API Intersects(const Ray& ray, double* length) const {

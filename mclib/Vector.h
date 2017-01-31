@@ -40,7 +40,11 @@ public:
                std::fabs((double)z - rhs.z) < epsilon;
     }
 
-    VecType operator[](std::size_t index) {
+    VecType& operator[](std::size_t index) {
+        return values[index];
+    }
+
+    const VecType& operator[](std::size_t index) const {
         return values[index];
     }
 
