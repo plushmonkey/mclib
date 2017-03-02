@@ -5,6 +5,7 @@
 
 #ifdef _WIN32
 #define WOULDBLOCK WSAEWOULDBLOCK
+#define MSG_DONTWAIT 0
 #else
 #define WOULDBLOCK EWOULDBLOCK
 #endif
@@ -73,7 +74,7 @@ std::size_t TCPSocket::Receive(DataBuffer& buffer, std::size_t amount) {
     buffer.Resize(amount);
     buffer.SetReadOffset(0);
 
-    int recvAmount = recv(m_Handle, (char*)&buffer[0], amount, 0);
+    int recvAmount = recv(m_Handle, (char*)&buffer[0], amount, MSG_DONTWAIT);
     if (recvAmount <= 0) {
 #if defined(_WIN32) || defined(WIN32)
         int err = WSAGetLastError();
@@ -96,7 +97,7 @@ std::size_t TCPSocket::Receive(DataBuffer& buffer, std::size_t amount) {
 DataBuffer TCPSocket::Receive(std::size_t amount) {
     std::unique_ptr<char[]> buf(new char[amount]);
 
-    int received = ::recv(m_Handle, buf.get(), amount, 0);
+    int received = ::recv(m_Handle, buf.get(), amount, MSG_DONTWAIT);
 
     if (received <= 0) {
 #if defined(_WIN32) || defined(WIN32)

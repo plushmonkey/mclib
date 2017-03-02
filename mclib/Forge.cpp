@@ -267,8 +267,12 @@ void ForgeHandler::HandleData(const std::string& data) {
                     SendPluginMessage(L"FML|HS", ack);
                 }
                 break;
+                default:
+                break;
             }
         }
+        break;
+        default:
         break;
     }
 }

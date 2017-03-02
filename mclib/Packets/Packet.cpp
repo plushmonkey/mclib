@@ -1755,6 +1755,8 @@ bool TitlePacket::Deserialize(DataBuffer& data, std::size_t packetLength) {
             data >> m_FadeIn >> m_Stay >> m_FadeOut;
         }
         break;
+        default:
+        break;
     }
     
     return true;

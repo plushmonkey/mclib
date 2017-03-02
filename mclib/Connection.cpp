@@ -35,8 +35,6 @@ Connection::Connection(Minecraft::Packets::PacketDispatcher* dispatcher, Minecra
     dispatcher->RegisterHandler(Protocol::State::Play, Protocol::Play::PlayerPositionAndLook, this);
     dispatcher->RegisterHandler(Protocol::State::Play, Protocol::Play::UpdateHealth, this);
     dispatcher->RegisterHandler(Protocol::State::Play, Protocol::Play::Disconnect, this);
-
-    m_Socket->SetBlocking(false);
 }
 
 Connection::~Connection() {
@@ -164,7 +162,6 @@ bool Connection::Connect(const std::string& server, u16 port) {
     bool result = false;
 
     m_Socket = std::make_shared<Network::TCPSocket>();
-    m_Socket->SetBlocking(false);
     m_Yggdrasil = std::unique_ptr<Yggdrasil>(new Yggdrasil());
     m_ProtocolState = Protocol::State::Handshake;
 
@@ -196,6 +193,8 @@ bool Connection::Connect(const std::string& server, u16 port) {
         }
     }
 
+    m_Socket->SetBlocking(false);
+
     if (result)
         NotifyListeners(&ConnectionListener::OnSocketStateChange, m_Socket->GetStatus());
 
@@ -220,7 +219,7 @@ Minecraft::Packets::Packet* Connection::CreatePacketSync(Minecraft::DataBuffer& 
         return nullptr;
     }
 
-    if (buffer.GetRemaining() < (u32)length.GetInt()) {
+    if (length.GetInt() == 0 || buffer.GetRemaining() < (u32)length.GetInt()) {
         // Reset the read offset back to what it was because the full packet hasn't been received yet.
         buffer.SetReadOffset(readOffset);
         return nullptr;
@@ -244,7 +243,7 @@ std::future<Minecraft::Packets::Packet*> Connection::CreatePacket(Minecraft::Dat
         return std::future<Minecraft::Packets::Packet*>();
     }
 
-    if (buffer.GetRemaining() < (u32)length.GetInt()) {
+    if (length.GetInt() == 0 || buffer.GetRemaining() < (u32)length.GetInt()) {
         // Reset the read offset back to what it was because the full packet hasn't been received yet.
         buffer.SetReadOffset(readOffset);
         return std::future<Minecraft::Packets::Packet*>();
@@ -265,11 +264,7 @@ void Connection::CreatePacket() {
         return;
     }
 
-    //if (buffer.GetSize() == 0) return;
-
     m_HandleBuffer << m_Encrypter->Decrypt(buffer);
-
-    Minecraft::Packets::Packet* packet = nullptr;
     
     do {
         try {
@@ -291,13 +286,6 @@ void Connection::CreatePacket() {
                 else 
                     break;
             }
-            //packet = CreatePacket(m_HandleBuffer);
-            /*if (packet) {
-                this->GetDispatcher()->Dispatch(packet);
-                Minecraft::Packets::PacketFactory::FreePacket(packet);
-            } else {
-                break;
-            }*/
         } catch (const Minecraft::Protocol::UnfinishedProtocolException&) {
             // Ignore for now
         }

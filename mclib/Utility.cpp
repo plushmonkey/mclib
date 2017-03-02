@@ -22,6 +22,7 @@
 #include <mutex>
 #include <condition_variable>
 #include <regex>
+#include <cmath>
 
 #undef max
 #undef min
@@ -447,9 +448,9 @@ bool PlayerController::InLoadedChunk() const {
 Vector3d PlayerController::GetPosition() const { return m_Position; }
 Vector3d PlayerController::GetHeading() const {
     return Vector3d(
-        -std::cosf(GetPitch()) * std::sinf(GetYaw()),
-        -std::sinf(GetPitch()),
-        std::cosf(GetPitch()) * std::cosf(GetYaw())
+        -std::cos(GetPitch()) * std::sin(GetYaw()),
+        -std::sin(GetPitch()),
+        std::cos(GetPitch()) * std::cos(GetYaw())
     );
 }
 float PlayerController::GetYaw() const { return m_Yaw; }

@@ -21,8 +21,6 @@ void Chunk::Load(DataBuffer& in, ChunkColumnMetadata* meta, s32 chunkIndex) {
     VarInt paletteLength;
     in >> paletteLength;
 
-    s32 abc = paletteLength.GetInt();
-
     for (s32 i = 0; i < paletteLength.GetInt(); ++i) {
         VarInt paletteValue;
         in >> paletteValue;
@@ -31,8 +29,7 @@ void Chunk::Load(DataBuffer& in, ChunkColumnMetadata* meta, s32 chunkIndex) {
 
     VarInt dataArrayLength;
     in >> dataArrayLength;
-    s32 arrayLen = dataArrayLength.GetInt();
-
+    
     m_Data.resize(dataArrayLength.GetInt());
     
     for (s32 i = 0; i < dataArrayLength.GetInt(); ++i) {

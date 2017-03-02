@@ -6,6 +6,7 @@
 #include <thread>
 #include <iostream>
 #include <chrono>
+#include <fstream>
 
 #ifdef _DEBUG
 #pragma comment(lib, "../Debug/mclibd.lib")
@@ -175,7 +176,8 @@ public:
 
                     std::string body = resp.body;
 
-                    std::ofstream out(name + L".png", std::ios::out | std::ios::binary);
+                    std::string filename = std::string(name.begin(), name.end()) + ".png";
+                    std::ofstream out(filename, std::ios::out | std::ios::binary);
 
                     out.write(body.c_str(), body.size());
                 }
@@ -277,8 +279,9 @@ public:
 int main(void) {
     Minecraft::BlockRegistry::GetInstance()->RegisterVanillaBlocks();
     Minecraft::Packets::PacketDispatcher dispatcher;
+    Minecraft::Protocol::Version version = Minecraft::Protocol::Version::Minecraft_1_10_2;
 
-    Client gameClient(&dispatcher, Minecraft::Protocol::Version::Minecraft_1_10_2);
+    Client gameClient(&dispatcher, version);
     Minecraft::Forge::ForgeHandler forgeHandler(&dispatcher, gameClient.GetConnection());
     Logger logger(&gameClient, &dispatcher);
 
@@ -286,7 +289,7 @@ int main(void) {
     const u16 port = 25565;
 
     {
-        Client pingClient(&dispatcher, Minecraft::Protocol::Version::Minecraft_1_10_2);
+        Client pingClient(&dispatcher, version);
 
         try {
             pingClient.Ping(server, port);
