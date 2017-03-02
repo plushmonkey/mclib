@@ -61,6 +61,7 @@ public:
     void MCLIB_API HandlePacket(Minecraft::Packets::Inbound::EncryptionRequestPacket* packet);
     void MCLIB_API HandlePacket(Minecraft::Packets::Inbound::LoginSuccessPacket* packet);
     void MCLIB_API HandlePacket(Minecraft::Packets::Inbound::SetCompressionPacket* packet);
+    void MCLIB_API HandlePacket(Minecraft::Packets::Inbound::UpdateHealthPacket* packet);
 
     void MCLIB_API HandlePacket(Minecraft::Packets::Inbound::Status::ResponsePacket* packet);
 

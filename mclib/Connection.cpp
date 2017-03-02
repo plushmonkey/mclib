@@ -33,6 +33,7 @@ Connection::Connection(Minecraft::Packets::PacketDispatcher* dispatcher, Minecra
 
     dispatcher->RegisterHandler(Protocol::State::Play, Protocol::Play::KeepAlive, this);
     dispatcher->RegisterHandler(Protocol::State::Play, Protocol::Play::PlayerPositionAndLook, this);
+    dispatcher->RegisterHandler(Protocol::State::Play, Protocol::Play::UpdateHealth, this);
     dispatcher->RegisterHandler(Protocol::State::Play, Protocol::Play::Disconnect, this);
 
     m_Socket->SetBlocking(false);
@@ -58,6 +59,15 @@ void Connection::HandlePacket(Minecraft::Packets::Inbound::PlayerPositionAndLook
         packet->GetYaw(), packet->GetPitch(), true);
 
     SendPacket(&response);
+}
+
+void Connection::HandlePacket(Minecraft::Packets::Inbound::UpdateHealthPacket* packet) {
+    using namespace Minecraft::Packets;
+
+    if (packet->GetHealth() <= 0) {
+        Outbound::ClientStatusPacket status(Outbound::ClientStatusPacket::Action::PerformRespawn);
+        SendPacket(&status);
+    }
 }
 
 void Connection::HandlePacket(Minecraft::Packets::Inbound::DisconnectPacket* packet) {

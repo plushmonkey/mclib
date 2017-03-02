@@ -16,6 +16,7 @@ PlayerManager::PlayerManager(Packets::PacketDispatcher* dispatcher, EntityManage
 
 PlayerManager::~PlayerManager() {
     m_EntityManager->UnregisterListener(this);
+    GetDispatcher()->UnregisterHandler(this);
 }
 
 PlayerManager::iterator PlayerManager::begin() {
