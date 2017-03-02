@@ -13,6 +13,12 @@ enum class State {
     Play
 };
 
+enum class Version {
+    Minecraft_1_10_2 = 210,
+    Minecraft_1_11_0 = 315,
+    Minecraft_1_11_2 = 316,
+};
+
 class UnfinishedProtocolException {
 private:
     VarInt m_PacketId;
@@ -35,6 +41,15 @@ enum ProtocolLogin {
 };
 
 } // ns Login
+
+namespace Status {
+
+enum ProtocolStatus {
+    Response = 0,
+    Pong
+};
+
+} // ns Status
 
 namespace Play {
 

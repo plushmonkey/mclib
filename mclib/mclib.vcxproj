@@ -100,6 +100,7 @@
     <ClInclude Include="Entity\LivingEntity.h" />
     <ClInclude Include="Entity\Monster.h" />
     <ClInclude Include="Entity\Player.h" />
+    <ClInclude Include="Forge.h" />
     <ClInclude Include="Hash.h" />
     <ClInclude Include="HTTPClient.h" />
     <ClInclude Include="mclib.h" />
@@ -139,6 +140,7 @@
     <ClCompile Include="DataBuffer.cpp" />
     <ClCompile Include="Encryption.cpp" />
     <ClCompile Include="Entity\EntityManager.cpp" />
+    <ClCompile Include="Forge.cpp" />
     <ClCompile Include="Hash.cpp" />
     <ClCompile Include="HTTPClient.cpp" />
     <ClCompile Include="MCString.cpp" />

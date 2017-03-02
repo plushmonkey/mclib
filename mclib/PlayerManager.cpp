@@ -98,6 +98,11 @@ void PlayerManager::HandlePacket(Packets::Inbound::LoginSuccessPacket* packet) {
 
 void PlayerManager::HandlePacket(Packets::Inbound::PlayerPositionAndLookPacket* packet) {
     auto player = m_EntityManager->GetPlayerEntity();
+
+    auto iter = m_Players.find(m_ClientUUID);
+    if (iter == m_Players.end()) {
+        m_Players[m_ClientUUID] = std::make_shared<Player>(m_ClientUUID, L"");
+    }
     m_Players[m_ClientUUID]->SetEntity(player);
 
     NotifyListeners(&PlayerListener::OnClientSpawn, m_Players[m_ClientUUID]);
@@ -113,7 +118,16 @@ void PlayerManager::HandlePacket(Packets::Inbound::PlayerListItemPacket* packet)
         UUID uuid = actionData->uuid;
 
         if (action == PlayerListItemPacket::Action::AddPlayer) {
-            if (m_Players.find(uuid) != m_Players.end()) continue;
+            auto iter = m_Players.find(uuid);
+
+            if (iter != m_Players.end()) {
+                bool newPlayer = iter->second->m_Name.empty();
+                if (newPlayer) {
+                    iter->second->m_Name = actionData->name;
+                    NotifyListeners(&PlayerListener::OnPlayerJoin, m_Players[uuid]);
+                }
+                continue;
+            }
 
             PlayerPtr player;
 

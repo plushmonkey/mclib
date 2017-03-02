@@ -28,12 +28,13 @@ private:
     std::thread m_UpdateThread;
 
 public:
-    MCLIB_API Client(Minecraft::Packets::PacketDispatcher* dispatcher);
+    MCLIB_API Client(Minecraft::Packets::PacketDispatcher* dispatcher, Minecraft::Protocol::Version version = Minecraft::Protocol::Version::Minecraft_1_11_2);
     MCLIB_API ~Client();
 
     void MCLIB_API OnSocketStateChange(Network::Socket::Status newState);
     void MCLIB_API UpdateThread();
     void MCLIB_API Login(const std::string& host, unsigned short port, const std::string& user, const std::string& password);
+    void MCLIB_API Ping(const std::string& host, unsigned short port);
 
     Minecraft::Packets::PacketDispatcher* GetDispatcher() { return m_Dispatcher; }
     Minecraft::Connection* GetConnection() { return &m_Connection; }

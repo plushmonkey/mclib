@@ -14,6 +14,8 @@
 
 namespace Minecraft {
 
+class PlayerManager;
+
 class Player {
 private:
     UUID m_UUID;
@@ -34,6 +36,8 @@ public:
 
     const std::wstring& GetName() const { return m_Name; }
     UUID GetUUID() const { return m_UUID; }
+
+    friend class PlayerManager;
 };
 typedef std::shared_ptr<Player> PlayerPtr;
 

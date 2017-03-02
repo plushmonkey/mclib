@@ -2,15 +2,17 @@
 #include "../mclib/Client.h"
 #include "../mclib/Hash.h"
 #include "../mclib/Utility.h"
+#include "../mclib/Forge.h"
 #include <thread>
 #include <iostream>
 #include <chrono>
 
 #ifdef _DEBUG
 #pragma comment(lib, "../Debug/mclibd.lib")
-#pragma comment(lib, "../lib/jsoncpp/lib/jsoncpp-MDd.lib")
+#pragma comment(lib, "../lib/jsoncpp/lib/jsoncppd.lib")
 #else
 #pragma comment(lib, "../Release/mclib.lib")
+#pragma comment(lib, "../lib/jsoncpp/lib/jsoncpp.lib")
 #endif
 
 s64 GetTime() {
@@ -276,19 +278,40 @@ int main(void) {
     Minecraft::BlockRegistry::GetInstance()->RegisterVanillaBlocks();
     Minecraft::Packets::PacketDispatcher dispatcher;
 
-    Client client(&dispatcher);
-    client.GetPlayerController()->SetHandleFall(true);
+    Client gameClient(&dispatcher, Minecraft::Protocol::Version::Minecraft_1_10_2);
+    Minecraft::Forge::ForgeHandler forgeHandler(&dispatcher, gameClient.GetConnection());
+    Logger logger(&gameClient, &dispatcher);
 
-    Logger logger(&client, &dispatcher);
-    SneakEnforcer sneakEnforcer(&client);
+    const std::string server("127.0.0.1");
+    const u16 port = 25565;
+
+    {
+        Client pingClient(&dispatcher, Minecraft::Protocol::Version::Minecraft_1_10_2);
+
+        try {
+            pingClient.Ping(server, port);
+        } catch (std::exception& e) {
+            std::wcout << e.what() << std::endl;
+            return 1;
+        }
+
+        std::cout << "Pinging server." << std::endl;
+
+        while (!forgeHandler.HasModInfo()) {
+            std::this_thread::sleep_for(std::chrono::seconds(1));
+        }
+    }
+
+    gameClient.GetPlayerController()->SetHandleFall(true);
 
     try {
-        client.Login("127.0.0.1", 25565, "testplayer", "");
+        std::cout << "Logging in." << std::endl;
+        gameClient.Login(server, port, "testplayer", "");
     } catch (std::exception& e) {
         std::wcout << e.what() << std::endl;
         return 1;
     }
-    
+
     while (true) {
         std::this_thread::sleep_for(std::chrono::seconds(1));
     }

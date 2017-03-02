@@ -5,8 +5,12 @@
 namespace Minecraft {
 namespace Packets {
 
-
 class LoginPacketFactory {
+public:
+    static Packet* CreatePacket(DataBuffer& data, std::size_t length);
+};
+
+class StatusPacketFactory {
 public:
     static Packet* CreatePacket(DataBuffer& data, std::size_t length);
 };
@@ -18,7 +22,7 @@ public:
 
 Packet* LoginPacketFactory::CreatePacket(DataBuffer& data, std::size_t length) {
     if (data.GetSize() == 0) return nullptr;
-    //u8 id;
+
     VarInt vid;
     data >> vid;
 
@@ -49,9 +53,37 @@ Packet* LoginPacketFactory::CreatePacket(DataBuffer& data, std::size_t length) {
     return packet;
 }
 
+
+Packet* StatusPacketFactory::CreatePacket(DataBuffer& data, std::size_t length) {
+    if (data.GetSize() == 0) return nullptr;
+
+    VarInt vid;
+    data >> vid;
+
+    u32 id = vid.GetInt();
+
+    InboundPacket* packet = nullptr;
+
+    switch (id) {
+    case Protocol::Status::Response:
+        packet = new Inbound::Status::ResponsePacket();
+    break;
+    case Protocol::Status::Pong:
+        packet = new Inbound::Status::PongPacket();
+        break;
+    default:
+        throw Protocol::UnfinishedProtocolException(vid, Protocol::State::Status);
+    }
+
+    if (packet)
+        packet->Deserialize(data, length);
+
+    return packet;
+}
+
 Packet* PlayPacketFactory::CreatePacket(DataBuffer& data, std::size_t length) {
     if (data.GetSize() == 0) return nullptr;
-    //u8 id;
+
     VarInt vid;
     data >> vid;
 
@@ -246,6 +278,8 @@ Packet* PacketFactory::CreatePacket(Protocol::State state, DataBuffer data, std:
         return PlayPacketFactory::CreatePacket(data, length);
     case Protocol::State::Login:
         return LoginPacketFactory::CreatePacket(data, length);
+    case Protocol::State::Status:
+        return StatusPacketFactory::CreatePacket(data, length);
     default:
         throw std::runtime_error("Protocol isn't in a valid state.");
     }

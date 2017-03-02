@@ -25,6 +25,7 @@ public:
     virtual void MCLIB_API OnSocketStateChange(Network::Socket::Status newStatus) { }
     virtual void MCLIB_API OnLogin(bool success) { }
     virtual void MCLIB_API OnAuthentication(bool success, std::string error) { }
+    virtual void MCLIB_API OnPingResponse(std::wstring response) { }
 };
 
 class Connection : public Minecraft::Packets::PacketHandler, public ObserverSubject<ConnectionListener> {
@@ -40,6 +41,7 @@ private:
     std::string m_Username;
     std::string m_Password;
     Minecraft::DataBuffer m_HandleBuffer;
+    Minecraft::Protocol::Version m_Version;
 
     std::queue<std::future<Minecraft::Packets::Packet*>> m_FuturePackets;
 
@@ -48,7 +50,7 @@ private:
     Minecraft::Packets::Packet* CreatePacketSync(Minecraft::DataBuffer& buffer);
 
 public:
-    MCLIB_API Connection(Minecraft::Packets::PacketDispatcher* dispatcher);
+    MCLIB_API Connection(Minecraft::Packets::PacketDispatcher* dispatcher, Minecraft::Protocol::Version version = Minecraft::Protocol::Version::Minecraft_1_11_2);
     MCLIB_API ~Connection();
 
     Minecraft::Yggdrasil* GetYggdrasil() { return m_Yggdrasil.get(); }
@@ -60,12 +62,16 @@ public:
     void MCLIB_API HandlePacket(Minecraft::Packets::Inbound::LoginSuccessPacket* packet);
     void MCLIB_API HandlePacket(Minecraft::Packets::Inbound::SetCompressionPacket* packet);
 
+    void MCLIB_API HandlePacket(Minecraft::Packets::Inbound::Status::ResponsePacket* packet);
+
     bool MCLIB_API Connect(const std::string& server, u16 port);
     void MCLIB_API Disconnect();
     void MCLIB_API CreatePacket();
 
     void MCLIB_API Login(const std::string& username, const std::string& password);
     void MCLIB_API SendPacket(Minecraft::Packets::Packet* packet);
+
+    void MCLIB_API Ping();
 };
 
 } // ns Minecraft

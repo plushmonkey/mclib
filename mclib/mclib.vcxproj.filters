@@ -168,6 +168,9 @@
     <ClInclude Include="BlockEntity.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Forge.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Block.cpp">
@@ -261,6 +264,9 @@
       <Filter>Source Files\Packets</Filter>
     </ClCompile>
     <ClCompile Include="BlockEntity.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Forge.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

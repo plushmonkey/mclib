@@ -1,9 +1,9 @@
 #include "Client.h"
 #include <iostream>
 
-Client::Client(Minecraft::Packets::PacketDispatcher* dispatcher)
+Client::Client(Minecraft::Packets::PacketDispatcher* dispatcher, Minecraft::Protocol::Version version)
     : m_Dispatcher(dispatcher),
-      m_Connection(m_Dispatcher),
+      m_Connection(m_Dispatcher, version),
       m_EntityManager(m_Dispatcher),
       m_PlayerManager(m_Dispatcher, &m_EntityManager),
       m_World(m_Dispatcher),
@@ -61,4 +61,18 @@ void Client::Login(const std::string& host, unsigned short port,
     m_UpdateThread = std::thread(&Client::UpdateThread, this);
 
     m_Connection.Login(user, password);
+}
+
+void Client::Ping(const std::string& host, unsigned short port) {
+    if (m_UpdateThread.joinable()) {
+        m_Connected = false;
+        m_UpdateThread.join();
+    }
+
+    if (!m_Connection.Connect(host, port))
+        throw std::runtime_error("Could not connect to server");
+
+    m_UpdateThread = std::thread(&Client::UpdateThread, this);
+
+    m_Connection.Ping();
 }

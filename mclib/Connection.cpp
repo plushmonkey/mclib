@@ -10,15 +10,17 @@
 #include <future>
 #include <thread>
 #include <memory>
+#include <iostream>
 
 namespace Minecraft {
 
-Connection::Connection(Minecraft::Packets::PacketDispatcher* dispatcher)
+Connection::Connection(Minecraft::Packets::PacketDispatcher* dispatcher, Minecraft::Protocol::Version version)
         : Minecraft::Packets::PacketHandler(dispatcher),
         m_Encrypter(new Minecraft::EncryptionStrategyNone()),
         m_Compressor(new Minecraft::CompressionNone()),
         m_Socket(new Network::TCPSocket()),
-        m_Yggdrasil(new Yggdrasil())
+        m_Yggdrasil(new Yggdrasil()),
+        m_Version(version)
 {
     using namespace Minecraft;
 
@@ -26,6 +28,8 @@ Connection::Connection(Minecraft::Packets::PacketDispatcher* dispatcher)
     dispatcher->RegisterHandler(Protocol::State::Login, Protocol::Login::EncryptionRequest, this);
     dispatcher->RegisterHandler(Protocol::State::Login, Protocol::Login::LoginSuccess, this);
     dispatcher->RegisterHandler(Protocol::State::Login, Protocol::Login::SetCompression, this);
+
+    dispatcher->RegisterHandler(Protocol::State::Status, Protocol::Status::Response, this);
 
     dispatcher->RegisterHandler(Protocol::State::Play, Protocol::Play::KeepAlive, this);
     dispatcher->RegisterHandler(Protocol::State::Play, Protocol::Play::PlayerPositionAndLook, this);
@@ -130,7 +134,7 @@ void Connection::HandlePacket(Minecraft::Packets::Inbound::LoginSuccessPacket* p
         skinFlags |= (int)ClientSettingsPacket::SkinPartFlags::RightPants;
         skinFlags |= (int)ClientSettingsPacket::SkinPartFlags::Hat;
 
-        u8 viewDistance = 32;
+        u8 viewDistance = 20;
 
 #ifdef _DEBUG
         viewDistance = 4;
@@ -259,7 +263,9 @@ void Connection::CreatePacket() {
     
     do {
         try {
-            if (m_ProtocolState == Protocol::State::Login) {
+            //if (m_ProtocolState == Protocol::State::Login) {
+            // todo: fix async buffer manipulation
+            if (1) {
                 Minecraft::Packets::Packet* packet = CreatePacketSync(m_HandleBuffer);
 
                 if (packet) {
@@ -322,7 +328,10 @@ void Connection::CreatePacket() {
 }
 
 void Connection::Login(const std::string& username, const std::string& password) {
-    Minecraft::Packets::Outbound::HandshakePacket handshake(315, m_Server, m_Port, Minecraft::Protocol::State::Login);
+    std::string fml("\0FML\0", 5);
+
+    Minecraft::Packets::Outbound::HandshakePacket handshake(static_cast<s32>(m_Version), m_Server + fml, m_Port, Minecraft::Protocol::State::Login);
+
     SendPacket(&handshake);
     m_ProtocolState = Minecraft::Protocol::State::Login;
 
@@ -348,6 +357,23 @@ void Connection::SendPacket(Minecraft::Packets::Packet* packet) {
     Minecraft::DataBuffer encrypted = m_Encrypter->Encrypt(compressed);
 
     m_Socket->Send(encrypted);
+}
+
+void Connection::HandlePacket(Minecraft::Packets::Inbound::Status::ResponsePacket* packet) {
+    std::wstring response = packet->GetResponse();
+
+    NotifyListeners(&ConnectionListener::OnPingResponse, response);
+}
+void Connection::Ping() {
+    std::string fml("\0FML\0", 5);
+    
+    Minecraft::Packets::Outbound::HandshakePacket handshake(static_cast<s32>(m_Version), m_Server + fml, m_Port, Minecraft::Protocol::State::Status);
+    SendPacket(&handshake);
+
+    m_ProtocolState = Minecraft::Protocol::State::Status;
+
+    Minecraft::Packets::Outbound::Status::RequestPacket request;
+    SendPacket(&request);
 }
 
 } // ns Minecraft
