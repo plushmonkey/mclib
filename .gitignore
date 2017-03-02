@@ -4,3 +4,6 @@ Release
 *.sdf
 *.suo
 lib
+*.so
+*.o
+
