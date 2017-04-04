@@ -39,6 +39,10 @@ Connection::Connection(Minecraft::Packets::PacketDispatcher* dispatcher, Minecra
 
 Connection::~Connection() {
     GetDispatcher()->UnregisterHandler(this);
+    if (m_Encrypter)
+        delete m_Encrypter;
+    if (m_Compressor)
+        delete m_Compressor;
 }
 
 void Connection::HandlePacket(Minecraft::Packets::Inbound::KeepAlivePacket* packet) {

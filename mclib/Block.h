@@ -29,6 +29,8 @@ public:
     {
 
     }
+    
+    virtual ~Block() { }
 	
 	bool operator==(const Block& other) {
 		return m_Data == other.m_Data;
@@ -98,6 +100,8 @@ private:
     BlockRegistry() { }
 public:
     static MCLIB_API BlockRegistry* GetInstance();
+    
+    MCLIB_API ~BlockRegistry();
 
     BlockPtr GetBlock(u16 data) const {
         auto iter = m_Blocks.find(data);
@@ -125,6 +129,7 @@ public:
     }
 
     void MCLIB_API RegisterVanillaBlocks();
+    void MCLIB_API ClearRegistry();
 };
 
 } // ns Minecraft

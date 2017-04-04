@@ -58,6 +58,11 @@ public:
     {
         Initialize();
     }
+    
+    ~Yggdrasil() {
+        if (m_Http)
+            delete m_Http;
+    }
 
     const std::string& GetAccessToken() const { return m_AccessToken; }
     const std::string& GetClientToken() const { return m_ClientToken; }

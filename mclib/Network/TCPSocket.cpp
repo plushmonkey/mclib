@@ -42,6 +42,8 @@ bool TCPSocket::Connect(const IPAddress& address, unsigned short port) {
         m_RemoteAddr = *sockaddr;
         break;
     }
+    
+    freeaddrinfo(result);
 
     if (!ptr)
         return false;

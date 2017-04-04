@@ -142,6 +142,10 @@ BlockRegistry* BlockRegistry::GetInstance() {
     return &registry;
 }
 
+BlockRegistry::~BlockRegistry() {
+    ClearRegistry();
+}
+
 void BlockRegistry::RegisterVanillaBlocks() {
     const AABB FullSolidBounds(Vector3d(0, 0, 0), Vector3d(1, 1, 1));
     const AABB LowerHalfBounds(Vector3d(0, 0, 0), Vector3d(1, 0.5, 1));
@@ -520,6 +524,13 @@ void BlockRegistry::RegisterVanillaBlocks() {
     }
 
 
+}
+
+void BlockRegistry::ClearRegistry() {
+    for (auto& pair : m_Blocks) {
+        delete pair.second;
+    }
+    m_Blocks.clear();
 }
 
 } // ns Minecraft
