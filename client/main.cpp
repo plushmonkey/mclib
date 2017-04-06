@@ -1,8 +1,9 @@
-#include "../mclib/Common.h"
-#include "../mclib/Client.h"
-#include "../mclib/Hash.h"
-#include "../mclib/Utility.h"
-#include "../mclib/Forge.h"
+#include <mclib/common/Common.h>
+#include <mclib/core/Client.h>
+#include <mclib/util/Forge.h>
+#include <mclib/util/Hash.h>
+#include <mclib/util/Utility.h>
+
 #include <thread>
 #include <iostream>
 #include <chrono>
@@ -29,26 +30,29 @@ enum class Face {
     East
 };
 
-class BlockPlacer : public Minecraft::Packets::PacketHandler, public Minecraft::WorldListener, public ClientListener {
+using mc::Vector3i;
+using mc::Vector3d;
+
+class BlockPlacer : public mc::protocol::packets::PacketHandler, public mc::world::WorldListener, public mc::core::ClientListener {
 private:
-    Client* m_Client;
-    PlayerController* m_PlayerController;
-    Minecraft::World* m_World;
+    mc::core::Client* m_Client;
+    mc::util::PlayerController* m_PlayerController;
+    mc::world::World* m_World;
     Vector3i m_Target;
     s64 m_LastUpdate;
-    Minecraft::Slot m_HeldItem;
+    mc::inventory::Slot m_HeldItem;
 
 public:
-    BlockPlacer(Minecraft::Packets::PacketDispatcher* dispatcher, Client* client, PlayerController* pc, Minecraft::World* world) 
-        : Minecraft::Packets::PacketHandler(dispatcher), m_Client(client), m_PlayerController(pc), m_World(world), m_LastUpdate(GetTime())
+    BlockPlacer(mc::protocol::packets::PacketDispatcher* dispatcher, mc::core::Client* client, mc::util::PlayerController* pc, mc::world::World* world) 
+        : mc::protocol::packets::PacketHandler(dispatcher), m_Client(client), m_PlayerController(pc), m_World(world), m_LastUpdate(GetTime())
     {
-        m_Target = Vector3i(-2, 62, 275);
+        m_Target = mc::Vector3i(-2, 62, 275);
         world->RegisterListener(this);
         client->RegisterListener(this);
 
-        using namespace Minecraft::Protocol;
-        dispatcher->RegisterHandler(State::Play, Play::WindowItems, this);
-        dispatcher->RegisterHandler(State::Play, Play::SetSlot, this);
+        using namespace mc::protocol;
+        dispatcher->RegisterHandler(State::Play, play::WindowItems, this);
+        dispatcher->RegisterHandler(State::Play, play::SetSlot, this);
     }
 
     ~BlockPlacer() {
@@ -57,12 +61,12 @@ public:
         m_Client->UnregisterListener(this);
     }
 
-    void HandlePacket(Minecraft::Packets::Inbound::WindowItemsPacket* packet) {
+    void HandlePacket(mc::protocol::packets::in::WindowItemsPacket* packet) {
         auto slots = packet->GetSlots();
         m_HeldItem = slots[36];
     }
 
-    void HandlePacket(Minecraft::Packets::Inbound::SetSlotPacket* packet) {
+    void HandlePacket(mc::protocol::packets::in::SetSlotPacket* packet) {
         if (packet->GetWindowId() != 0) return;
 
         if (packet->GetSlotIndex() == 36)
@@ -80,15 +84,15 @@ public:
         m_PlayerController->LookAt(ToVector3d(m_Target));
 
         if (m_HeldItem.GetItemId() != -1) {
-            Minecraft::BlockPtr block = m_World->GetBlock(m_Target + Vector3i(0, 1, 0)).GetBlock();
+            mc::block::BlockPtr block = m_World->GetBlock(m_Target + Vector3i(0, 1, 0)).GetBlock();
             
             if (!block || block->GetType() == 0) {
-                Minecraft::Packets::Outbound::PlayerBlockPlacementPacket blockPlacePacket(m_Target, (u8)Face::Top, Minecraft::Hand::Main, Vector3f(0.5, 0, 0.5));
+                mc::protocol::packets::out::PlayerBlockPlacementPacket blockPlacePacket(m_Target, (u8)Face::Top, mc::Hand::Main, mc::Vector3f(0.5, 0, 0.5));
 
                 m_Client->GetConnection()->SendPacket(&blockPlacePacket);
                 std::wcout << "Placing block" << std::endl;
             } else {
-                using namespace Minecraft::Packets::Outbound;
+                using namespace mc::protocol::packets::out;
                 {
                     PlayerDiggingPacket::Status status = PlayerDiggingPacket::Status::StartedDigging;
                     PlayerDiggingPacket packet(status, m_Target + Vector3i(0, 1, 0), (u8)Face::West);
@@ -109,7 +113,7 @@ public:
     }
 };
 
-class TextureGrabber : public Minecraft::Packets::PacketHandler {
+class TextureGrabber : public mc::protocol::packets::PacketHandler {
 private:
     bool ContainsTextureURL(const Json::Value& root) {
         if (!root.isMember("textures")) return false;
@@ -118,20 +122,20 @@ private:
     }
 
 public:
-    TextureGrabber(Minecraft::Packets::PacketDispatcher* dispatcher)
-        : Minecraft::Packets::PacketHandler(dispatcher)
+    TextureGrabber(mc::protocol::packets::PacketDispatcher* dispatcher)
+        : mc::protocol::packets::PacketHandler(dispatcher)
     {
-        using namespace Minecraft::Protocol;
+        using namespace mc::protocol;
 
-        dispatcher->RegisterHandler(State::Play, Play::PlayerListItem, this);
+        dispatcher->RegisterHandler(State::Play, play::PlayerListItem, this);
     }
 
     ~TextureGrabber() {
         GetDispatcher()->UnregisterHandler(this);
     }
 
-    void HandlePacket(Minecraft::Packets::Inbound::PlayerListItemPacket* packet) {
-        using namespace Minecraft::Packets::Inbound;
+    void HandlePacket(mc::protocol::packets::in::PlayerListItemPacket* packet) {
+        using namespace mc::protocol::packets::in;
 
         PlayerListItemPacket::Action action = packet->GetAction();
 
@@ -146,7 +150,7 @@ public:
                 if (iter == properties.end()) continue;
 
                 std::wstring encoded = iter->second;
-                std::string decoded = Base64Decode(std::string(encoded.begin(), encoded.end()));
+                std::string decoded = mc::util::Base64Decode(std::string(encoded.begin(), encoded.end()));
 
                 Json::Value root;
                 Json::Reader reader;
@@ -167,9 +171,9 @@ public:
 
                 std::wcout << L"Fetching skin for " << name << std::endl;
 
-                CurlHTTPClient http;
+                mc::util::CurlHTTPClient http;
 
-                HTTPResponse resp = http.Get(url);
+                mc::util::HTTPResponse resp = http.Get(url);
 
                 if (resp.status == 200) {
                     std::wcout << L"Saving texture for " << name << std::endl;
@@ -186,15 +190,15 @@ public:
     }
 };
 
-class SneakEnforcer : public Minecraft::PlayerListener, public ClientListener {
+class SneakEnforcer : public mc::core::PlayerListener, public mc::core::ClientListener {
 private:
-    Client* m_Client;
-    Minecraft::PlayerManager* m_PlayerManager;
-    Minecraft::Connection* m_Connection;
+    mc::core::Client* m_Client;
+    mc::core::PlayerManager* m_PlayerManager;
+    mc::core::Connection* m_Connection;
     s64 m_StartTime;
 
 public:
-    SneakEnforcer(Client* client) 
+    SneakEnforcer(mc::core::Client* client) 
         : m_Client(client), 
           m_PlayerManager(client->GetPlayerManager()), 
           m_Connection(client->GetConnection()),
@@ -217,8 +221,8 @@ public:
         m_Client->GetPlayerController()->SetPitch(pitch);
     }
 
-    void OnClientSpawn(Minecraft::PlayerPtr player) override {
-        using namespace Minecraft::Packets::Outbound;
+    void OnClientSpawn(mc::core::PlayerPtr player) override {
+        using namespace mc::protocol::packets::out;
         EntityActionPacket::Action action = EntityActionPacket::Action::StartSneak;
 
         EntityActionPacket packet(player->GetEntity()->GetEntityId(), action);
@@ -226,21 +230,21 @@ public:
     }
 };
 
-class Logger : public Minecraft::Packets::PacketHandler, public ClientListener {
+class Logger : public mc::protocol::packets::PacketHandler, public mc::core::ClientListener {
 private:
-    Client* m_Client;
+    mc::core::Client* m_Client;
 
 public:
-    Logger(Client* client, Minecraft::Packets::PacketDispatcher* dispatcher)
-        : Minecraft::Packets::PacketHandler(dispatcher), m_Client(client)
+    Logger(mc::core::Client* client, mc::protocol::packets::PacketDispatcher* dispatcher)
+        : mc::protocol::packets::PacketHandler(dispatcher), m_Client(client)
     {
-        using namespace Minecraft::Protocol;
+        using namespace mc::protocol;
 
         m_Client->RegisterListener(this);
 
-        dispatcher->RegisterHandler(State::Play, Play::Chat, this);
-        dispatcher->RegisterHandler(State::Play, Play::EntityLookAndRelativeMove, this);
-        dispatcher->RegisterHandler(State::Play, Play::BlockChange, this);
+        dispatcher->RegisterHandler(State::Play, play::Chat, this);
+        dispatcher->RegisterHandler(State::Play, play::EntityLookAndRelativeMove, this);
+        dispatcher->RegisterHandler(State::Play, play::BlockChange, this);
     }
 
     ~Logger() {
@@ -248,19 +252,19 @@ public:
         m_Client->UnregisterListener(this);
     }
 
-    void HandlePacket(Minecraft::Packets::Inbound::ChatPacket* packet) {
-        std::string message = ParseChatNode(packet->GetChatData());
+    void HandlePacket(mc::protocol::packets::in::ChatPacket* packet) {
+        std::string message = mc::util::ParseChatNode(packet->GetChatData());
 
         std::cout << message << std::endl;
     }
 
-    void HandlePacket(Minecraft::Packets::Inbound::EntityLookAndRelativeMovePacket* packet) {
-        Vector3d delta = ToVector3d(packet->GetDelta()) / (128.0 * 32.0);
+    void HandlePacket(mc::protocol::packets::in::EntityLookAndRelativeMovePacket* packet) {
+        Vector3d delta = mc::ToVector3d(packet->GetDelta()) / (128.0 * 32.0);
 
         //std::cout << delta << std::endl;
     }
 
-    void HandlePacket(Minecraft::Packets::Inbound::BlockChangePacket* packet) {
+    void HandlePacket(mc::protocol::packets::in::BlockChangePacket* packet) {
         Vector3i pos = packet->GetPosition();
         s32 blockId = packet->GetBlockId();
 
@@ -268,28 +272,28 @@ public:
     }
 
     void OnTick() override {
-        Minecraft::PlayerPtr player = m_Client->GetPlayerManager()->GetPlayerByName(L"testplayer");
+        mc::core::PlayerPtr player = m_Client->GetPlayerManager()->GetPlayerByName(L"testplayer");
         if (!player) return;
 
-        Minecraft::EntityPtr entity = player->GetEntity();
+        mc::entity::EntityPtr entity = player->GetEntity();
         if (!entity) return;
     }
 };
 
 int main(void) {
-    Minecraft::BlockRegistry::GetInstance()->RegisterVanillaBlocks();
-    Minecraft::Packets::PacketDispatcher dispatcher;
-    Minecraft::Protocol::Version version = Minecraft::Protocol::Version::Minecraft_1_10_2;
+    mc::block::BlockRegistry::GetInstance()->RegisterVanillaBlocks();
+    mc::protocol::packets::PacketDispatcher dispatcher;
+    mc::protocol::Version version = mc::protocol::Version::Minecraft_1_10_2;
 
-    Client gameClient(&dispatcher, version);
-    Minecraft::Forge::ForgeHandler forgeHandler(&dispatcher, gameClient.GetConnection());
+    mc::core::Client gameClient(&dispatcher, version);
+    mc::util::ForgeHandler forgeHandler(&dispatcher, gameClient.GetConnection());
     Logger logger(&gameClient, &dispatcher);
 
     const std::string server("127.0.0.1");
     const u16 port = 25565;
 
     {
-        Client pingClient(&dispatcher, version);
+        mc::core::Client pingClient(&dispatcher, version);
 
         try {
             pingClient.Ping(server, port);
@@ -309,14 +313,10 @@ int main(void) {
 
     try {
         std::cout << "Logging in." << std::endl;
-        gameClient.Login(server, port, "testplayer", "");
+        gameClient.Login(server, port, "testplayer", "", true);
     } catch (std::exception& e) {
         std::wcout << e.what() << std::endl;
         return 1;
-    }
-
-    while (true) {
-        std::this_thread::sleep_for(std::chrono::seconds(1));
     }
 
     return 0;

@@ -13,261 +13,312 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
-    <Filter Include="Header Files\Entity">
-      <UniqueIdentifier>{3aae7d9c-2449-4a36-94fb-429937e44d74}</UniqueIdentifier>
+    <Filter Include="Header Files\common">
+      <UniqueIdentifier>{f7d9d3c8-b55b-47db-a8d7-30b7c6c5e6fa}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Header Files\Network">
-      <UniqueIdentifier>{cbffb0b4-cfb7-4ff2-a960-a40f1cc0a9b7}</UniqueIdentifier>
+    <Filter Include="Header Files\block">
+      <UniqueIdentifier>{8a541dfd-0aac-4e95-8079-faba0697bda7}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Header Files\Packets">
-      <UniqueIdentifier>{95adebee-d2f1-4d86-9fde-27e081befbf1}</UniqueIdentifier>
+    <Filter Include="Header Files\core">
+      <UniqueIdentifier>{51034f4b-569e-4ea5-b1be-715e4831ac1f}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Source Files\Entity">
-      <UniqueIdentifier>{3feaff61-9e7f-4102-91a7-dcc345572dec}</UniqueIdentifier>
+    <Filter Include="Header Files\entity">
+      <UniqueIdentifier>{f00b9147-981a-4948-8899-2142e3be99cf}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Source Files\Network">
-      <UniqueIdentifier>{af231f29-c1a8-4584-9f71-31cc5caecb18}</UniqueIdentifier>
+    <Filter Include="Header Files\nbt">
+      <UniqueIdentifier>{2106ba87-e253-4ab9-9bf4-55e1600a82b4}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Source Files\Packets">
-      <UniqueIdentifier>{9c30610b-8176-47d9-9433-c9f8f06aae55}</UniqueIdentifier>
+    <Filter Include="Header Files\network">
+      <UniqueIdentifier>{a281d619-ab08-4c44-9100-27283cce7c0f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\world">
+      <UniqueIdentifier>{25d03441-72e2-41a1-9847-6aad44d2b2e8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\protocol">
+      <UniqueIdentifier>{2181c373-3cfe-4fd6-ac87-9cbadac08f53}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\protocol\packets">
+      <UniqueIdentifier>{3eadd529-fea7-4fae-a160-e3cd3a9eb0f2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\util">
+      <UniqueIdentifier>{592054a3-6e16-4579-b2f4-7ebf24b9e5cc}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\block">
+      <UniqueIdentifier>{d1e0e59b-aac2-408b-b3e3-dce1ca773615}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\common">
+      <UniqueIdentifier>{86dadedc-5a8b-4e62-a874-1f812607d1e6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\core">
+      <UniqueIdentifier>{10e8c874-63fc-4af5-8d1a-e043da2f1bff}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\entity">
+      <UniqueIdentifier>{f8435554-ef7b-401b-b31b-008f51aae9ae}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\nbt">
+      <UniqueIdentifier>{fb2faa3a-2c9d-4eb6-949e-2d440e8e1c81}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\network">
+      <UniqueIdentifier>{f93b5f82-90e9-48aa-9675-7a92a337a3bc}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\protocol">
+      <UniqueIdentifier>{a29a2545-ac61-4ab4-b773-c5ad7b60a150}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\protocol\packets">
+      <UniqueIdentifier>{8f76fc07-63e6-48cf-8c31-3a7ea44040b5}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\util">
+      <UniqueIdentifier>{712d4748-fe4d-4302-9feb-ddb3a9e860c5}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\world">
+      <UniqueIdentifier>{4e1435b9-f06d-4645-a379-8918cad54b62}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\inventory">
+      <UniqueIdentifier>{04e3a569-cd0b-4eb1-b414-afeccb6de74d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\inventory">
+      <UniqueIdentifier>{822a32e8-0694-48e4-8535-cc81ecebfda6}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="AABB.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="include\mclib\block\Block.h">
+      <Filter>Header Files\block</Filter>
     </ClInclude>
-    <ClInclude Include="Block.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="include\mclib\block\BlockEntity.h">
+      <Filter>Header Files\block</Filter>
     </ClInclude>
-    <ClInclude Include="Chunk.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="include\mclib\common\AABB.h">
+      <Filter>Header Files\common</Filter>
     </ClInclude>
-    <ClInclude Include="Client.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="include\mclib\common\Common.h">
+      <Filter>Header Files\common</Filter>
     </ClInclude>
-    <ClInclude Include="Common.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="include\mclib\common\DataBuffer.h">
+      <Filter>Header Files\common</Filter>
     </ClInclude>
-    <ClInclude Include="Compression.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="include\mclib\common\MCString.h">
+      <Filter>Header Files\common</Filter>
     </ClInclude>
-    <ClInclude Include="Connection.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="include\mclib\common\Position.h">
+      <Filter>Header Files\common</Filter>
     </ClInclude>
-    <ClInclude Include="DataBuffer.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="include\mclib\common\Types.h">
+      <Filter>Header Files\common</Filter>
     </ClInclude>
-    <ClInclude Include="Encryption.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="include\mclib\common\UUID.h">
+      <Filter>Header Files\common</Filter>
     </ClInclude>
-    <ClInclude Include="Hash.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="include\mclib\common\VarInt.h">
+      <Filter>Header Files\common</Filter>
     </ClInclude>
-    <ClInclude Include="HTTPClient.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="include\mclib\common\Vector.h">
+      <Filter>Header Files\common</Filter>
     </ClInclude>
-    <ClInclude Include="MCString.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="include\mclib\core\Client.h">
+      <Filter>Header Files\core</Filter>
     </ClInclude>
-    <ClInclude Include="Metadata.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="include\mclib\core\Compression.h">
+      <Filter>Header Files\core</Filter>
     </ClInclude>
-    <ClInclude Include="NBT.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="include\mclib\core\Connection.h">
+      <Filter>Header Files\core</Filter>
     </ClInclude>
-    <ClInclude Include="ObserverSubject.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="include\mclib\core\Encryption.h">
+      <Filter>Header Files\core</Filter>
     </ClInclude>
-    <ClInclude Include="PlayerManager.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="include\mclib\core\PlayerManager.h">
+      <Filter>Header Files\core</Filter>
     </ClInclude>
-    <ClInclude Include="Position.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="include\mclib\entity\Creeper.h">
+      <Filter>Header Files\entity</Filter>
     </ClInclude>
-    <ClInclude Include="Protocol.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="include\mclib\entity\Entity.h">
+      <Filter>Header Files\entity</Filter>
     </ClInclude>
-    <ClInclude Include="Slot.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="include\mclib\entity\EntityFactory.h">
+      <Filter>Header Files\entity</Filter>
     </ClInclude>
-    <ClInclude Include="Tokenizer.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="include\mclib\entity\EntityManager.h">
+      <Filter>Header Files\entity</Filter>
     </ClInclude>
-    <ClInclude Include="Types.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="include\mclib\entity\LivingEntity.h">
+      <Filter>Header Files\entity</Filter>
     </ClInclude>
-    <ClInclude Include="Utility.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="include\mclib\entity\Metadata.h">
+      <Filter>Header Files\entity</Filter>
     </ClInclude>
-    <ClInclude Include="UUID.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="include\mclib\entity\Monster.h">
+      <Filter>Header Files\entity</Filter>
     </ClInclude>
-    <ClInclude Include="VarInt.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="include\mclib\entity\Player.h">
+      <Filter>Header Files\entity</Filter>
     </ClInclude>
-    <ClInclude Include="Vector.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="include\mclib\nbt\NBT.h">
+      <Filter>Header Files\nbt</Filter>
     </ClInclude>
-    <ClInclude Include="World.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="include\mclib\network\IPAddress.h">
+      <Filter>Header Files\network</Filter>
     </ClInclude>
-    <ClInclude Include="Yggdrasil.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="include\mclib\network\Network.h">
+      <Filter>Header Files\network</Filter>
     </ClInclude>
-    <ClInclude Include="Entity\Creeper.h">
-      <Filter>Header Files\Entity</Filter>
+    <ClInclude Include="include\mclib\network\Socket.h">
+      <Filter>Header Files\network</Filter>
     </ClInclude>
-    <ClInclude Include="Entity\Entity.h">
-      <Filter>Header Files\Entity</Filter>
+    <ClInclude Include="include\mclib\network\TCPSocket.h">
+      <Filter>Header Files\network</Filter>
     </ClInclude>
-    <ClInclude Include="Entity\EntityFactory.h">
-      <Filter>Header Files\Entity</Filter>
+    <ClInclude Include="include\mclib\network\UDPSocket.h">
+      <Filter>Header Files\network</Filter>
     </ClInclude>
-    <ClInclude Include="Entity\EntityManager.h">
-      <Filter>Header Files\Entity</Filter>
+    <ClInclude Include="include\mclib\protocol\Protocol.h">
+      <Filter>Header Files\protocol</Filter>
     </ClInclude>
-    <ClInclude Include="Entity\LivingEntity.h">
-      <Filter>Header Files\Entity</Filter>
+    <ClInclude Include="include\mclib\protocol\packets\Packet.h">
+      <Filter>Header Files\protocol\packets</Filter>
     </ClInclude>
-    <ClInclude Include="Entity\Monster.h">
-      <Filter>Header Files\Entity</Filter>
+    <ClInclude Include="include\mclib\protocol\packets\PacketDispatcher.h">
+      <Filter>Header Files\protocol\packets</Filter>
     </ClInclude>
-    <ClInclude Include="Entity\Player.h">
-      <Filter>Header Files\Entity</Filter>
+    <ClInclude Include="include\mclib\protocol\packets\PacketFactory.h">
+      <Filter>Header Files\protocol\packets</Filter>
     </ClInclude>
-    <ClInclude Include="Network\IPAddress.h">
-      <Filter>Header Files\Network</Filter>
+    <ClInclude Include="include\mclib\protocol\packets\PacketHandler.h">
+      <Filter>Header Files\protocol\packets</Filter>
     </ClInclude>
-    <ClInclude Include="Network\Network.h">
-      <Filter>Header Files\Network</Filter>
+    <ClInclude Include="include\mclib\util\Forge.h">
+      <Filter>Header Files\util</Filter>
     </ClInclude>
-    <ClInclude Include="Network\Socket.h">
-      <Filter>Header Files\Network</Filter>
+    <ClInclude Include="include\mclib\util\Hash.h">
+      <Filter>Header Files\util</Filter>
     </ClInclude>
-    <ClInclude Include="Network\TCPSocket.h">
-      <Filter>Header Files\Network</Filter>
+    <ClInclude Include="include\mclib\util\HTTPClient.h">
+      <Filter>Header Files\util</Filter>
     </ClInclude>
-    <ClInclude Include="Network\UDPSocket.h">
-      <Filter>Header Files\Network</Filter>
+    <ClInclude Include="include\mclib\util\ObserverSubject.h">
+      <Filter>Header Files\util</Filter>
     </ClInclude>
-    <ClInclude Include="Packets\Packet.h">
-      <Filter>Header Files\Packets</Filter>
+    <ClInclude Include="include\mclib\util\Tokenizer.h">
+      <Filter>Header Files\util</Filter>
     </ClInclude>
-    <ClInclude Include="Packets\PacketDispatcher.h">
-      <Filter>Header Files\Packets</Filter>
+    <ClInclude Include="include\mclib\util\Utility.h">
+      <Filter>Header Files\util</Filter>
     </ClInclude>
-    <ClInclude Include="Packets\PacketFactory.h">
-      <Filter>Header Files\Packets</Filter>
+    <ClInclude Include="include\mclib\util\Yggdrasil.h">
+      <Filter>Header Files\util</Filter>
     </ClInclude>
-    <ClInclude Include="Packets\PacketHandler.h">
-      <Filter>Header Files\Packets</Filter>
+    <ClInclude Include="include\mclib\world\Chunk.h">
+      <Filter>Header Files\world</Filter>
     </ClInclude>
-    <ClInclude Include="mclib.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="include\mclib\world\World.h">
+      <Filter>Header Files\world</Filter>
     </ClInclude>
-    <ClInclude Include="BlockEntity.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="include\mclib\inventory\Slot.h">
+      <Filter>Header Files\inventory</Filter>
     </ClInclude>
-    <ClInclude Include="Forge.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="include\mclib\nbt\Tag.h">
+      <Filter>Header Files\nbt</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="Block.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="src\mclib\block\Block.cpp">
+      <Filter>Source Files\block</Filter>
     </ClCompile>
-    <ClCompile Include="Chunk.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="src\mclib\block\BlockEntity.cpp">
+      <Filter>Source Files\block</Filter>
     </ClCompile>
-    <ClCompile Include="Client.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="src\mclib\common\DataBuffer.cpp">
+      <Filter>Source Files\common</Filter>
     </ClCompile>
-    <ClCompile Include="Compression.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="src\mclib\common\MCString.cpp">
+      <Filter>Source Files\common</Filter>
     </ClCompile>
-    <ClCompile Include="Connection.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="src\mclib\common\Position.cpp">
+      <Filter>Source Files\common</Filter>
     </ClCompile>
-    <ClCompile Include="DataBuffer.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="src\mclib\common\UUID.cpp">
+      <Filter>Source Files\common</Filter>
     </ClCompile>
-    <ClCompile Include="Encryption.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="src\mclib\common\VarInt.cpp">
+      <Filter>Source Files\common</Filter>
     </ClCompile>
-    <ClCompile Include="Hash.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="src\mclib\core\Client.cpp">
+      <Filter>Source Files\core</Filter>
     </ClCompile>
-    <ClCompile Include="HTTPClient.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="src\mclib\core\Compression.cpp">
+      <Filter>Source Files\core</Filter>
     </ClCompile>
-    <ClCompile Include="MCString.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="src\mclib\core\Connection.cpp">
+      <Filter>Source Files\core</Filter>
     </ClCompile>
-    <ClCompile Include="Metadata.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="src\mclib\core\Encryption.cpp">
+      <Filter>Source Files\core</Filter>
     </ClCompile>
-    <ClCompile Include="NBT.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="src\mclib\core\PlayerManager.cpp">
+      <Filter>Source Files\core</Filter>
     </ClCompile>
-    <ClCompile Include="PlayerManager.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="src\mclib\entity\EntityManager.cpp">
+      <Filter>Source Files\entity</Filter>
     </ClCompile>
-    <ClCompile Include="Position.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="src\mclib\entity\Metadata.cpp">
+      <Filter>Source Files\entity</Filter>
     </ClCompile>
-    <ClCompile Include="Slot.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="src\mclib\nbt\NBT.cpp">
+      <Filter>Source Files\nbt</Filter>
     </ClCompile>
-    <ClCompile Include="Utility.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="src\mclib\network\IPAddress.cpp">
+      <Filter>Source Files\network</Filter>
     </ClCompile>
-    <ClCompile Include="UUID.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="src\mclib\network\Network.cpp">
+      <Filter>Source Files\network</Filter>
     </ClCompile>
-    <ClCompile Include="VarInt.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="src\mclib\network\Socket.cpp">
+      <Filter>Source Files\network</Filter>
     </ClCompile>
-    <ClCompile Include="World.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="src\mclib\network\TCPSocket.cpp">
+      <Filter>Source Files\network</Filter>
     </ClCompile>
-    <ClCompile Include="Yggdrasil.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="src\mclib\network\UDPSocket.cpp">
+      <Filter>Source Files\network</Filter>
     </ClCompile>
-    <ClCompile Include="Entity\EntityManager.cpp">
-      <Filter>Source Files\Entity</Filter>
+    <ClCompile Include="src\mclib\protocol\packets\Packet.cpp">
+      <Filter>Source Files\protocol\packets</Filter>
     </ClCompile>
-    <ClCompile Include="Network\IPAddress.cpp">
-      <Filter>Source Files\Network</Filter>
+    <ClCompile Include="src\mclib\protocol\packets\PacketDispatcher.cpp">
+      <Filter>Source Files\protocol\packets</Filter>
     </ClCompile>
-    <ClCompile Include="Network\Network.cpp">
-      <Filter>Source Files\Network</Filter>
+    <ClCompile Include="src\mclib\protocol\packets\PacketFactory.cpp">
+      <Filter>Source Files\protocol\packets</Filter>
     </ClCompile>
-    <ClCompile Include="Network\Socket.cpp">
-      <Filter>Source Files\Network</Filter>
+    <ClCompile Include="src\mclib\protocol\packets\PacketHandler.cpp">
+      <Filter>Source Files\protocol\packets</Filter>
     </ClCompile>
-    <ClCompile Include="Network\TCPSocket.cpp">
-      <Filter>Source Files\Network</Filter>
+    <ClCompile Include="src\mclib\util\Forge.cpp">
+      <Filter>Source Files\util</Filter>
     </ClCompile>
-    <ClCompile Include="Network\UDPSocket.cpp">
-      <Filter>Source Files\Network</Filter>
+    <ClCompile Include="src\mclib\util\Hash.cpp">
+      <Filter>Source Files\util</Filter>
     </ClCompile>
-    <ClCompile Include="Packets\Packet.cpp">
-      <Filter>Source Files\Packets</Filter>
+    <ClCompile Include="src\mclib\util\HTTPClient.cpp">
+      <Filter>Source Files\util</Filter>
     </ClCompile>
-    <ClCompile Include="Packets\PacketDispatcher.cpp">
-      <Filter>Source Files\Packets</Filter>
+    <ClCompile Include="src\mclib\util\Utility.cpp">
+      <Filter>Source Files\util</Filter>
     </ClCompile>
-    <ClCompile Include="Packets\PacketFactory.cpp">
-      <Filter>Source Files\Packets</Filter>
+    <ClCompile Include="src\mclib\util\Yggdrasil.cpp">
+      <Filter>Source Files\util</Filter>
     </ClCompile>
-    <ClCompile Include="Packets\PacketHandler.cpp">
-      <Filter>Source Files\Packets</Filter>
+    <ClCompile Include="src\mclib\world\Chunk.cpp">
+      <Filter>Source Files\world</Filter>
     </ClCompile>
-    <ClCompile Include="BlockEntity.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="src\mclib\world\World.cpp">
+      <Filter>Source Files\world</Filter>
     </ClCompile>
-    <ClCompile Include="Forge.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="src\mclib\inventory\Slot.cpp">
+      <Filter>Source Files\inventory</Filter>
+    </ClCompile>
+    <ClCompile Include="src\mclib\nbt\Tag.cpp">
+      <Filter>Source Files\nbt</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

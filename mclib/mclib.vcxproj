@@ -10,6 +10,89 @@
       <Platform>Win32</Platform>
     </ProjectConfiguration>
   </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="include\mclib\block\Block.h" />
+    <ClInclude Include="include\mclib\block\BlockEntity.h" />
+    <ClInclude Include="include\mclib\common\AABB.h" />
+    <ClInclude Include="include\mclib\common\Common.h" />
+    <ClInclude Include="include\mclib\common\DataBuffer.h" />
+    <ClInclude Include="include\mclib\common\MCString.h" />
+    <ClInclude Include="include\mclib\common\Position.h" />
+    <ClInclude Include="include\mclib\common\Types.h" />
+    <ClInclude Include="include\mclib\common\UUID.h" />
+    <ClInclude Include="include\mclib\common\VarInt.h" />
+    <ClInclude Include="include\mclib\common\Vector.h" />
+    <ClInclude Include="include\mclib\core\Client.h" />
+    <ClInclude Include="include\mclib\core\Compression.h" />
+    <ClInclude Include="include\mclib\core\Connection.h" />
+    <ClInclude Include="include\mclib\core\Encryption.h" />
+    <ClInclude Include="include\mclib\core\PlayerManager.h" />
+    <ClInclude Include="include\mclib\entity\Creeper.h" />
+    <ClInclude Include="include\mclib\entity\Entity.h" />
+    <ClInclude Include="include\mclib\entity\EntityFactory.h" />
+    <ClInclude Include="include\mclib\entity\EntityManager.h" />
+    <ClInclude Include="include\mclib\entity\LivingEntity.h" />
+    <ClInclude Include="include\mclib\entity\Metadata.h" />
+    <ClInclude Include="include\mclib\entity\Monster.h" />
+    <ClInclude Include="include\mclib\entity\Player.h" />
+    <ClInclude Include="include\mclib\inventory\Slot.h" />
+    <ClInclude Include="include\mclib\nbt\NBT.h" />
+    <ClInclude Include="include\mclib\nbt\Tag.h" />
+    <ClInclude Include="include\mclib\network\IPAddress.h" />
+    <ClInclude Include="include\mclib\network\Network.h" />
+    <ClInclude Include="include\mclib\network\Socket.h" />
+    <ClInclude Include="include\mclib\network\TCPSocket.h" />
+    <ClInclude Include="include\mclib\network\UDPSocket.h" />
+    <ClInclude Include="include\mclib\protocol\packets\Packet.h" />
+    <ClInclude Include="include\mclib\protocol\packets\PacketDispatcher.h" />
+    <ClInclude Include="include\mclib\protocol\packets\PacketFactory.h" />
+    <ClInclude Include="include\mclib\protocol\packets\PacketHandler.h" />
+    <ClInclude Include="include\mclib\protocol\Protocol.h" />
+    <ClInclude Include="include\mclib\util\Forge.h" />
+    <ClInclude Include="include\mclib\util\Hash.h" />
+    <ClInclude Include="include\mclib\util\HTTPClient.h" />
+    <ClInclude Include="include\mclib\util\ObserverSubject.h" />
+    <ClInclude Include="include\mclib\util\Tokenizer.h" />
+    <ClInclude Include="include\mclib\util\Utility.h" />
+    <ClInclude Include="include\mclib\util\Yggdrasil.h" />
+    <ClInclude Include="include\mclib\world\Chunk.h" />
+    <ClInclude Include="include\mclib\world\World.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="src\mclib\block\Block.cpp" />
+    <ClCompile Include="src\mclib\block\BlockEntity.cpp" />
+    <ClCompile Include="src\mclib\common\DataBuffer.cpp" />
+    <ClCompile Include="src\mclib\common\MCString.cpp" />
+    <ClCompile Include="src\mclib\common\Position.cpp" />
+    <ClCompile Include="src\mclib\common\UUID.cpp" />
+    <ClCompile Include="src\mclib\common\VarInt.cpp" />
+    <ClCompile Include="src\mclib\core\Client.cpp" />
+    <ClCompile Include="src\mclib\core\Compression.cpp" />
+    <ClCompile Include="src\mclib\core\Connection.cpp" />
+    <ClCompile Include="src\mclib\core\Encryption.cpp" />
+    <ClCompile Include="src\mclib\core\PlayerManager.cpp" />
+    <ClCompile Include="src\mclib\entity\EntityManager.cpp" />
+    <ClCompile Include="src\mclib\entity\Metadata.cpp" />
+    <ClCompile Include="src\mclib\inventory\Slot.cpp" />
+    <ClCompile Include="src\mclib\nbt\NBT.cpp" />
+    <ClCompile Include="src\mclib\nbt\Tag.cpp" />
+    <ClCompile Include="src\mclib\network\IPAddress.cpp" />
+    <ClCompile Include="src\mclib\network\Network.cpp" />
+    <ClCompile Include="src\mclib\network\Socket.cpp" />
+    <ClCompile Include="src\mclib\network\TCPSocket.cpp" />
+    <ClCompile Include="src\mclib\network\UDPSocket.cpp" />
+    <ClCompile Include="src\mclib\protocol\packets\Packet.cpp" />
+    <ClCompile Include="src\mclib\protocol\packets\PacketDispatcher.cpp" />
+    <ClCompile Include="src\mclib\protocol\packets\PacketFactory.cpp" />
+    <ClCompile Include="src\mclib\protocol\packets\PacketHandler.cpp" />
+    <ClCompile Include="src\mclib\util\Forge.cpp" />
+    <ClCompile Include="src\mclib\util\Hash.cpp" />
+    <ClCompile Include="src\mclib\util\HTTPClient.cpp" />
+    <ClCompile Include="src\mclib\util\Utility.cpp" />
+    <ClCompile Include="src\mclib\util\Yggdrasil.cpp" />
+    <ClCompile Include="src\mclib\world\Chunk.cpp" />
+    <ClCompile Include="src\mclib\world\World.cpp" />
+  </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{2A6A98AE-F46F-4C53-8E64-003289FEB7E7}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
@@ -41,13 +124,13 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>..\lib\jsoncpp\include;..\lib\libcurl\include;..\lib\OpenSSL\include;..\lib\utf8\include;..\lib\zlib\include;$(VC_IncludePath);$(WindowsSDK_IncludePath);</IncludePath>
+    <IncludePath>include;..\lib\jsoncpp\include;..\lib\libcurl\include;..\lib\OpenSSL\include;..\lib\utf8\include;..\lib\zlib\include;$(VC_IncludePath);$(WindowsSDK_IncludePath);</IncludePath>
     <LibraryPath>..\lib\jsoncpp\lib;..\lib\libcurl\lib;..\lib\OpenSSL\lib;..\lib\zlib\lib;$(VC_LibraryPath_x86);$(WindowsSDK_LibraryPath_x86)</LibraryPath>
     <TargetName>$(ProjectName)d</TargetName>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
-    <IncludePath>..\lib\jsoncpp\include;..\lib\libcurl\include;..\lib\OpenSSL\include;..\lib\utf8\include;..\lib\zlib\include;$(VC_IncludePath);$(WindowsSDK_IncludePath);</IncludePath>
+    <IncludePath>include;..\lib\jsoncpp\include;..\lib\libcurl\include;..\lib\OpenSSL\include;..\lib\utf8\include;..\lib\zlib\include;$(VC_IncludePath);$(WindowsSDK_IncludePath);</IncludePath>
     <LibraryPath>..\lib\jsoncpp\lib;..\lib\libcurl\lib;..\lib\OpenSSL\lib;..\lib\zlib\lib;$(VC_LibraryPath_x86);$(WindowsSDK_LibraryPath_x86)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
@@ -82,88 +165,6 @@
       <AdditionalDependencies>jsoncpp.lib;libcurl.lib;Wldap32.lib;Crypt32.lib;ssleay32.lib;libeay32.lib;zlibstatic.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
-  <ItemGroup>
-    <ClInclude Include="AABB.h" />
-    <ClInclude Include="Block.h" />
-    <ClInclude Include="BlockEntity.h" />
-    <ClInclude Include="Chunk.h" />
-    <ClInclude Include="Client.h" />
-    <ClInclude Include="Common.h" />
-    <ClInclude Include="Compression.h" />
-    <ClInclude Include="Connection.h" />
-    <ClInclude Include="DataBuffer.h" />
-    <ClInclude Include="Encryption.h" />
-    <ClInclude Include="Entity\Creeper.h" />
-    <ClInclude Include="Entity\Entity.h" />
-    <ClInclude Include="Entity\EntityFactory.h" />
-    <ClInclude Include="Entity\EntityManager.h" />
-    <ClInclude Include="Entity\LivingEntity.h" />
-    <ClInclude Include="Entity\Monster.h" />
-    <ClInclude Include="Entity\Player.h" />
-    <ClInclude Include="Forge.h" />
-    <ClInclude Include="Hash.h" />
-    <ClInclude Include="HTTPClient.h" />
-    <ClInclude Include="mclib.h" />
-    <ClInclude Include="MCString.h" />
-    <ClInclude Include="Metadata.h" />
-    <ClInclude Include="NBT.h" />
-    <ClInclude Include="Network\IPAddress.h" />
-    <ClInclude Include="Network\Network.h" />
-    <ClInclude Include="Network\Socket.h" />
-    <ClInclude Include="Network\TCPSocket.h" />
-    <ClInclude Include="Network\UDPSocket.h" />
-    <ClInclude Include="ObserverSubject.h" />
-    <ClInclude Include="Packets\Packet.h" />
-    <ClInclude Include="Packets\PacketDispatcher.h" />
-    <ClInclude Include="Packets\PacketFactory.h" />
-    <ClInclude Include="Packets\PacketHandler.h" />
-    <ClInclude Include="PlayerManager.h" />
-    <ClInclude Include="Position.h" />
-    <ClInclude Include="Protocol.h" />
-    <ClInclude Include="Slot.h" />
-    <ClInclude Include="Tokenizer.h" />
-    <ClInclude Include="Types.h" />
-    <ClInclude Include="Utility.h" />
-    <ClInclude Include="UUID.h" />
-    <ClInclude Include="VarInt.h" />
-    <ClInclude Include="Vector.h" />
-    <ClInclude Include="World.h" />
-    <ClInclude Include="Yggdrasil.h" />
-  </ItemGroup>
-  <ItemGroup>
-    <ClCompile Include="Block.cpp" />
-    <ClCompile Include="BlockEntity.cpp" />
-    <ClCompile Include="Chunk.cpp" />
-    <ClCompile Include="Client.cpp" />
-    <ClCompile Include="Compression.cpp" />
-    <ClCompile Include="Connection.cpp" />
-    <ClCompile Include="DataBuffer.cpp" />
-    <ClCompile Include="Encryption.cpp" />
-    <ClCompile Include="Entity\EntityManager.cpp" />
-    <ClCompile Include="Forge.cpp" />
-    <ClCompile Include="Hash.cpp" />
-    <ClCompile Include="HTTPClient.cpp" />
-    <ClCompile Include="MCString.cpp" />
-    <ClCompile Include="Metadata.cpp" />
-    <ClCompile Include="NBT.cpp" />
-    <ClCompile Include="Network\IPAddress.cpp" />
-    <ClCompile Include="Network\Network.cpp" />
-    <ClCompile Include="Network\Socket.cpp" />
-    <ClCompile Include="Network\TCPSocket.cpp" />
-    <ClCompile Include="Network\UDPSocket.cpp" />
-    <ClCompile Include="Packets\Packet.cpp" />
-    <ClCompile Include="Packets\PacketDispatcher.cpp" />
-    <ClCompile Include="Packets\PacketFactory.cpp" />
-    <ClCompile Include="Packets\PacketHandler.cpp" />
-    <ClCompile Include="PlayerManager.cpp" />
-    <ClCompile Include="Position.cpp" />
-    <ClCompile Include="Slot.cpp" />
-    <ClCompile Include="Utility.cpp" />
-    <ClCompile Include="UUID.cpp" />
-    <ClCompile Include="VarInt.cpp" />
-    <ClCompile Include="World.cpp" />
-    <ClCompile Include="Yggdrasil.cpp" />
-  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>
