@@ -17,7 +17,7 @@ private:
 
 public:
     /* Create an invalid address */
-    MCLIB_API IPAddress();
+    MCLIB_API IPAddress() noexcept;
 
     /* Initialize by string IP */
     MCLIB_API IPAddress(const std::string& str);
@@ -26,7 +26,7 @@ public:
     MCLIB_API IPAddress(const std::wstring& str);
 
     /* Initialize by octets */
-    MCLIB_API IPAddress(u8 octet1, u8 octet2, u8 octet3, u8 octet4);
+    MCLIB_API IPAddress(u8 octet1, u8 octet2, u8 octet3, u8 octet4) noexcept;
 
     /* Get the specific octet. 1-4 */
     u8 MCLIB_API GetOctet(u8 num) const;
@@ -35,7 +35,7 @@ public:
     void MCLIB_API SetOctet(u8 num, u8 value);
 
     /* Make sure the IP is valid. It will be invalid if the host wasn't found. */
-    bool IsValid() const { return m_Valid; }
+    bool IsValid() const noexcept { return m_Valid; }
 
     std::string MCLIB_API ToString() const;
 

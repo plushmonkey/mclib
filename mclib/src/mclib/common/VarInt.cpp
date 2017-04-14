@@ -6,23 +6,23 @@
 
 namespace mc {
 
-VarInt::VarInt() : m_Value(0) 
+VarInt::VarInt() noexcept : m_Value(0)
 {
 
 }
-VarInt::VarInt(s8 val) : m_Value(val)
+VarInt::VarInt(s8 val) noexcept : m_Value(val)
 {
 
 }
-VarInt::VarInt(s16 val) : m_Value(val)
+VarInt::VarInt(s16 val) noexcept : m_Value(val)
 {
 
 }
-VarInt::VarInt(s32 val) : m_Value(val)
+VarInt::VarInt(s32 val) noexcept : m_Value(val)
 {
 
 }
-VarInt::VarInt(s64 val) : m_Value(val)
+VarInt::VarInt(s64 val) noexcept : m_Value(val)
 {
 
 }
@@ -61,15 +61,16 @@ DataBuffer& operator>>(DataBuffer& in, VarInt& var) {
     }
 
     std::size_t i = in.GetReadOffset();
-    if (i >= in.GetSize())
-        throw std::out_of_range("Failed reading VarInt from DataBuffer.");
+
     do {
         if (i >= in.GetSize())
             throw std::out_of_range("Failed reading VarInt from DataBuffer.");
         value |= (u64)(in[i] & 0x7F) << shift;
         shift += 7;
     } while ((in[i++] & 0x80) != 0);
+
     in.SetReadOffset(i);
+
     if (value & (1 << 31))
         var.m_Value = ~(value >> 1);
     else

@@ -64,7 +64,7 @@ inventory::Slot CreateFirework(bool flicker, bool trail, u8 type, u8 duration, s
     TagCompound* fireworks = new TagCompound(L"Fireworks");
     TagPtr flightTag(new TagByte("Flight", duration));
 
-    fireworks->AddItem(flightTag);
+    fireworks->AddItem(TagType::Byte, flightTag);
 
     TagList* explosions = new TagList("Explosions", TagType::Compound);
 
@@ -76,23 +76,23 @@ inventory::Slot CreateFirework(bool flicker, bool trail, u8 type, u8 duration, s
     TagPtr colorsTag(new TagIntArray("Colors", colors));
     //TagPtr fadeColorsTag(new TagIntArray("FadeColors", colors));
 
-    explosion->AddItem(flickerTag);
-    explosion->AddItem(trailTag);
-    explosion->AddItem(typeTag);
-    explosion->AddItem(colorsTag);
+    explosion->AddItem(TagType::Byte, flickerTag);
+    explosion->AddItem(TagType::Byte, trailTag);
+    explosion->AddItem(TagType::Byte, typeTag);
+    explosion->AddItem(TagType::IntArray, colorsTag);
 
     explosions->AddItem(TagPtr(explosion));
-    fireworks->AddItem(TagPtr(explosions));
-    nbt.GetRoot().AddItem(TagPtr(fireworks));
+    fireworks->AddItem(TagType::Compound, TagPtr(explosions));
+    nbt.GetRoot().AddItem(TagType::Compound, TagPtr(fireworks));
     nbt.GetRoot().SetName(L"tag");
 
     if (!name.empty()) {
         TagCompound* display = new TagCompound(L"display");
         TagPtr nameTag(new TagString("Name", name));
 
-        display->AddItem(nameTag);
+        display->AddItem(TagType::String, nameTag);
 
-        nbt.GetRoot().AddItem(TagPtr(display));
+        nbt.GetRoot().AddItem(TagType::Compound, TagPtr(display));
     }
 
     inventory::Slot slot(401, 64, 0, nbt);

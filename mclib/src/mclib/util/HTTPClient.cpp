@@ -24,7 +24,6 @@ private:
     CURL* m_Curl;
     unsigned int m_Timeout = 12000;
 
-
     Headers GetResponseHeaders(std::string header) {
         std::size_t endFirst = header.find("\n");
 
@@ -112,6 +111,21 @@ public:
         curl_easy_cleanup(m_Curl);
     }
 
+    Impl(Impl& other) 
+        : m_Timeout(other.m_Timeout)
+    {
+        m_Curl = curl_easy_init();
+    }
+
+    Impl& operator=(Impl& rhs) {
+        m_Curl = curl_easy_init();
+        m_Timeout = rhs.m_Timeout;
+        return *this;
+    }
+
+    Impl(Impl&& other) = default;
+    Impl& operator=(Impl&& rhs) = default;
+
     HTTPResponse Get(const std::string& url, Headers headers) {
         return DoRequest(url, "", headers);
     }
@@ -138,13 +152,24 @@ public:
 };
 
 CurlHTTPClient::CurlHTTPClient()
-    : m_Impl(new CurlHTTPClient::Impl()) {
+    : m_Impl(std::make_unique<CurlHTTPClient::Impl>()) {
 
 }
 
-CurlHTTPClient::~CurlHTTPClient() {
-    delete m_Impl;
+CurlHTTPClient::~CurlHTTPClient() = default;
+
+CurlHTTPClient::CurlHTTPClient(CurlHTTPClient& other) 
+    : m_Impl(std::make_unique<Impl>(*other.m_Impl))
+{
 }
+
+CurlHTTPClient& CurlHTTPClient::operator=(CurlHTTPClient& rhs) {
+    *m_Impl = *rhs.m_Impl;
+    return *this;
+}
+
+CurlHTTPClient::CurlHTTPClient(CurlHTTPClient&& other) = default;
+CurlHTTPClient& CurlHTTPClient::operator=(CurlHTTPClient&& rhs) = default;
 
 HTTPResponse CurlHTTPClient::Get(const std::string& url, Headers headers) {
     return m_Impl->Get(url, headers);

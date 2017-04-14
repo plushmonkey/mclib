@@ -16,7 +16,7 @@ class DataBuffer {
 private:
     typedef std::vector<u8> Data;
     Data m_Buffer;
-    size_t m_ReadOffset = 0;
+    std::size_t m_ReadOffset = 0;
 
 public:
     typedef Data::iterator iterator;
@@ -35,8 +35,8 @@ public:
 
     template <typename T>
     void Append(T data) {
-        size_t size = sizeof(data);
-        size_t end_pos = m_Buffer.size();
+        std::size_t size = sizeof(data);
+        std::size_t end_pos = m_Buffer.size();
         m_Buffer.resize(m_Buffer.size() + size);
         memcpy(&m_Buffer[end_pos], &data, size);
     }
@@ -89,27 +89,27 @@ public:
 
     void ReadSome(char* buffer, std::size_t amount) {
         assert(m_ReadOffset + amount <= GetSize());
-        strncpy(buffer, (char*)&m_Buffer.at(m_ReadOffset), amount);
+        std::copy_n(m_Buffer.begin() + m_ReadOffset, amount, buffer);
         m_ReadOffset += amount;
     }
 
     void ReadSome(u8* buffer, std::size_t amount) {
         assert(m_ReadOffset + amount <= GetSize());
-        strncpy((char*)buffer, (char*)&m_Buffer.at(m_ReadOffset), amount);
+        std::copy_n(m_Buffer.begin() + m_ReadOffset, amount, buffer);
         m_ReadOffset += amount;
     }
 
     void ReadSome(DataBuffer& buffer, std::size_t amount) {
         assert(m_ReadOffset + amount <= GetSize());
         buffer.Resize(amount);
-        std::copy(m_Buffer.begin() + m_ReadOffset, m_Buffer.begin() + m_ReadOffset + amount, buffer.begin());
+        std::copy_n(m_Buffer.begin() + m_ReadOffset, amount, buffer.begin());
         m_ReadOffset += amount;
     }
 
     void ReadSome(std::string& buffer, std::size_t amount) {
         assert(m_ReadOffset + amount <= GetSize());
         buffer.resize(amount);
-        std::copy(m_Buffer.begin() + m_ReadOffset, m_Buffer.begin() + m_ReadOffset + amount, buffer.begin());
+        std::copy_n(m_Buffer.begin() + m_ReadOffset, amount, buffer.begin());
         m_ReadOffset += amount;
     }
 

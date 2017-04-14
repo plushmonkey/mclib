@@ -24,18 +24,18 @@ public:
 
     typedef VecType value_type;
 
-    Vector3() : x(0), y(0), z(0) { }
-    Vector3(VecType x, VecType y) : x(x), y(y), z(0) { }
-    Vector3(VecType x, VecType y, VecType z) : x(x), y(y), z(z) { }
+    Vector3() noexcept : x(0), y(0), z(0) { }
+    Vector3(VecType x, VecType y) noexcept : x(x), y(y), z(0) { }
+    Vector3(VecType x, VecType y, VecType z) noexcept : x(x), y(y), z(z) { }
 
-    Vector3& operator=(const Vector3& other) {
+    Vector3& operator=(const Vector3& other) noexcept {
         x = other.x;
         y = other.y;
         z = other.z;
         return *this;
     }
 
-    bool operator==(const Vector3& rhs) const {
+    bool operator==(const Vector3& rhs) const noexcept {
         double epsilon = 0.00001;
         return std::fabs((double)x - rhs.x) < epsilon &&
             std::fabs((double)y - rhs.y) < epsilon &&
@@ -50,7 +50,7 @@ public:
         return values[index];
     }
 
-    bool operator!=(const Vector3& rhs) const {
+    bool operator!=(const Vector3& rhs) const noexcept {
         return !(*this == rhs);
     }
 
@@ -58,42 +58,42 @@ public:
         return Vector3(-x, -y, -z);
     }
 
-    inline Vector3& operator+=(VecType v) {
+    inline Vector3& operator+=(VecType v) noexcept {
         x += v;
         y += v;
         z += v;
         return *this;
     }
 
-    inline Vector3& operator-=(VecType v) {
+    inline Vector3& operator-=(VecType v) noexcept {
         x -= v;
         y -= v;
         z -= v;
         return *this;
     }
 
-    inline Vector3& operator+=(const Vector3& v) {
+    inline Vector3& operator+=(const Vector3& v) noexcept {
         x += v.x;
         y += v.y;
         z += v.z;
         return *this;
     }
 
-    inline Vector3& operator-=(const Vector3& v) {
+    inline Vector3& operator-=(const Vector3& v) noexcept {
         x -= v.x;
         y -= v.y;
         z -= v.z;
         return *this;
     }
 
-    inline Vector3& operator*=(VecType v) {
+    inline Vector3& operator*=(VecType v) noexcept {
         x *= v;
         y *= v;
         z *= v;
         return *this;
     }
 
-    inline Vector3& operator/=(VecType v) {
+    inline Vector3& operator/=(VecType v) noexcept {
         x /= v;
         y /= v;
         z /= v;
@@ -128,7 +128,7 @@ public:
         return Vector3(x / v, y / v, z / v);
     }
 
-    inline double operator*(const Vector3& rhs) const {
+    inline double operator*(const Vector3& rhs) const noexcept {
         return Dot(rhs);
     }
 
@@ -136,7 +136,7 @@ public:
         return std::sqrt(x * x + y * y + z * z);
     }
 
-    inline double LengthSq() const {
+    inline double LengthSq() const noexcept {
         return (double)x * x + y * y + z * z;
     }
 
@@ -149,7 +149,7 @@ public:
         }
     }
 
-    inline double Dot(const Vector3& other) const {
+    inline double Dot(const Vector3& other) const noexcept {
         return x * other.x + y * other.y + z * other.z;
     }
 
@@ -177,7 +177,7 @@ public:
 };
 
 template <typename T>
-inline double DotProduct(const Vector3<T>& v1, const Vector3<T>& v2) {
+inline double DotProduct(const Vector3<T>& v1, const Vector3<T>& v2) noexcept {
     return v1.x*v2.x + v1.y*v2.y + v1.z*v2.z;
 }
 
@@ -196,7 +196,7 @@ inline Vector3<T> Vector3Normalize(const Vector3<T>& v1) {
 }
 
 template <typename T>
-inline bool operator<(const Vector3<T>& lhs, const Vector3<T>& rhs) {
+inline bool operator<(const Vector3<T>& lhs, const Vector3<T>& rhs) noexcept {
     if (lhs.z < rhs.z) {
         return true;
     } else if (lhs.z > rhs.z) {
@@ -254,14 +254,14 @@ typedef Vector3<int16_t> Vector3s;
 typedef Vector3<float> Vector3f;
 typedef Vector3<double> Vector3d;
 
-inline Vector3d& operator+=(Vector3d& v1, const Vector3f& v2) {
+inline Vector3d& operator+=(Vector3d& v1, const Vector3f& v2) noexcept {
     v1.x += v2.x;
     v1.y += v2.y;
     v1.z += v2.z;
     return v1;
 }
 
-inline Vector3d& operator-=(Vector3d& v1, const Vector3f& v2) {
+inline Vector3d& operator-=(Vector3d& v1, const Vector3f& v2) noexcept {
     v1.x -= v2.x;
     v1.y -= v2.y;
     v1.z -= v2.z;

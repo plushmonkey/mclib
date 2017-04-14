@@ -13,26 +13,30 @@ namespace inventory {
 
 class Slot {
 private:
-    s16 m_ItemId;
-    u8 m_ItemCount;
-    s16 m_ItemDamage;
     nbt::NBT m_NBT;
-
+    s16 m_ItemId;
+    s16 m_ItemDamage;
+    u8 m_ItemCount;
 
 public:
-    Slot() : m_ItemId(-1), m_ItemCount(0), m_ItemDamage(0) { }
-    Slot(s16 itemId, u8 itemCount, s16 itemDamage)
+    Slot() noexcept : m_ItemId(-1), m_ItemCount(0), m_ItemDamage(0) { }
+    Slot(s16 itemId, u8 itemCount, s16 itemDamage) noexcept
         : m_ItemId(itemId), m_ItemCount(itemCount), m_ItemDamage(itemDamage), m_NBT()
     { }
 
-    Slot(s16 itemId, u8 itemCount, s16 itemDamage, nbt::NBT nbt)
+    Slot(s16 itemId, u8 itemCount, s16 itemDamage, nbt::NBT nbt) noexcept
         : m_ItemId(itemId), m_ItemCount(itemCount), m_ItemDamage(itemDamage), m_NBT(nbt)
     { }
 
-    s16 GetItemId() const { return m_ItemId; }
-    u8 GetItemCount() const { return m_ItemCount; }
-    s16 GetItemDamage() const { return m_ItemDamage; }
-    const nbt::NBT& GetNBT() const { return m_NBT; }
+    Slot(const Slot& rhs) = default;
+    Slot& operator=(const Slot& rhs) = default;
+    Slot(Slot&& rhs) = default;
+    Slot& operator=(Slot&& rhs) = default;
+
+    s16 GetItemId() const noexcept { return m_ItemId; }
+    u8 GetItemCount() const noexcept { return m_ItemCount; }
+    s16 GetItemDamage() const noexcept { return m_ItemDamage; }
+    const nbt::NBT& GetNBT() const noexcept { return m_NBT; }
 
     friend MCLIB_API DataBuffer& operator<<(DataBuffer& out, const Slot& slot);
     friend MCLIB_API DataBuffer& operator>>(DataBuffer& in, Slot& slot);

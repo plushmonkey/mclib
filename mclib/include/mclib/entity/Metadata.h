@@ -7,6 +7,7 @@
 #include <mclib/common/Types.h>
 
 #include <array>
+#include <memory>
 
 namespace mc {
 namespace entity {
@@ -57,14 +58,19 @@ public:
     };
 
 private:
-    enum Types { Byte, VarInt, Float, String, Chat, Slot, Boolean, Rotation, Position, OptPosition, Direction, OptUUID, OptBlockID, None };
+    enum DataType { Byte, VarInt, Float, String, Chat, Slot, Boolean, Rotation, Position, OptPosition, Direction, OptUUID, OptBlockID, None };
 
     enum { MetadataCount = 36 };
-    std::array<std::pair<Type*, Types>, MetadataCount> m_Metadata;
+    std::array<std::pair<std::unique_ptr<Type>, DataType>, MetadataCount> m_Metadata;
 
+    void CopyOther(const EntityMetadata& other);
 public:
     MCLIB_API EntityMetadata();
-    MCLIB_API ~EntityMetadata();
+
+    EntityMetadata(const EntityMetadata& rhs);
+    EntityMetadata& operator=(const EntityMetadata& rhs);
+    EntityMetadata(EntityMetadata&& rhs) = default;
+    EntityMetadata& operator=(EntityMetadata&& rhs) = default;
 
     template <typename T>
     T* GetIndex(std::size_t index) {

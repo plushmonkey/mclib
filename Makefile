@@ -1,4 +1,4 @@
-CXXFLAGS=-std=c++11 -Wall -fPIC -O2 -I./mclib/include -I./lib/utf8/include -I/usr/include/jsoncpp
+CXXFLAGS=-std=c++14 -Wall -fPIC -O2 -I./mclib/include -I./lib/utf8/include -I/usr/include/jsoncpp
 LIBS=-lssl -lcrypto -lcurl -lz -ljsoncpp
 CXX=clang++
 

@@ -17,9 +17,9 @@ private:
     s64 m_Z;
 
 public:
-    Position() : m_X(0), m_Y(0), m_Z(0) { }
-    MCLIB_API Position(s32 x, s32 y, s32 z);
-    s64 MCLIB_API Encode64() const;
+    Position() noexcept : m_X(0), m_Y(0), m_Z(0) { }
+    MCLIB_API Position(s32 x, s32 y, s32 z) noexcept;
+    s64 MCLIB_API Encode64() const noexcept;
 
     s64 GetX() const { return m_X; }
     s64 GetY() const { return m_Y; }

@@ -17,13 +17,13 @@ private:
     u64 m_LeastSigBits;
 
 public:
-    UUID() : m_MostSigBits(0), m_LeastSigBits(0) { }
-    UUID(u64 most, u64 least) : m_MostSigBits(most), m_LeastSigBits(least) { }
+    UUID() noexcept : m_MostSigBits(0), m_LeastSigBits(0) { }
+    UUID(u64 most, u64 least) noexcept : m_MostSigBits(most), m_LeastSigBits(least) { }
 
     std::string MCLIB_API ToString(bool dashes = true) const;
 
-    u64 GetUpperBits() const { return m_MostSigBits; }
-    u64 GetLowerBits() const { return m_LeastSigBits; }
+    u64 GetUpperBits() const noexcept { return m_MostSigBits; }
+    u64 GetLowerBits() const noexcept { return m_LeastSigBits; }
 
     static UUID MCLIB_API FromString(const std::string& str, bool dashes = true);
     static UUID MCLIB_API FromString(const std::wstring& str, bool dashes = true);

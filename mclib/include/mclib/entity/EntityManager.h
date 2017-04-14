@@ -35,6 +35,11 @@ public:
     MCLIB_API EntityManager(protocol::packets::PacketDispatcher* dispatcher);
     MCLIB_API ~EntityManager();
 
+    EntityManager(const EntityManager& rhs) = delete;
+    EntityManager& operator=(const EntityManager& rhs) = delete;
+    EntityManager(EntityManager&& rhs) = delete;
+    EntityManager& operator=(EntityManager&& rhs) = delete;
+
     std::shared_ptr<PlayerEntity> GetPlayerEntity() const {
         auto iter = m_Entities.find(m_EntityId);
         if (iter == m_Entities.end()) return nullptr;

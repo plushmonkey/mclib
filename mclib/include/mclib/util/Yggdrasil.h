@@ -5,8 +5,9 @@
 #include <mclib/common/UUID.h>
 #include <mclib/util/HTTPClient.h>
 
-#include <string>
 #include <exception>
+#include <memory>
+#include <string>
 
 namespace mc {
 namespace util {
@@ -35,7 +36,7 @@ public:
 
 class Yggdrasil {
 private:
-    HTTPClient* m_Http;
+    std::unique_ptr<HTTPClient> m_Http;
     std::string m_PlayerName;
     std::string m_AuthUrl;
     std::string m_SessionURL;
@@ -45,26 +46,21 @@ private:
 
     void Initialize();
 
-    Yggdrasil(const Yggdrasil& other);
-    Yggdrasil& operator=(const Yggdrasil& other);
-
 public:
     Yggdrasil()
-        : m_Http(new CurlHTTPClient())
+        : m_Http(std::make_unique<CurlHTTPClient>())
     {
         Initialize();
     }
 
-    Yggdrasil(HTTPClient* http)
-        : m_Http(http)
+    Yggdrasil(std::unique_ptr<HTTPClient> http)
+        : m_Http(std::move(http))
     {
         Initialize();
     }
 
-    ~Yggdrasil() {
-        if (m_Http)
-            delete m_Http;
-    }
+    Yggdrasil(const Yggdrasil& other) = delete;
+    Yggdrasil& operator=(const Yggdrasil& other) = delete;
 
     const std::string& GetAccessToken() const { return m_AccessToken; }
     const std::string& GetClientToken() const { return m_ClientToken; }

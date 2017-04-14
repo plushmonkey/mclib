@@ -59,8 +59,7 @@ bool Yggdrasil::Authenticate(const std::string& username, const std::string& pas
     authPayload["password"] = password;
     authPayload["clientToken"] = client.length() > 0 ? client : DefaultClientToken;
 
-    delete m_Http;
-    m_Http = new CurlHTTPClient();
+    m_Http = std::make_unique<CurlHTTPClient>();
 
     HTTPResponse resp = m_Http->PostJSON(m_AuthUrl + "authenticate", authPayload);
 

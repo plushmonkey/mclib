@@ -26,6 +26,7 @@ namespace util {
 
 MCLIB_API std::string ParseChatNode(Json::Value node);
 MCLIB_API std::string StripChatMessage(const std::string& message);
+MCLIB_API s64 GetTime();
 
 class PlayerController : public core::PlayerListener {
 private:

@@ -53,12 +53,15 @@ protected:
 public:
     virtual MCLIB_API ~Socket();
 
-    void MCLIB_API SetBlocking(bool block);
-    bool MCLIB_API IsBlocking() const;
+    Socket(Socket&& rhs) = default;
+    Socket& operator=(Socket&& rhs) = default;
 
-    Type MCLIB_API GetType() const;
-    Status MCLIB_API GetStatus() const;
-    SocketHandle MCLIB_API GetHandle() const;
+    void MCLIB_API SetBlocking(bool block);
+    bool MCLIB_API IsBlocking() const noexcept;
+
+    Type MCLIB_API GetType() const noexcept;
+    Status MCLIB_API GetStatus() const noexcept;
+    SocketHandle MCLIB_API GetHandle() const noexcept;
 
     bool MCLIB_API Connect(const std::string& ip, u16 port);
     virtual bool Connect(const IPAddress& address, u16 port) = 0;

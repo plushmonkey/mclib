@@ -29,12 +29,14 @@ private:
     class Impl;
     Impl* m_Impl;
 
-    EncryptionStrategyAES(const EncryptionStrategyAES& other);
-    EncryptionStrategyAES& operator=(const EncryptionStrategyAES& other);
-
 public:
     MCLIB_API EncryptionStrategyAES(const std::string& publicKey, const std::string& verifyToken);
     MCLIB_API ~EncryptionStrategyAES();
+
+    EncryptionStrategyAES(const EncryptionStrategyAES& other) = delete;
+    EncryptionStrategyAES& operator=(const EncryptionStrategyAES& other) = delete;
+    EncryptionStrategyAES(EncryptionStrategyAES&& other) = delete;
+    EncryptionStrategyAES& operator=(EncryptionStrategyAES&& other) = delete;
 
     DataBuffer MCLIB_API Encrypt(const DataBuffer& buffer);
     DataBuffer MCLIB_API Decrypt(const DataBuffer& buffer);

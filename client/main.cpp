@@ -11,10 +11,10 @@
 
 #ifdef _DEBUG
 #pragma comment(lib, "../Debug/mclibd.lib")
-#pragma comment(lib, "../lib/jsoncpp/lib/jsoncppd.lib")
+#pragma comment(lib, "../lib/jsoncpp/lib/jsoncppd-msvc-2017.lib")
 #else
 #pragma comment(lib, "../Release/mclib.lib")
-#pragma comment(lib, "../lib/jsoncpp/lib/jsoncpp.lib")
+#pragma comment(lib, "../lib/jsoncpp/lib/jsoncpp-msvc-2017.lib")
 #endif
 
 s64 GetTime() {
@@ -242,7 +242,10 @@ public:
 
         m_Client->RegisterListener(this);
 
+        dispatcher->RegisterHandler(State::Login, login::Disconnect, this);
+
         dispatcher->RegisterHandler(State::Play, play::Chat, this);
+        dispatcher->RegisterHandler(State::Play, play::Disconnect, this);
         dispatcher->RegisterHandler(State::Play, play::EntityLookAndRelativeMove, this);
         dispatcher->RegisterHandler(State::Play, play::BlockChange, this);
     }
@@ -271,12 +274,76 @@ public:
         std::cout << "Block changed at " << pos << " to " << blockId << std::endl;
     }
 
+    void HandlePacket(mc::protocol::packets::in::DisconnectPacket* packet) {
+        std::wcout << L"Disconnected: " << packet->GetReason() << std::endl;
+    }
+
     void OnTick() override {
         mc::core::PlayerPtr player = m_Client->GetPlayerManager()->GetPlayerByName(L"testplayer");
         if (!player) return;
 
         mc::entity::EntityPtr entity = player->GetEntity();
         if (!entity) return;
+    }
+};
+
+// Spam block dig packet to stress test WorldEdit.
+// Sends no arm swing packet.
+class BlockDigStressTest : public mc::core::ClientListener {
+private:
+    mc::core::Client* m_Client;
+    mc::util::PlayerController* m_PlayerController;
+    mc::world::World* m_World;
+    Vector3i m_Target;
+    mc::inventory::Slot m_HeldItem;
+    s32 m_DigPerTick;
+
+public:
+    BlockDigStressTest(mc::core::Client* client, s32 digPerTick)
+        : m_Client(client), 
+          m_PlayerController(client->GetPlayerController()), 
+          m_World(client->GetWorld()), 
+          m_DigPerTick(digPerTick)
+    {
+        client->RegisterListener(this);
+    }
+
+    ~BlockDigStressTest() {
+        m_Client->UnregisterListener(this);
+    }
+
+    void OnTick() {
+        const Vector3i offset(0, 2, 0);
+
+        m_Target = ToVector3i(m_PlayerController->GetPosition()) + offset;
+
+        if (m_Target == offset) return;
+        if (!m_World->GetChunk(m_Target)) return;
+
+        m_PlayerController->LookAt(ToVector3d(m_Target));
+
+        mc::block::BlockPtr block = m_World->GetBlock(m_Target + Vector3i(0, 1, 0)).GetBlock();
+
+        if (block == nullptr) {
+            std::cerr << "Block is nullptr" << std::endl;
+            return;
+        }
+
+        std::cout << "Sending " << m_DigPerTick << " block break packets." << std::endl;
+
+        using namespace mc::protocol::packets::out;
+
+        for (s32 i = 0; i < m_DigPerTick; ++i) {
+            PlayerDiggingPacket::Status status = PlayerDiggingPacket::Status::StartedDigging;
+            PlayerDiggingPacket packet(status, m_Target + Vector3i(0, 1, 0), (u8)Face::West);
+
+            m_Client->GetConnection()->SendPacket(&packet);
+
+            status = PlayerDiggingPacket::Status::FinishedDigging;
+            packet = PlayerDiggingPacket(status, m_Target + Vector3i(0, 1, 0), (u8)Face::West);
+
+            m_Client->GetConnection()->SendPacket(&packet);
+    }
     }
 };
 
@@ -287,7 +354,6 @@ int main(void) {
 
     mc::core::Client gameClient(&dispatcher, version);
     mc::util::ForgeHandler forgeHandler(&dispatcher, gameClient.GetConnection());
-    Logger logger(&gameClient, &dispatcher);
 
     const std::string server("127.0.0.1");
     const u16 port = 25565;
@@ -311,6 +377,8 @@ int main(void) {
 
     gameClient.GetPlayerController()->SetHandleFall(true);
 
+    Logger logger(&gameClient, &dispatcher);
+    //BlockDigStressTest stressTest(&gameClient, 100);
     try {
         std::cout << "Logging in." << std::endl;
         gameClient.Login(server, port, "testplayer", "", true);

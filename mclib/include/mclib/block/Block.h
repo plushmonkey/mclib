@@ -17,7 +17,6 @@ protected:
     bool m_Solid;
     AABB m_BoundingBox;
 
-public:
     Block(const std::wstring& name, s32 data, bool solid = true) : m_Name(name), m_Data((u16)data), m_Solid(solid) { }
     Block(const std::wstring& name, s32 type, s32 meta, bool solid = true)
         : m_Name(name), m_Data((u16)((type << 4) | (meta & 15))), m_Solid(solid)
@@ -31,35 +30,41 @@ public:
 
     }
 
+public:
     virtual ~Block() { }
 
-    bool operator==(const Block& other) {
+    Block(const Block& other) = delete;
+    Block& operator=(const Block& rhs) = delete;
+    Block(Block&& other) = delete;
+    Block& operator=(Block&& rhs) = delete;
+
+    bool operator==(const Block& other) noexcept {
         return m_Data == other.m_Data;
     }
 
     virtual std::wstring GetName() const { return m_Name; }
 
-    u16 GetData() const {
+    u16 GetData() const noexcept {
         return m_Data;
     }
 
-    u16 GetType() const {
+    u16 GetType() const noexcept {
         return m_Data >> 4;
     }
 
-    u16 GetMeta() const {
+    u16 GetMeta() const noexcept {
         return m_Data & 15;
     }
 
-    bool IsSolid() const {
+    bool IsSolid() const noexcept {
         return m_Solid;
     }
 
-    void SetBoundingBox(const AABB& bound) {
+    void SetBoundingBox(const AABB& bound) noexcept {
         m_BoundingBox = bound;
     }
 
-    AABB GetBoundingBox() const {
+    AABB GetBoundingBox() const noexcept {
         return m_BoundingBox;
     }
 
@@ -79,6 +84,8 @@ public:
     virtual bool CollidesWith(Vector3d at, const AABB& other) {
         return GetBoundingBox(ToVector3i(at)).Intersects(other);
     }
+
+    friend class BlockRegistry;
 };
 typedef Block* BlockPtr;
 
@@ -88,10 +95,10 @@ private:
     u16 m_Data;
 
 public:
-    BlockState(BlockPtr block, u16 data) : m_Block(block), m_Data(data) { }
+    BlockState(BlockPtr block, u16 data) noexcept : m_Block(block), m_Data(data) { }
 
-    BlockPtr GetBlock() const { return m_Block; }
-    u16 GetData() const { return m_Data; }
+    BlockPtr GetBlock() const noexcept { return m_Block; }
+    u16 GetData() const noexcept { return m_Data; }
 };
 
 class BlockRegistry {

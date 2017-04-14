@@ -86,8 +86,8 @@ DataBuffer& operator>>(DataBuffer& in, EntityMetadata::UUIDType& value) {
 
 DataBuffer& operator<<(DataBuffer& out, const EntityMetadata& md) {
     for (std::size_t i = 0; i < md.MetadataCount; ++i) {
-        EntityMetadata::Types type = md.m_Metadata[i].second;
-        EntityMetadata::Type* value = md.m_Metadata[i].first;
+        EntityMetadata::DataType type = md.m_Metadata[i].second;
+        EntityMetadata::Type* value = md.m_Metadata[i].first.get();
 
         if (!value) continue;
 
@@ -96,38 +96,38 @@ DataBuffer& operator<<(DataBuffer& out, const EntityMetadata& md) {
         out << item;
 
         switch (type) {
-        case EntityMetadata::Types::Byte:
+        case EntityMetadata::DataType::Byte:
             out << *((EntityMetadata::ByteType*)value);
             break;
-        case EntityMetadata::Types::VarInt:
-        case EntityMetadata::Types::Direction:
-        case EntityMetadata::Types::OptBlockID:
+        case EntityMetadata::DataType::VarInt:
+        case EntityMetadata::DataType::Direction:
+        case EntityMetadata::DataType::OptBlockID:
             out << *((EntityMetadata::VarIntType*)value);
             break;
-        case EntityMetadata::Types::Float:
+        case EntityMetadata::DataType::Float:
             out << *((EntityMetadata::FloatType*)value);
             break;
-        case EntityMetadata::Types::String:
-        case EntityMetadata::Types::Chat:
+        case EntityMetadata::DataType::String:
+        case EntityMetadata::DataType::Chat:
             out << *((EntityMetadata::StringType*)value);
             break;
-        case EntityMetadata::Types::Slot:
+        case EntityMetadata::DataType::Slot:
             out << *((EntityMetadata::SlotType*)value);
             break;
-        case EntityMetadata::Types::Boolean:
+        case EntityMetadata::DataType::Boolean:
             out << *((EntityMetadata::BooleanType*)value);
             break;
-        case EntityMetadata::Types::Rotation:
+        case EntityMetadata::DataType::Rotation:
             out << *((EntityMetadata::RotationType*)value);
             break;
-        case EntityMetadata::Types::Position:
+        case EntityMetadata::DataType::Position:
             out << *((EntityMetadata::PositionType*)value);
             break;
-        case EntityMetadata::Types::OptPosition:
+        case EntityMetadata::DataType::OptPosition:
             out << ((EntityMetadata::PositionType*)value)->exists;
             out << *((EntityMetadata::PositionType*)value);
             break;
-        case EntityMetadata::Types::OptUUID:
+        case EntityMetadata::DataType::OptUUID:
             out << ((EntityMetadata::UUIDType*)value)->exists;
             out << *((EntityMetadata::UUIDType*)value);
             break;
@@ -153,108 +153,118 @@ DataBuffer& operator>>(DataBuffer& in, EntityMetadata& md) {
 
         in >> typeVal;
 
-        EntityMetadata::Types type = (EntityMetadata::Types)(typeVal);
+        EntityMetadata::DataType type = (EntityMetadata::DataType)(typeVal);
         md.m_Metadata[index].second = type;
 
         switch (type) {
-        case EntityMetadata::Types::Byte:
-        {
-            EntityMetadata::ByteType* value = new EntityMetadata::ByteType;
-            in >> *value;
-            md.m_Metadata[index].first = value;
-        }
-        break;
-        case EntityMetadata::Types::VarInt:
-        case EntityMetadata::Types::Direction:
-        case EntityMetadata::Types::OptBlockID:
-        {
-            EntityMetadata::VarIntType* value = new EntityMetadata::VarIntType;
-            in >> *value;
-            md.m_Metadata[index].first = value;
-        }
-        break;
-        case EntityMetadata::Types::Float:
-        {
-            EntityMetadata::FloatType* value = new EntityMetadata::FloatType;
-            in >> *value;
-            md.m_Metadata[index].first = value;
-        }
-        break;
-        case EntityMetadata::Types::Chat:
-        case EntityMetadata::Types::String:
-        {
-            EntityMetadata::StringType* value = new EntityMetadata::StringType;
-            in >> *value;
-            md.m_Metadata[index].first = value;
-        }
-        break;
-        case EntityMetadata::Types::Slot:
-        {
-            EntityMetadata::SlotType* value = new EntityMetadata::SlotType;
-            in >> *value;
-            md.m_Metadata[index].first = value;
-        }
-        break;
-        case EntityMetadata::Types::Boolean:
-        {
-            EntityMetadata::BooleanType* value = new EntityMetadata::BooleanType;
-            in >> *value;
-            md.m_Metadata[index].first = value;
-        }
-        break;
-        case EntityMetadata::Types::Rotation:
-        {
-            EntityMetadata::RotationType* value = new EntityMetadata::RotationType;
-            in >> *value;
-            md.m_Metadata[index].first = value;
-        }
-        break;
-        case EntityMetadata::Types::Position:
-        {
-            EntityMetadata::PositionType* value = new EntityMetadata::PositionType;
-            in >> *value;
-            md.m_Metadata[index].first = value;
-        }
-        break;
-        case EntityMetadata::Types::OptPosition:
-        {
-            EntityMetadata::PositionType* value = new EntityMetadata::PositionType;
-            in >> value->exists;
-            if (value->exists) {
+            case EntityMetadata::DataType::Byte:
+            {
+                std::unique_ptr<EntityMetadata::ByteType> value = std::make_unique<EntityMetadata::ByteType>();
                 in >> *value;
+                md.m_Metadata[index].first = std::move(value);
             }
-            md.m_Metadata[index].first = value;
-        }
-        break;
-        case EntityMetadata::Types::OptUUID:
-        {
-            EntityMetadata::UUIDType* value = new EntityMetadata::UUIDType;
-            in >> value->exists;
-            if (value->exists) {
-                in >> *value;
-            }
-            md.m_Metadata[index].first = value;
-        }
-        break;
-        default:
             break;
+            case EntityMetadata::DataType::VarInt:
+            case EntityMetadata::DataType::Direction:
+            case EntityMetadata::DataType::OptBlockID:
+            {
+                std::unique_ptr<EntityMetadata::VarIntType> value = std::make_unique<EntityMetadata::VarIntType>();
+                in >> *value;
+                md.m_Metadata[index].first = std::move(value);
+            }
+            break;
+            case EntityMetadata::DataType::Float:
+            {
+                std::unique_ptr<EntityMetadata::FloatType> value = std::make_unique<EntityMetadata::FloatType>();
+                in >> *value;
+                md.m_Metadata[index].first = std::move(value);
+            }
+            break;
+            case EntityMetadata::DataType::Chat:
+            case EntityMetadata::DataType::String:
+            {
+                std::unique_ptr<EntityMetadata::StringType> value = std::make_unique<EntityMetadata::StringType>();
+                in >> *value;
+                md.m_Metadata[index].first = std::move(value);
+            }
+            break;
+            case EntityMetadata::DataType::Slot:
+            {
+                std::unique_ptr<EntityMetadata::SlotType> value = std::make_unique<EntityMetadata::SlotType>();
+                in >> *value;
+                md.m_Metadata[index].first = std::move(value);
+            }
+            break;
+            case EntityMetadata::DataType::Boolean:
+            {
+                std::unique_ptr<EntityMetadata::BooleanType> value = std::make_unique<EntityMetadata::BooleanType>();
+                in >> *value;
+                md.m_Metadata[index].first = std::move(value);
+            }
+            break;
+            case EntityMetadata::DataType::Rotation:
+            {
+                std::unique_ptr<EntityMetadata::RotationType> value = std::make_unique<EntityMetadata::RotationType>();
+                in >> *value;
+                md.m_Metadata[index].first = std::move(value);
+            }
+            break;
+            case EntityMetadata::DataType::Position:
+            {
+                std::unique_ptr<EntityMetadata::PositionType> value = std::make_unique<EntityMetadata::PositionType>();
+                in >> *value;
+                md.m_Metadata[index].first = std::move(value);
+            }
+            break;
+            case EntityMetadata::DataType::OptPosition:
+            {
+                std::unique_ptr<EntityMetadata::PositionType> value = std::make_unique<EntityMetadata::PositionType>();
+                in >> value->exists;
+                if (value->exists) {
+                    in >> *value;
+                }
+                md.m_Metadata[index].first = std::move(value);
+            }
+            break;
+            case EntityMetadata::DataType::OptUUID:
+            {
+                std::unique_ptr<EntityMetadata::UUIDType> value = std::make_unique<EntityMetadata::UUIDType>();
+                in >> value->exists;
+                if (value->exists) {
+                    in >> *value;
+                }
+                md.m_Metadata[index].first = std::move(value);
+            }
+            break;
+            default:
+                break;
         }
     }
+
     return in;
+}
+
+void EntityMetadata::CopyOther(const EntityMetadata& other) {
+    for (std::size_t i = 0; i < MetadataCount; ++i) {
+        m_Metadata[i].first = std::make_unique<Type>(*other.m_Metadata[i].first);
+        m_Metadata[i].second = other.m_Metadata[i].second;
+    }
 }
 
 EntityMetadata::EntityMetadata() {
     for (std::size_t i = 0; i < MetadataCount; ++i) {
         m_Metadata[i].first = nullptr;
-        m_Metadata[i].second = Types::None;
+        m_Metadata[i].second = DataType::None;
     }
 }
 
-EntityMetadata::~EntityMetadata() {
-    for (std::size_t i = 0; i < MetadataCount; ++i) {
-        if (m_Metadata[i].first)
-            delete m_Metadata[i].first;
-    }
+EntityMetadata::EntityMetadata(const EntityMetadata& rhs) {
+    CopyOther(rhs);
+}
+
+EntityMetadata& EntityMetadata::operator=(const EntityMetadata& rhs) {
+    CopyOther(rhs);
+    return *this;
 }
 
 } // ns entity

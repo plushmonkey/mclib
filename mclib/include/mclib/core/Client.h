@@ -37,6 +37,11 @@ public:
     MCLIB_API Client(protocol::packets::PacketDispatcher* dispatcher, protocol::Version version = protocol::Version::Minecraft_1_11_2);
     MCLIB_API ~Client();
 
+    Client(const Client& rhs) = delete;
+    Client& operator=(const Client& rhs) = delete;
+    Client(Client&& rhs) = delete;
+    Client& operator=(Client&& rhs) = delete;
+
     void MCLIB_API OnSocketStateChange(network::Socket::Status newState);
     void MCLIB_API UpdateThread();
     void MCLIB_API Login(const std::string& host, unsigned short port, const std::string& user, const std::string& password, bool block = false);

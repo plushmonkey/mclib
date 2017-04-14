@@ -1,6 +1,14 @@
 #include <mclib/core/Client.h>
+#include <mclib/util/Utility.h>
 
 #include <iostream>
+
+// These were changed in MSVC 2015. Redefine them so the old lib files link correctly.
+// legacy_stdio_definitions.lib is supposed to define these but it doesn't seem to work.
+#if (defined _MSC_VER) && _MSC_VER >= 1900
+extern "C" { FILE __iob_func[3] = { *stdin,*stdout,*stderr }; }
+int (WINAPIV * __vsnprintf)(char *, size_t, const char*, va_list) = _vsnprintf;
+#endif
 
 namespace mc {
 namespace core {
@@ -30,14 +38,14 @@ void Client::OnSocketStateChange(network::Socket::Status newState) {
 }
 
 void Client::UpdateThread() {
+    s64 lastUpdate = 0;
+
     while (m_Connected) {
         try {
             m_Connection.CreatePacket();
         } catch (std::exception& e) {
             std::wcout << e.what() << std::endl;
         }
-
-        std::this_thread::sleep_for(std::chrono::milliseconds(10));
 
         m_PlayerController.Update();
 
@@ -47,7 +55,11 @@ void Client::UpdateThread() {
             playerEntity->SetPosition(m_PlayerController.GetPosition());
         }
 
-        NotifyListeners(&ClientListener::OnTick);
+        s64 time = util::GetTime();
+        if (time >= lastUpdate + (1000 / 20)) {
+            NotifyListeners(&ClientListener::OnTick);
+            lastUpdate = time;
+        }
     }
 }
 

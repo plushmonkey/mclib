@@ -1,13 +1,17 @@
 #include <mclib/network/Network.h>
 
-namespace {
-
-mc::network::NetworkInitializer initializer;
-
-} // ns
-
 namespace mc {
 namespace network {
+
+class NetworkInitializer {
+private:
+public:
+    MCLIB_API NetworkInitializer();
+    MCLIB_API ~NetworkInitializer();
+
+    NetworkInitializer(const NetworkInitializer& rhs) = delete;
+    NetworkInitializer& operator=(const NetworkInitializer& rhs) = delete;
+};
 
 #ifdef _WIN32
 NetworkInitializer::NetworkInitializer() {
@@ -25,6 +29,8 @@ NetworkInitializer::~NetworkInitializer() {
 
 }
 #endif
+
+NetworkInitializer initializer;
 
 IPAddresses Dns::Resolve(const std::string& host) {
     IPAddresses list;

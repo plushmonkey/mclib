@@ -3,7 +3,6 @@
 #include <mclib/common/DataBuffer.h>
 
 #include <algorithm>
-#include <iostream>
 
 namespace mc {
 namespace world {
@@ -18,11 +17,19 @@ Chunk::Chunk(const Chunk& other) {
     m_BitsPerBlock = other.m_BitsPerBlock;
 }
 
+Chunk& Chunk::operator=(const Chunk& other) {
+    m_Data = other.m_Data;
+    m_BitsPerBlock = other.m_BitsPerBlock;
+    return *this;
+}
+
 void Chunk::Load(DataBuffer& in, ChunkColumnMetadata* meta, s32 chunkIndex) {
     in >> m_BitsPerBlock;
 
     VarInt paletteLength;
     in >> paletteLength;
+
+    m_Palette.reserve(paletteLength.GetInt());
 
     for (s32 i = 0; i < paletteLength.GetInt(); ++i) {
         VarInt paletteValue;

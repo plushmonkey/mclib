@@ -6,11 +6,11 @@ namespace mc {
 namespace nbt {
 
 DataBuffer& operator<<(DataBuffer& out, const NBT& nbt) {
-    auto root = nbt.GetRoot();
+    const auto& root = nbt.GetRoot();
 
     //u8 type = 10; // Compound start
     //out << type;
-    out << (Tag&)root;
+    out << (const Tag&)root;
     return out;
 }
 

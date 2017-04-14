@@ -19,7 +19,7 @@ private:
     Vector3d m_DirectionReciprocal;
 
 public:
-    Ray(const Vector3d& origin, const Vector3d& direction)
+    Ray(const Vector3d& origin, const Vector3d& direction) noexcept
         : m_Origin(origin),
         m_Direction(direction)
     {
@@ -39,9 +39,9 @@ public:
             m_DirectionReciprocal.z = 1.0 / direction.z;
     }
 
-    const Vector3d& GetOrigin() const { return m_Origin; }
-    const Vector3d& GetDirection() const { return m_Direction; }
-    const Vector3d& GetReciprocal() const { return m_DirectionReciprocal; }
+    const Vector3d& GetOrigin() const noexcept { return m_Origin; }
+    const Vector3d& GetDirection() const noexcept { return m_Direction; }
+    const Vector3d& GetReciprocal() const noexcept { return m_DirectionReciprocal; }
 };
 
 
@@ -49,16 +49,16 @@ struct AABB {
     Vector3d min;
     Vector3d max;
 
-    MCLIB_API AABB() : min(0, 0, 0), max(0, 0, 0) { }
-    MCLIB_API AABB(const Vector3d& min, const Vector3d& max) : min(min), max(max) { }
+    MCLIB_API AABB() noexcept : min(0, 0, 0), max(0, 0, 0) { }
+    MCLIB_API AABB(const Vector3d& min, const Vector3d& max) noexcept : min(min), max(max) { }
 
-    bool MCLIB_API Contains(Vector3d point) const {
+    bool MCLIB_API Contains(Vector3d point) const noexcept {
         return (point.x >= min.x && point.x <= max.x) &&
             (point.y >= min.y && point.y <= max.y) &&
             (point.z >= min.z && point.z <= max.z);
     }
 
-    bool MCLIB_API Intersects(const AABB& other) const {
+    bool MCLIB_API Intersects(const AABB& other) const noexcept {
         return (max.x > other.min.x &&
             min.x < other.max.x &&
             max.y > other.min.y &&
@@ -67,7 +67,7 @@ struct AABB {
             min.z < other.max.z);
     }
 
-    bool MCLIB_API Intersects(const Ray& ray, double* length) const {
+    bool MCLIB_API Intersects(const Ray& ray, double* length) const noexcept {
         double t1 = (min.x - ray.GetOrigin().x) * ray.GetReciprocal().x;
         double t2 = (max.x - ray.GetOrigin().x) * ray.GetReciprocal().x;
 

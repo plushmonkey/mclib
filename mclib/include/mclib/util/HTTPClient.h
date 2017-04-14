@@ -4,6 +4,7 @@
 #include <mclib/mclib.h>
 
 #include <map>
+#include <memory>
 #include <json/json.h>
 
 namespace mc {
@@ -19,7 +20,10 @@ struct HTTPResponse {
 
 class HTTPClient {
 public:
+    HTTPClient() = default;
     virtual ~HTTPClient() { }
+    HTTPClient(HTTPClient&& other) = default;
+    HTTPClient& operator=(HTTPClient&& rhs) = default;
 
     virtual HTTPResponse Get(const std::string& url, Headers headers = {}) = 0;
     virtual HTTPResponse Post(const std::string& url, const std::string& data, Headers headers = {}) = 0;
@@ -30,10 +34,16 @@ public:
 class CurlHTTPClient : public HTTPClient {
 private:
     class Impl;
-    Impl* m_Impl;
+    std::unique_ptr<Impl> m_Impl;
 public:
     MCLIB_API CurlHTTPClient();
     MCLIB_API ~CurlHTTPClient();
+
+    CurlHTTPClient(CurlHTTPClient& other);
+    CurlHTTPClient& operator=(CurlHTTPClient& rhs);
+    CurlHTTPClient(CurlHTTPClient&& other);
+    CurlHTTPClient& operator=(CurlHTTPClient&& rhs);
+
     HTTPResponse MCLIB_API Get(const std::string& url, Headers headers = {});
     HTTPResponse MCLIB_API Post(const std::string& url, const std::string& data, Headers headers = {});
     HTTPResponse MCLIB_API PostJSON(const std::string& url, const std::string& data, Headers headers = {});

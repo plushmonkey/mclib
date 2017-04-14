@@ -7,13 +7,13 @@
 
 namespace mc {
 
-Position::Position(s32 x, s32 y, s32 z)
+Position::Position(s32 x, s32 y, s32 z) noexcept
     : m_X(x), m_Y(y), m_Z(z)
 {
     
 }
 
-s64 Position::Encode64() const {
+s64 Position::Encode64() const noexcept {
     return ((m_X & 0x3FFFFFF) << 38) | ((m_Y & 0xFFF) << 26) | (m_Z & 0x3FFFFFF);
 }
 

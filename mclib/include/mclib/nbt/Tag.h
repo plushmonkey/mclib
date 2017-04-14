@@ -13,7 +13,6 @@ class DataBuffer;
 
 namespace nbt {
 
-
 enum class TagType { End, Byte, Short, Int, Long, Float, Double, ByteArray, String, List, Compound, IntArray };
 
 class TagList;
@@ -22,17 +21,22 @@ class TagCompound;
 class Tag {
 protected:
     std::wstring m_Name;
+
     virtual void Write(DataBuffer& buffer) const = 0;
     virtual void Read(DataBuffer& buffer) = 0;
 
 public:
     MCLIB_API Tag(const std::string& name) : m_Name(name.begin(), name.end()) { }
     MCLIB_API Tag(const std::wstring& name) : m_Name(name) { }
-    MCLIB_API std::wstring GetName() const;
+
+    MCLIB_API std::wstring GetName() const noexcept;
     void MCLIB_API SetName(const std::wstring& name) { m_Name = name; }
+
     virtual TagType MCLIB_API GetType() const = 0;
+
     friend MCLIB_API DataBuffer& operator<<(DataBuffer& out, const Tag& tag);
     friend MCLIB_API DataBuffer& operator>>(DataBuffer& in, Tag& tag);
+
     friend class TagList;
     friend class TagCompound;
 };
@@ -51,9 +55,9 @@ public:
     MCLIB_API TagString(std::wstring name, std::wstring val) : Tag(name), m_Value(val) { }
     MCLIB_API TagString(std::string name, std::string val) : Tag(name), m_Value(val.begin(), val.end()) { }
 
-    TagType MCLIB_API GetType() const;
+    TagType MCLIB_API GetType() const noexcept;
 
-    std::wstring MCLIB_API GetValue() const { return m_Value; }
+    std::wstring MCLIB_API GetValue() const noexcept { return m_Value; }
     friend MCLIB_API DataBuffer& operator<<(DataBuffer& out, const Tag& tag);
 };
 
@@ -69,9 +73,9 @@ public:
     MCLIB_API TagByteArray(std::wstring name, std::string val) : Tag(name), m_Value(val) { }
     MCLIB_API TagByteArray(std::string name, std::string val) : Tag(name), m_Value(val) { }
 
-    TagType MCLIB_API GetType() const;
+    TagType MCLIB_API GetType() const noexcept;
 
-    std::string MCLIB_API GetValue() const { return m_Value; }
+    std::string MCLIB_API GetValue() const noexcept { return m_Value; }
     friend MCLIB_API DataBuffer& operator<<(DataBuffer& out, const Tag& tag);
 };
 
@@ -87,9 +91,9 @@ public:
     MCLIB_API TagIntArray(std::wstring name, std::vector<s32> val) : Tag(name), m_Value(val) { }
     MCLIB_API TagIntArray(std::string name, std::vector<s32> val) : Tag(name), m_Value(val) { }
 
-    TagType MCLIB_API GetType() const;
+    TagType MCLIB_API GetType() const noexcept;
 
-    std::vector<s32> MCLIB_API GetValue() const { return m_Value; }
+    std::vector<s32> MCLIB_API GetValue() const noexcept { return m_Value; }
     friend MCLIB_API DataBuffer& operator<<(DataBuffer& out, const Tag& tag);
 };
 
@@ -100,15 +104,20 @@ private:
 
     void MCLIB_API Write(DataBuffer& buffer) const;
     void MCLIB_API Read(DataBuffer& buffer);
-
+    void MCLIB_API CopyOther(const TagList& rhs);
 public:
     MCLIB_API TagList() : Tag(L""), m_ListType(TagType::End) { }
     MCLIB_API TagList(std::wstring name, TagType listType) : Tag(name), m_ListType(listType) { }
     MCLIB_API TagList(std::string name, TagType listType) : Tag(name), m_ListType(listType) { }
     MCLIB_API ~TagList();
 
-    TagType MCLIB_API GetType() const;
-    TagType MCLIB_API GetListType() const { return m_ListType; }
+    MCLIB_API TagList(const TagList& rhs);
+    MCLIB_API TagList& operator=(const TagList& rhs);
+    TagList(TagList&& rhs) = default;
+    TagList& operator=(TagList&& rhs) = default;
+
+    TagType MCLIB_API GetType() const noexcept;
+    TagType MCLIB_API GetListType() const noexcept { return m_ListType; }
     std::vector<TagPtr> MCLIB_API GetList() const { return m_Tags; }
 
     void MCLIB_API AddItem(TagPtr item);
@@ -117,26 +126,36 @@ public:
 };
 
 class TagCompound : public Tag {
+public:
+    using DataType = std::pair<TagType, TagPtr>;
+
 private:
-    std::vector<TagPtr> m_Tags;
+    std::vector<DataType> m_Tags;
 
     void MCLIB_API Write(DataBuffer& buffer) const;
     void MCLIB_API Read(DataBuffer& buffer);
 
+    void CopyOther(const TagCompound& rhs);
 public:
     MCLIB_API TagCompound() : Tag(L"") { }
     MCLIB_API TagCompound(const std::wstring& name) : Tag(name) { }
     MCLIB_API TagCompound(const std::string& name) : Tag(name) { }
     MCLIB_API ~TagCompound();
 
-    TagType MCLIB_API GetType() const;
+    MCLIB_API TagCompound(const TagCompound& rhs);
+    MCLIB_API TagCompound& operator=(const TagCompound& rhs);
+    TagCompound(TagCompound&& rhs) = default;
+    TagCompound& operator=(TagCompound&& rhs) = default;
 
-    std::vector<TagPtr>::iterator MCLIB_API begin() { return m_Tags.begin(); }
-    std::vector<TagPtr>::iterator MCLIB_API end() { return m_Tags.end(); }
-    std::vector<TagPtr>::const_iterator MCLIB_API begin() const { return m_Tags.begin(); }
-    std::vector<TagPtr>::const_iterator MCLIB_API end() const { return m_Tags.end(); }
+    TagType MCLIB_API GetType() const noexcept;
 
-    void MCLIB_API AddItem(TagPtr item);
+    void MCLIB_API AddItem(TagType type, TagPtr item);
+
+    std::vector<DataType>::iterator MCLIB_API begin() { return m_Tags.begin(); }
+    std::vector<DataType>::iterator MCLIB_API end() { return m_Tags.end(); }
+    std::vector<DataType>::const_iterator MCLIB_API begin() const { return m_Tags.begin(); }
+    std::vector<DataType>::const_iterator MCLIB_API end() const { return m_Tags.end(); }
+
     friend MCLIB_API DataBuffer& operator<<(DataBuffer& out, const TagCompound& tag);
     friend MCLIB_API DataBuffer& operator<<(DataBuffer& out, const Tag& tag);
 };
@@ -152,9 +171,9 @@ public:
     MCLIB_API TagByte() : Tag(L""), m_Value(0) { }
     MCLIB_API TagByte(std::wstring name, u8 value) : Tag(name), m_Value(value) { }
     MCLIB_API TagByte(std::string name, u8 value) : Tag(name), m_Value(value) { }
-    TagType MCLIB_API GetType() const;
+    TagType MCLIB_API GetType() const noexcept;
 
-    u8 MCLIB_API GetValue() const { return m_Value; }
+    u8 MCLIB_API GetValue() const noexcept { return m_Value; }
     friend MCLIB_API DataBuffer& operator<<(DataBuffer& out, const Tag& tag);
 };
 
@@ -169,9 +188,9 @@ public:
     MCLIB_API TagShort() : Tag(L""), m_Value(0) { }
     MCLIB_API TagShort(std::wstring name, s16 value) : Tag(name), m_Value(value) { }
     MCLIB_API TagShort(std::string name, s16 value) : Tag(name), m_Value(value) { }
-    TagType MCLIB_API GetType() const;
+    TagType MCLIB_API GetType() const noexcept;
 
-    s16 MCLIB_API GetValue() const { return m_Value; }
+    s16 MCLIB_API GetValue() const noexcept { return m_Value; }
     friend MCLIB_API DataBuffer& operator<<(DataBuffer& out, const Tag& tag);
 };
 
@@ -186,9 +205,9 @@ public:
     MCLIB_API TagInt() : Tag(L""), m_Value(0) { }
     MCLIB_API TagInt(std::wstring name, s32 value) : Tag(name), m_Value(value) { }
     MCLIB_API TagInt(std::string name, s32 value) : Tag(name), m_Value(value) { }
-    TagType MCLIB_API GetType() const;
+    TagType MCLIB_API GetType() const noexcept;
 
-    s32 MCLIB_API GetValue() const { return m_Value; }
+    s32 MCLIB_API GetValue() const noexcept { return m_Value; }
     friend MCLIB_API DataBuffer& operator<<(DataBuffer& out, const Tag& tag);
 };
 
@@ -203,9 +222,9 @@ public:
     MCLIB_API TagLong() : Tag(L""), m_Value(0) { }
     MCLIB_API TagLong(std::wstring name, s64 value) : Tag(name), m_Value(value) { }
     MCLIB_API TagLong(std::string name, s64 value) : Tag(name), m_Value(value) { }
-    TagType MCLIB_API GetType() const;
+    TagType MCLIB_API GetType() const noexcept;
 
-    s64 MCLIB_API GetValue() const { return m_Value; }
+    s64 MCLIB_API GetValue() const noexcept { return m_Value; }
     friend MCLIB_API DataBuffer& operator<<(DataBuffer& out, const Tag& tag);
 };
 
@@ -220,9 +239,9 @@ public:
     MCLIB_API TagFloat() : Tag(L""), m_Value(0.0f) { }
     MCLIB_API TagFloat(std::wstring name, float value) : Tag(name), m_Value(value) { }
     MCLIB_API TagFloat(std::string name, float value) : Tag(name), m_Value(value) { }
-    TagType MCLIB_API GetType() const;
+    TagType MCLIB_API GetType() const noexcept;
 
-    float MCLIB_API GetValue() const { return m_Value; }
+    float MCLIB_API GetValue() const noexcept { return m_Value; }
     friend MCLIB_API DataBuffer& operator<<(DataBuffer& out, const Tag& tag);
 };
 
@@ -237,9 +256,9 @@ public:
     MCLIB_API TagDouble() : Tag(L""), m_Value(0.0) { }
     MCLIB_API TagDouble(std::wstring name, double value) : Tag(name), m_Value(value) { }
     MCLIB_API TagDouble(std::string name, double value) : Tag(name), m_Value(value) { }
-    TagType MCLIB_API GetType() const;
+    TagType MCLIB_API GetType() const noexcept;
 
-    double MCLIB_API GetValue() const { return m_Value; }
+    double MCLIB_API GetValue() const noexcept { return m_Value; }
     friend MCLIB_API DataBuffer& operator<<(DataBuffer& out, const Tag& tag);
 };
 

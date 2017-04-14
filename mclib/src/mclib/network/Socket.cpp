@@ -38,15 +38,15 @@ void Socket::SetBlocking(bool block) {
     m_Blocking = block;
 }
 
-bool Socket::IsBlocking() const {
+bool Socket::IsBlocking() const noexcept {
     return m_Blocking;
 }
 
-Socket::Type Socket::GetType() const {
+Socket::Type Socket::GetType() const noexcept {
     return m_Type;
 }
 
-SocketHandle Socket::GetHandle() const {
+SocketHandle Socket::GetHandle() const noexcept {
     return m_Handle;
 }
 
@@ -54,7 +54,7 @@ void Socket::SetStatus(Socket::Status status) {
     m_Status = status;
 }
 
-Socket::Status Socket::GetStatus() const {
+Socket::Status Socket::GetStatus() const noexcept {
     return m_Status;
 }
 

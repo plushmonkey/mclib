@@ -23,8 +23,13 @@ private:
 public:
     MCLIB_API NBT() { }
 
-    TagCompound& GetRoot() { return m_Root; }
-    const TagCompound& GetRoot() const { return m_Root; }
+    NBT(const NBT& rhs) = default;
+    NBT& operator=(const NBT& rhs) = default;
+    NBT(NBT&& rhs) = default;
+    NBT& operator=(NBT&& rhs) = default;
+
+    TagCompound& GetRoot() noexcept { return m_Root; }
+    const TagCompound& GetRoot() const noexcept { return m_Root; }
     bool HasData() const { return m_Root.begin() != m_Root.end(); }
 
     friend MCLIB_API DataBuffer& operator>>(DataBuffer& out, NBT& nbt);

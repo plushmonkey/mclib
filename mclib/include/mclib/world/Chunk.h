@@ -38,6 +38,7 @@ public:
     MCLIB_API Chunk();
 
     MCLIB_API Chunk(const Chunk& other);
+    MCLIB_API Chunk& operator=(const Chunk& other);
     /**
      * Position is relative to this chunk position
      */
@@ -74,6 +75,11 @@ private:
 
 public:
     MCLIB_API ChunkColumn(ChunkColumnMetadata metadata);
+
+    ChunkColumn(const ChunkColumn& rhs) = default;
+    ChunkColumn& operator=(const ChunkColumn& rhs) = default;
+    ChunkColumn(ChunkColumn&& rhs) = default;
+    ChunkColumn& operator=(ChunkColumn&& rhs) = default;
 
     iterator MCLIB_API begin() {
         return m_Chunks.begin();

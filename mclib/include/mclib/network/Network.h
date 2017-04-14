@@ -21,13 +21,6 @@
 namespace mc {
 namespace network {
 
-class NetworkInitializer {
-private:
-public:
-    MCLIB_API NetworkInitializer();
-    MCLIB_API ~NetworkInitializer();
-};
-
 class Dns {
 public:
     static MCLIB_API IPAddresses Resolve(const std::string& host);

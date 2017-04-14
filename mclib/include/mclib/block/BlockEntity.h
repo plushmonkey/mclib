@@ -51,15 +51,15 @@ protected:
     virtual MCLIB_API bool ImportNBT(nbt::NBT* nbt) { return true; }
 
 public:
-    MCLIB_API BlockEntity(BlockEntityType type, Vector3i position);
+    MCLIB_API BlockEntity(BlockEntityType type, Vector3i position) noexcept;
 
-    MCLIB_API BlockEntityType GetType() const { return m_Type; }
-    MCLIB_API Vector3i GetPosition() const { return m_Position; }
-    MCLIB_API nbt::NBT* GetNBT() { return &m_NBT; }
+    MCLIB_API BlockEntityType GetType() const noexcept { return m_Type; }
+    MCLIB_API Vector3i GetPosition() const noexcept { return m_Position; }
+    MCLIB_API nbt::NBT* GetNBT() noexcept { return &m_NBT; }
 
-    MCLIB_API static std::shared_ptr<BlockEntity> CreateFromNBT(nbt::NBT* nbt);
+    MCLIB_API static std::unique_ptr<BlockEntity> CreateFromNBT(nbt::NBT* nbt);
 };
-typedef std::shared_ptr<BlockEntity> BlockEntityPtr;
+using BlockEntityPtr = std::shared_ptr<BlockEntity>;
 
 class SignBlockEntity : public BlockEntity {
 private:

@@ -31,6 +31,11 @@ public:
     MCLIB_API World(protocol::packets::PacketDispatcher* dispatcher);
     MCLIB_API ~World();
 
+    World(const World& rhs) = delete;
+    World& operator=(const World& rhs) = delete;
+    World(World&& rhs) = delete;
+    World& operator=(World&& rhs) = delete;
+
     void MCLIB_API HandlePacket(protocol::packets::in::ChunkDataPacket* packet);
     void MCLIB_API HandlePacket(protocol::packets::in::UnloadChunkPacket* packet);
     void MCLIB_API HandlePacket(protocol::packets::in::MultiBlockChangePacket* packet);

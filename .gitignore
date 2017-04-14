@@ -6,4 +6,5 @@ Release
 lib
 *.so
 *.o
+.vs
 

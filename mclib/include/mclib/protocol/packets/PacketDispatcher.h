@@ -20,6 +20,13 @@ private:
     std::map<PacketType, std::vector<PacketHandler*>> m_Handlers;
 
 public:
+    PacketDispatcher() = default;
+
+    PacketDispatcher(const PacketDispatcher& rhs) = delete;
+    PacketDispatcher& operator=(const PacketDispatcher& rhs) = delete;
+    PacketDispatcher(PacketDispatcher&& rhs) = delete;
+    PacketDispatcher& operator=(PacketDispatcher&& rhs) = delete;
+
     void MCLIB_API Dispatch(Packet* packet);
 
     void MCLIB_API RegisterHandler(State protocolState, PacketId id, PacketHandler* handler);

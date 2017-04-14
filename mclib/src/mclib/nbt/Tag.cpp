@@ -7,7 +7,7 @@
 namespace mc {
 namespace nbt {
 
-std::wstring Tag::GetName() const {
+std::wstring Tag::GetName() const noexcept {
     return m_Name;
 }
 
@@ -67,8 +67,7 @@ DataBuffer& operator<<(DataBuffer& out, const TagCompound& tag) {
     return out;
 }
 
-
-TagType TagString::GetType() const {
+TagType TagString::GetType() const noexcept {
     return TagType::String;
 }
 
@@ -76,7 +75,7 @@ void TagString::Write(DataBuffer& buffer) const {
     std::string utf8;
     utf8::utf16to8(m_Value.begin(), m_Value.end(), std::back_inserter(utf8));
 
-    u16 length = utf8.length();
+    u16 length = (u16)utf8.length();
     buffer << length;
     buffer << utf8;
 }
@@ -98,7 +97,7 @@ void TagString::Read(DataBuffer& buffer) {
 }
 
 
-TagType TagByteArray::GetType() const {
+TagType TagByteArray::GetType() const noexcept {
     return TagType::ByteArray;
 }
 
@@ -118,7 +117,7 @@ void TagByteArray::Read(DataBuffer& buffer) {
     buffer.ReadSome(m_Value, length);
 }
 
-TagType TagIntArray::GetType() const {
+TagType TagIntArray::GetType() const noexcept {
     return TagType::IntArray;
 }
 
@@ -197,7 +196,7 @@ void TagList::Read(DataBuffer& buffer) {
     }
 }
 
-TagType TagList::GetType() const {
+TagType TagList::GetType() const noexcept {
     return TagType::List;
 }
 
@@ -209,20 +208,65 @@ TagList::~TagList() {
 
 }
 
+void TagList::CopyOther(const TagList& rhs) {
+    m_Tags = std::vector<TagPtr>(rhs.m_Tags.size());
+
+    for (std::size_t i = 0; i < m_Tags.size(); ++i) {
+        auto tag = rhs.m_Tags[i];
+
+        if (m_ListType == TagType::Byte) {
+            m_Tags[i] = std::make_shared<TagByte>(*(TagByte*)tag.get());
+        } else if (m_ListType == TagType::Short) {
+            m_Tags[i] = std::make_shared<TagShort>(*(TagShort*)tag.get());
+        } else if (m_ListType == TagType::Int) {
+            m_Tags[i] = std::make_shared<TagInt>(*(TagInt*)tag.get());
+        } else if (m_ListType == TagType::Long) {
+            m_Tags[i] = std::make_shared<TagLong>(*(TagLong*)tag.get());
+        } else if (m_ListType == TagType::Float) {
+            m_Tags[i] = std::make_shared<TagFloat>(*(TagFloat*)tag.get());
+        } else if (m_ListType == TagType::Double) {
+            m_Tags[i] = std::make_shared<TagDouble>(*(TagDouble*)tag.get());
+        } else if (m_ListType == TagType::ByteArray) {
+            m_Tags[i] = std::make_shared<TagByteArray>(*(TagByteArray*)tag.get());
+        } else if (m_ListType == TagType::String) {
+            m_Tags[i] = std::make_shared<TagString>(*(TagString*)tag.get());
+        } else if (m_ListType == TagType::List) {
+            m_Tags[i] = std::make_shared<TagList>(*(TagList*)tag.get());
+        } else if (m_ListType == TagType::Compound) {
+            m_Tags[i] = std::make_shared<TagCompound>(*(TagCompound*)tag.get());
+        } else if (m_ListType == TagType::IntArray) {
+            m_Tags[i] = std::make_shared<TagIntArray>(*(TagIntArray*)tag.get());
+        }
+    }
+}
+
+TagList::TagList(const TagList& rhs) : Tag(rhs.GetName()), m_ListType(rhs.GetListType()) {
+    CopyOther(rhs);
+}
+
+TagList& TagList::operator=(const TagList& rhs) {
+    SetName(rhs.GetName());
+    m_ListType = rhs.GetListType();
+    CopyOther(rhs);
+    return *this;
+}
+
 void TagCompound::Write(DataBuffer& buffer) const {
-    for (TagPtr tag : m_Tags)
-        buffer << *tag;
+    for (auto pair : m_Tags) {
+        buffer << *pair.second;
+    }
 
     buffer << (u8)0;
 }
 
 void TagCompound::Read(DataBuffer& buffer) {
     while (true) {
-        u8 type;
+        u8 typeValue;
 
-        buffer >> type;
-
-        if (type == 0) break;
+        buffer >> typeValue;
+        
+        TagType type = (TagType)typeValue;
+        if (type == TagType::End) break;
 
         TagString name;
 
@@ -230,31 +274,31 @@ void TagCompound::Read(DataBuffer& buffer) {
 
         TagPtr tag;
 
-        if (type == 1)
+        if (type == TagType::Byte)
             tag = std::make_shared<TagByte>();
-        else if (type == 2)
+        else if (type == TagType::Short)
             tag = std::make_shared<TagShort>();
-        else if (type == 3)
+        else if (type == TagType::Int)
             tag = std::make_shared<TagInt>();
-        else if (type == 4)
+        else if (type == TagType::Long)
             tag = std::make_shared<TagLong>();
-        else if (type == 5)
+        else if (type == TagType::Float)
             tag = std::make_shared<TagFloat>();
-        else if (type == 6)
+        else if (type == TagType::Double)
             tag = std::make_shared<TagDouble>();
-        else if (type == 7)
+        else if (type == TagType::ByteArray)
             tag = std::make_shared<TagByteArray>();
-        else if (type == 8)
+        else if (type == TagType::String)
             tag = std::make_shared<TagString>();
-        else if (type == 9)
+        else if (type == TagType::List)
             tag = std::make_shared<TagList>();
-        else if (type == 10)
+        else if (type == TagType::Compound)
             tag = std::make_shared<TagCompound>();
-        else if (type == 11)
+        else if (type == TagType::IntArray)
             tag = std::make_shared<TagIntArray>();
 
         if (tag) {
-            m_Tags.push_back(tag);
+            m_Tags.push_back(std::make_pair(type, tag));
             tag->Read(buffer);
             tag->SetName(name.GetValue());
         } else {
@@ -263,19 +307,67 @@ void TagCompound::Read(DataBuffer& buffer) {
     }
 }
 
-TagType TagCompound::GetType() const {
+TagType TagCompound::GetType() const noexcept {
     return TagType::Compound;
 }
 
-void TagCompound::AddItem(TagPtr item) {
-    m_Tags.push_back(item);
+void TagCompound::AddItem(TagType type, TagPtr item) {
+    m_Tags.push_back(std::make_pair(type, item));
 }
 
 TagCompound::~TagCompound() {
 
 }
 
-TagType TagByte::GetType() const {
+void TagCompound::CopyOther(const TagCompound& rhs) {
+    m_Tags = std::vector<DataType>(rhs.m_Tags.size());
+
+    for (std::size_t i = 0; i < m_Tags.size(); ++i) {
+        auto pair = rhs.m_Tags[i];
+        auto tag = pair.second;
+        auto type = pair.first;
+        
+        std::shared_ptr<Tag> newTag;
+
+        if (type == TagType::Byte) {
+            newTag = std::make_shared<TagByte>(*(TagByte*)tag.get());
+        } else if (type == TagType::Short) {
+            newTag = std::make_shared<TagShort>(*(TagShort*)tag.get());
+        } else if (type == TagType::Int) {
+            newTag = std::make_shared<TagInt>(*(TagInt*)tag.get());
+        } else if (type == TagType::Long) {
+            newTag = std::make_shared<TagLong>(*(TagLong*)tag.get());
+        } else if (type == TagType::Float) {
+            newTag = std::make_shared<TagFloat>(*(TagFloat*)tag.get());
+        } else if (type == TagType::Double) {
+            newTag = std::make_shared<TagDouble>(*(TagDouble*)tag.get());
+        } else if (type == TagType::ByteArray) {
+            newTag = std::make_shared<TagByteArray>(*(TagByteArray*)tag.get());
+        } else if (type == TagType::String) {
+            newTag = std::make_shared<TagString>(*(TagString*)tag.get());
+        } else if (type == TagType::List) {
+            newTag = std::make_shared<TagList>(*(TagList*)tag.get());
+        } else if (type == TagType::Compound) {
+            newTag = std::make_shared<TagCompound>(*(TagCompound*)tag.get());
+        } else if (type == TagType::IntArray) {
+            newTag = std::make_shared<TagIntArray>(*(TagIntArray*)tag.get());
+        }
+
+        m_Tags[i] = std::make_pair(type, newTag);
+    }
+}
+
+TagCompound::TagCompound(const TagCompound& rhs) : Tag(rhs.GetName()) {
+    CopyOther(rhs);
+}
+
+TagCompound& TagCompound::operator=(const TagCompound& rhs) {
+    SetName(rhs.GetName());
+    CopyOther(rhs);
+    return *this;
+}
+
+TagType TagByte::GetType() const noexcept {
     return TagType::Byte;
 }
 
@@ -287,7 +379,7 @@ void TagByte::Read(DataBuffer& buffer) {
     buffer >> m_Value;
 }
 
-TagType TagShort::GetType() const {
+TagType TagShort::GetType() const noexcept {
     return TagType::Short;
 }
 
@@ -299,7 +391,7 @@ void TagShort::Read(DataBuffer& buffer) {
     buffer >> m_Value;
 }
 
-TagType TagInt::GetType() const {
+TagType TagInt::GetType() const noexcept {
     return TagType::Int;
 }
 
@@ -311,7 +403,7 @@ void TagInt::Read(DataBuffer& buffer) {
     buffer >> m_Value;
 }
 
-TagType TagLong::GetType() const {
+TagType TagLong::GetType() const noexcept {
     return TagType::Long;
 }
 
@@ -323,7 +415,7 @@ void TagLong::Read(DataBuffer& buffer) {
     buffer >> m_Value;
 }
 
-TagType TagFloat::GetType() const {
+TagType TagFloat::GetType() const noexcept {
     return TagType::Float;
 }
 
@@ -335,7 +427,7 @@ void TagFloat::Read(DataBuffer& buffer) {
     buffer >> m_Value;
 }
 
-TagType TagDouble::GetType() const {
+TagType TagDouble::GetType() const noexcept {
     return TagType::Double;
 }
 

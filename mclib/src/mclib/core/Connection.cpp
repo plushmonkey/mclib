@@ -18,10 +18,10 @@ namespace core {
 
 Connection::Connection(protocol::packets::PacketDispatcher* dispatcher, protocol::Version version)
     : protocol::packets::PacketHandler(dispatcher),
-    m_Encrypter(new EncryptionStrategyNone()),
-    m_Compressor(new CompressionNone()),
-    m_Socket(new network::TCPSocket()),
-    m_Yggdrasil(new util::Yggdrasil()),
+    m_Encrypter(std::make_unique<EncryptionStrategyNone>()),
+    m_Compressor(std::make_unique<CompressionNone>()),
+    m_Socket(std::make_unique<network::TCPSocket>()),
+    m_Yggdrasil(std::make_unique<util::Yggdrasil>()),
     m_Version(version)
 {
     dispatcher->RegisterHandler(protocol::State::Login, protocol::login::Disconnect, this);
@@ -39,10 +39,6 @@ Connection::Connection(protocol::packets::PacketDispatcher* dispatcher, protocol
 
 Connection::~Connection() {
     GetDispatcher()->UnregisterHandler(this);
-    if (m_Encrypter)
-        delete m_Encrypter;
-    if (m_Compressor)
-        delete m_Compressor;
 }
 
 network::Socket::Status Connection::GetSocketState() const {
@@ -119,15 +115,14 @@ void Connection::HandlePacket(protocol::packets::in::EncryptionRequestPacket* pa
     std::string pubkey = packet->GetPublicKey();
     std::string verify = packet->GetVerifyToken();
 
-    EncryptionStrategyAES* aesEncrypter = new EncryptionStrategyAES(pubkey, verify);
+    auto aesEncrypter = std::make_unique<EncryptionStrategyAES>(pubkey, verify);
     protocol::packets::out::EncryptionResponsePacket* encResp = aesEncrypter->GenerateResponsePacket();
 
     AuthenticateClient(packet->GetServerId().GetUTF16(), aesEncrypter->GetSharedSecret(), pubkey);
 
     SendPacket(encResp);
 
-    delete m_Encrypter;
-    m_Encrypter = aesEncrypter;
+    m_Encrypter = std::move(aesEncrypter);
 }
 
 void Connection::HandlePacket(protocol::packets::in::LoginSuccessPacket* packet) {
@@ -162,22 +157,19 @@ void Connection::HandlePacket(protocol::packets::in::LoginSuccessPacket* packet)
 }
 
 void Connection::HandlePacket(protocol::packets::in::SetCompressionPacket* packet) {
-    delete m_Compressor;
-    m_Compressor = new CompressionZ(packet->GetMaxPacketSize());
+    m_Compressor = std::make_unique<CompressionZ>(packet->GetMaxPacketSize());
 }
 
 bool Connection::Connect(const std::string& server, u16 port) {
     bool result = false;
 
-    m_Socket = std::make_shared<network::TCPSocket>();
+    m_Socket = std::make_unique<network::TCPSocket>();
     m_Yggdrasil = std::unique_ptr<util::Yggdrasil>(new util::Yggdrasil());
     m_ProtocolState = protocol::State::Handshake;
 
 
-    delete m_Compressor;
-    m_Compressor = new CompressionNone();
-    delete m_Encrypter;
-    m_Encrypter = new EncryptionStrategyNone();
+    m_Compressor = std::make_unique<CompressionNone>();
+    m_Encrypter = std::make_unique<EncryptionStrategyNone>();
 
     while (!m_FuturePackets.empty())
         m_FuturePackets.pop();
@@ -267,11 +259,6 @@ void Connection::CreatePacket() {
 
     m_Socket->Receive(buffer, 4096);
 
-    if (m_Socket->GetStatus() != network::Socket::Connected) {
-        NotifyListeners(&ConnectionListener::OnSocketStateChange, m_Socket->GetStatus());
-        return;
-    }
-
     m_HandleBuffer << m_Encrypter->Decrypt(buffer);
 
     do {
@@ -330,6 +317,11 @@ void Connection::CreatePacket() {
             m_FuturePackets.pop();
             throw e;
         }
+    }
+
+    if (m_Socket->GetStatus() != network::Socket::Connected) {
+        NotifyListeners(&ConnectionListener::OnSocketStateChange, m_Socket->GetStatus());
+        return;
     }
 }
 

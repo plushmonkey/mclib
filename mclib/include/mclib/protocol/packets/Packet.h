@@ -33,11 +33,16 @@ protected:
     protocol::State m_ProtocolState;
 
 public:
-    Packet() : m_Id(0xFF), m_ProtocolState(protocol::State::Play) { }
+    Packet() noexcept : m_Id(0xFF), m_ProtocolState(protocol::State::Play) { }
     virtual ~Packet() { }
 
-    protocol::State GetProtocolState() const { return m_ProtocolState; }
-    VarInt GetId() const { return m_Id; }
+    Packet(const Packet& rhs) = default;
+    Packet& operator=(const Packet& rhs) = default;
+    Packet(Packet&& rhs) = default;
+    Packet& operator=(Packet&& rhs) = default;
+
+    protocol::State GetProtocolState() const noexcept { return m_ProtocolState; }
+    VarInt GetId() const noexcept{ return m_Id; }
     virtual DataBuffer Serialize() const = 0;
     virtual bool Deserialize(DataBuffer& data, std::size_t packetLength) = 0;
     virtual void Dispatch(PacketHandler* handler) = 0;
@@ -52,6 +57,7 @@ public:
 class OutboundPacket : public Packet {
 public:
     virtual ~OutboundPacket() { }
+
     bool Deserialize(DataBuffer& data, std::size_t packetLength) { return false; }
     void Dispatch(PacketHandler* handler) {
         throw std::runtime_error("Cannot dispatch an outbound packet.");
@@ -68,6 +74,7 @@ private:
 
 public:
     MCLIB_API DisconnectPacket();
+
     bool MCLIB_API Deserialize(DataBuffer& data, std::size_t packetLength);
     void MCLIB_API Dispatch(PacketHandler* handler);
 
@@ -82,6 +89,7 @@ private:
 
 public:
     MCLIB_API EncryptionRequestPacket();
+
     bool MCLIB_API Deserialize(DataBuffer& data, std::size_t packetLength);
     void MCLIB_API Dispatch(PacketHandler* handler);
 

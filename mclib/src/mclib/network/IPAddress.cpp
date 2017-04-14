@@ -15,7 +15,7 @@ namespace mc {
 namespace network {
 
 /* Create an invalid address */
-IPAddress::IPAddress()
+IPAddress::IPAddress() noexcept
     : m_Valid(false), m_Address(0)
 {
 
@@ -61,7 +61,7 @@ IPAddress::IPAddress(const std::wstring& ip)
 }
 
 /* Initialize by octets */
-IPAddress::IPAddress(uint8_t octet1, uint8_t octet2, uint8_t octet3, uint8_t octet4)
+IPAddress::IPAddress(uint8_t octet1, uint8_t octet2, uint8_t octet3, uint8_t octet4) noexcept
     : m_Valid(true)
 {
     m_Address = (octet1 << 24) | (octet2 << 16) | (octet3 << 8) | octet4;

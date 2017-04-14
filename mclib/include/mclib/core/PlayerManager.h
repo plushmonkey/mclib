@@ -76,6 +76,11 @@ public:
     MCLIB_API PlayerManager(protocol::packets::PacketDispatcher* dispatcher, entity::EntityManager* entityManager);
     MCLIB_API ~PlayerManager();
 
+    PlayerManager(const PlayerManager& rhs) = delete;
+    PlayerManager& operator=(const PlayerManager& rhs) = delete;
+    PlayerManager(PlayerManager&& rhs) = delete;
+    PlayerManager& operator=(PlayerManager&& rhs) = delete;
+
     iterator MCLIB_API begin();
     iterator MCLIB_API end();
 
