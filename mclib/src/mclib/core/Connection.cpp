@@ -11,7 +11,6 @@
 #include <future>
 #include <thread>
 #include <memory>
-#include <iostream>
 
 namespace mc {
 namespace core {
@@ -22,7 +21,8 @@ Connection::Connection(protocol::packets::PacketDispatcher* dispatcher, protocol
     m_Compressor(std::make_unique<CompressionNone>()),
     m_Socket(std::make_unique<network::TCPSocket>()),
     m_Yggdrasil(std::make_unique<util::Yggdrasil>()),
-    m_Version(version)
+    m_Version(version),
+    m_SentSettings(false)
 {
     dispatcher->RegisterHandler(protocol::State::Login, protocol::login::Disconnect, this);
     dispatcher->RegisterHandler(protocol::State::Login, protocol::login::EncryptionRequest, this);
@@ -125,35 +125,34 @@ void Connection::HandlePacket(protocol::packets::in::EncryptionRequestPacket* pa
     m_Encrypter = std::move(aesEncrypter);
 }
 
+void Connection::SendSettings() {
+    using namespace protocol::packets::out;
+
+    u8 skinFlags = 0;
+    skinFlags |= (int)ClientSettingsPacket::SkinPartFlags::Cape;
+    skinFlags |= (int)ClientSettingsPacket::SkinPartFlags::Jacket;
+    skinFlags |= (int)ClientSettingsPacket::SkinPartFlags::LeftSleeve;
+    skinFlags |= (int)ClientSettingsPacket::SkinPartFlags::RightSleeve;
+    skinFlags |= (int)ClientSettingsPacket::SkinPartFlags::LeftPants;
+    skinFlags |= (int)ClientSettingsPacket::SkinPartFlags::RightPants;
+    skinFlags |= (int)ClientSettingsPacket::SkinPartFlags::Hat;
+
+    u8 viewDistance = 20;
+
+#ifdef _DEBUG
+    viewDistance = 4;
+#endif
+    ClientSettingsPacket clientSettings(L"en-GB", viewDistance, ClientSettingsPacket::ChatMode::Enabled, true, skinFlags, ClientSettingsPacket::MainHand::Right);
+
+    SendPacket(&clientSettings);
+
+    m_SentSettings = true;
+}
+
 void Connection::HandlePacket(protocol::packets::in::LoginSuccessPacket* packet) {
     m_ProtocolState = protocol::State::Play;
 
     NotifyListeners(&ConnectionListener::OnLogin, true);
-
-    using namespace protocol::packets::out;
-
-    // I guess the server doesn't switch protocol state immediately
-    std::async(std::launch::async, [&]{
-        std::this_thread::sleep_for(std::chrono::seconds(5));
-
-        u8 skinFlags = 0;
-        skinFlags |= (int)ClientSettingsPacket::SkinPartFlags::Cape;
-        skinFlags |= (int)ClientSettingsPacket::SkinPartFlags::Jacket;
-        skinFlags |= (int)ClientSettingsPacket::SkinPartFlags::LeftSleeve;
-        skinFlags |= (int)ClientSettingsPacket::SkinPartFlags::RightSleeve;
-        skinFlags |= (int)ClientSettingsPacket::SkinPartFlags::LeftPants;
-        skinFlags |= (int)ClientSettingsPacket::SkinPartFlags::RightPants;
-        skinFlags |= (int)ClientSettingsPacket::SkinPartFlags::Hat;
-
-        u8 viewDistance = 20;
-
-#ifdef _DEBUG
-        viewDistance = 4;
-#endif
-        ClientSettingsPacket clientSettings(L"en-GB", viewDistance, ClientSettingsPacket::ChatMode::Enabled, true, skinFlags, ClientSettingsPacket::MainHand::Right);
-
-        SendPacket(&clientSettings);
-    });
 }
 
 void Connection::HandlePacket(protocol::packets::in::SetCompressionPacket* packet) {
@@ -269,6 +268,11 @@ void Connection::CreatePacket() {
                 protocol::packets::Packet* packet = CreatePacketSync(m_HandleBuffer);
 
                 if (packet) {
+                    // Only send the settings after the server has accepted the new protocol state.
+                    if (!m_SentSettings && packet->GetProtocolState() == protocol::State::Play) {
+                        SendSettings();
+                    }
+
                     this->GetDispatcher()->Dispatch(packet);
                     protocol::packets::PacketFactory::FreePacket(packet);
                 } else {

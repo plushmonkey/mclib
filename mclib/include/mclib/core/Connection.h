@@ -45,10 +45,12 @@ private:
     protocol::State m_ProtocolState;
     protocol::Version m_Version;
     u16 m_Port;
+    bool m_SentSettings;
 
     void AuthenticateClient(const std::wstring& serverId, const std::string& sharedSecret, const std::string& pubkey);
     std::future<protocol::packets::Packet*> CreatePacket(DataBuffer& buffer);
     protocol::packets::Packet* CreatePacketSync(DataBuffer& buffer);
+    void SendSettings();
 
 public:
     MCLIB_API Connection(protocol::packets::PacketDispatcher* dispatcher, protocol::Version version = protocol::Version::Minecraft_1_11_2);
