@@ -125,24 +125,15 @@ void Connection::HandlePacket(protocol::packets::in::EncryptionRequestPacket* pa
     m_Encrypter = std::move(aesEncrypter);
 }
 
-void Connection::SendSettings() {
-    using namespace protocol::packets::out;
-
-    u8 skinFlags = 0;
-    skinFlags |= (int)ClientSettingsPacket::SkinPartFlags::Cape;
-    skinFlags |= (int)ClientSettingsPacket::SkinPartFlags::Jacket;
-    skinFlags |= (int)ClientSettingsPacket::SkinPartFlags::LeftSleeve;
-    skinFlags |= (int)ClientSettingsPacket::SkinPartFlags::RightSleeve;
-    skinFlags |= (int)ClientSettingsPacket::SkinPartFlags::LeftPants;
-    skinFlags |= (int)ClientSettingsPacket::SkinPartFlags::RightPants;
-    skinFlags |= (int)ClientSettingsPacket::SkinPartFlags::Hat;
-
-    u8 viewDistance = 20;
-
-#ifdef _DEBUG
-    viewDistance = 4;
-#endif
-    ClientSettingsPacket clientSettings(L"en-GB", viewDistance, ClientSettingsPacket::ChatMode::Enabled, true, skinFlags, ClientSettingsPacket::MainHand::Right);
+void Connection::SendSettingsPacket() {
+    protocol::packets::out::ClientSettingsPacket clientSettings(
+        m_ClientSettings.GetLocale(), 
+        m_ClientSettings.GetViewDistance(), 
+        m_ClientSettings.GetChatMode(), 
+        m_ClientSettings.GetChatColors(), 
+        m_ClientSettings.GetSkinParts(), 
+        m_ClientSettings.GetMainHand()
+    );
 
     SendPacket(&clientSettings);
 
@@ -270,7 +261,7 @@ void Connection::CreatePacket() {
                 if (packet) {
                     // Only send the settings after the server has accepted the new protocol state.
                     if (!m_SentSettings && packet->GetProtocolState() == protocol::State::Play) {
-                        SendSettings();
+                        SendSettingsPacket();
                     }
 
                     this->GetDispatcher()->Dispatch(packet);

@@ -23,6 +23,7 @@
     <ClInclude Include="include\mclib\common\VarInt.h" />
     <ClInclude Include="include\mclib\common\Vector.h" />
     <ClInclude Include="include\mclib\core\Client.h" />
+    <ClInclude Include="include\mclib\core\ClientSettings.h" />
     <ClInclude Include="include\mclib\core\Compression.h" />
     <ClInclude Include="include\mclib\core\Connection.h" />
     <ClInclude Include="include\mclib\core\Encryption.h" />
@@ -67,6 +68,7 @@
     <ClCompile Include="src\mclib\common\UUID.cpp" />
     <ClCompile Include="src\mclib\common\VarInt.cpp" />
     <ClCompile Include="src\mclib\core\Client.cpp" />
+    <ClCompile Include="src\mclib\core\ClientSettings.cpp" />
     <ClCompile Include="src\mclib\core\Compression.cpp" />
     <ClCompile Include="src\mclib\core\Connection.cpp" />
     <ClCompile Include="src\mclib\core\Encryption.cpp" />

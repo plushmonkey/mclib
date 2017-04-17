@@ -350,7 +350,7 @@ public:
 int main(void) {
     mc::block::BlockRegistry::GetInstance()->RegisterVanillaBlocks();
     mc::protocol::packets::PacketDispatcher dispatcher;
-    mc::protocol::Version version = mc::protocol::Version::Minecraft_1_10_2;
+    mc::protocol::Version version = mc::protocol::Version::Minecraft_1_11_2;
 
     mc::core::Client gameClient(&dispatcher, version);
     mc::util::ForgeHandler forgeHandler(&dispatcher, gameClient.GetConnection());
@@ -371,11 +371,14 @@ int main(void) {
         std::cout << "Pinging server." << std::endl;
 
         while (!forgeHandler.HasModInfo()) {
-            std::this_thread::sleep_for(std::chrono::seconds(1));
+            std::this_thread::sleep_for(std::chrono::milliseconds(100));
         }
     }
 
     gameClient.GetPlayerController()->SetHandleFall(true);
+    gameClient.GetConnection()->GetSettings()
+        .SetMainHand(mc::MainHand::Right)
+        .SetViewDistance(20);
 
     Logger logger(&gameClient, &dispatcher);
     //BlockDigStressTest stressTest(&gameClient, 100);

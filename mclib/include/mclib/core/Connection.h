@@ -3,6 +3,7 @@
 
 #include <mclib/common/DataBuffer.h>
 #include <mclib/common/Types.h>
+#include <mclib/core/ClientSettings.h>
 #include <mclib/network/Socket.h>
 #include <mclib/protocol/packets/Packet.h>
 #include <mclib/protocol/packets/PacketHandler.h>
@@ -37,6 +38,7 @@ private:
     std::unique_ptr<network::Socket> m_Socket;
     std::unique_ptr<util::Yggdrasil> m_Yggdrasil;
     std::queue<std::future<protocol::packets::Packet*>> m_FuturePackets;
+    ClientSettings m_ClientSettings;
     std::string m_Server;
     std::string m_Email;
     std::string m_Username;
@@ -50,7 +52,7 @@ private:
     void AuthenticateClient(const std::wstring& serverId, const std::string& sharedSecret, const std::string& pubkey);
     std::future<protocol::packets::Packet*> CreatePacket(DataBuffer& buffer);
     protocol::packets::Packet* CreatePacketSync(DataBuffer& buffer);
-    void SendSettings();
+    void SendSettingsPacket();
 
 public:
     MCLIB_API Connection(protocol::packets::PacketDispatcher* dispatcher, protocol::Version version = protocol::Version::Minecraft_1_11_2);
@@ -63,6 +65,9 @@ public:
 
     util::Yggdrasil* GetYggdrasil() { return m_Yggdrasil.get(); }
     network::Socket::Status MCLIB_API GetSocketState() const;
+    ClientSettings& GetSettings() noexcept { return m_ClientSettings; }
+
+    void SendSettings() noexcept { m_SentSettings = false; }
 
     void MCLIB_API HandlePacket(protocol::packets::in::KeepAlivePacket* packet);
     void MCLIB_API HandlePacket(protocol::packets::in::PlayerPositionAndLookPacket* packet);

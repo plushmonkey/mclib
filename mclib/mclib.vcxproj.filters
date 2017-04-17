@@ -219,6 +219,9 @@
     <ClInclude Include="include\mclib\nbt\Tag.h">
       <Filter>Header Files\nbt</Filter>
     </ClInclude>
+    <ClInclude Include="include\mclib\core\ClientSettings.h">
+      <Filter>Header Files\core</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\mclib\block\Block.cpp">
@@ -319,6 +322,9 @@
     </ClCompile>
     <ClCompile Include="src\mclib\nbt\Tag.cpp">
       <Filter>Source Files\nbt</Filter>
+    </ClCompile>
+    <ClCompile Include="src\mclib\core\ClientSettings.cpp">
+      <Filter>Source Files\core</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

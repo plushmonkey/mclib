@@ -19,7 +19,6 @@
 
 namespace mc {
 
-enum class Hand { Main, Off };
 enum class SoundCategory { Master, Music, Record, Weather, Block, Hostile, Neutral, Player, Ambient, Voice };
 
 namespace protocol {
@@ -1676,16 +1675,6 @@ public:
 };
 
 class ClientSettingsPacket : public OutboundPacket { // 0x04
-public:
-    enum class ChatMode { Enabled, Commands, Hidden };
-    enum class SkinPartFlags {
-        Cape = 0x1, Jacket = 0x2,
-        LeftSleeve = 0x4, RightSleeve = 0x8,
-        LeftPants = 0x10, RightPants = 0x20,
-        Hat = 0x40
-    };
-    enum class MainHand { Left, Right };
-
 private:
     std::wstring m_Locale;
     u8 m_ViewDistance;
