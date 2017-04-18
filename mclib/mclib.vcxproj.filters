@@ -222,6 +222,12 @@
     <ClInclude Include="include\mclib\core\ClientSettings.h">
       <Filter>Header Files\core</Filter>
     </ClInclude>
+    <ClInclude Include="include\mclib\inventory\Inventory.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\mclib\inventory\Hotbar.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\mclib\block\Block.cpp">
@@ -325,6 +331,12 @@
     </ClCompile>
     <ClCompile Include="src\mclib\core\ClientSettings.cpp">
       <Filter>Source Files\core</Filter>
+    </ClCompile>
+    <ClCompile Include="src\mclib\inventory\Inventory.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\mclib\inventory\Hotbar.cpp">
+      <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

@@ -20,7 +20,9 @@ Client::Client(protocol::packets::PacketDispatcher* dispatcher, protocol::Versio
     m_PlayerManager(m_Dispatcher, &m_EntityManager),
     m_World(m_Dispatcher),
     m_PlayerController(&m_Connection, m_World, m_PlayerManager),
-    m_Connected(false)
+    m_Connected(false),
+    m_InventoryManager(std::make_unique<inventory::InventoryManager>(m_Dispatcher, &m_Connection)),
+    m_Hotbar(m_Dispatcher, &m_Connection, m_InventoryManager.get())
 {
     m_Connection.RegisterListener(this);
 }
@@ -54,6 +56,8 @@ void Client::UpdateThread() {
             // Keep entity manager and player controller in sync
             playerEntity->SetPosition(m_PlayerController.GetPosition());
         }
+
+        std::this_thread::sleep_for(std::chrono::milliseconds(1));
 
         s64 time = util::GetTime();
         if (time >= lastUpdate + (1000 / 20)) {

@@ -36,6 +36,8 @@
     <ClInclude Include="include\mclib\entity\Metadata.h" />
     <ClInclude Include="include\mclib\entity\Monster.h" />
     <ClInclude Include="include\mclib\entity\Player.h" />
+    <ClInclude Include="include\mclib\inventory\Hotbar.h" />
+    <ClInclude Include="include\mclib\inventory\Inventory.h" />
     <ClInclude Include="include\mclib\inventory\Slot.h" />
     <ClInclude Include="include\mclib\nbt\NBT.h" />
     <ClInclude Include="include\mclib\nbt\Tag.h" />
@@ -75,6 +77,8 @@
     <ClCompile Include="src\mclib\core\PlayerManager.cpp" />
     <ClCompile Include="src\mclib\entity\EntityManager.cpp" />
     <ClCompile Include="src\mclib\entity\Metadata.cpp" />
+    <ClCompile Include="src\mclib\inventory\Hotbar.cpp" />
+    <ClCompile Include="src\mclib\inventory\Inventory.cpp" />
     <ClCompile Include="src\mclib\inventory\Slot.cpp" />
     <ClCompile Include="src\mclib\nbt\NBT.cpp" />
     <ClCompile Include="src\mclib\nbt\Tag.cpp" />

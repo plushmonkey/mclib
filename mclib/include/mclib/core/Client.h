@@ -5,6 +5,8 @@
 #include <mclib/core/Connection.h>
 #include <mclib/core/PlayerManager.h>
 #include <mclib/entity/EntityManager.h>
+#include <mclib/inventory/Inventory.h>
+#include <mclib/inventory/Hotbar.h>
 #include <mclib/network/Network.h>
 #include <mclib/protocol/packets/PacketDispatcher.h>
 #include <mclib/util/ObserverSubject.h>
@@ -26,10 +28,11 @@ private:
     core::Connection m_Connection;
     entity::EntityManager m_EntityManager;
     core::PlayerManager m_PlayerManager;
-    world::World m_World;
+    std::unique_ptr<inventory::InventoryManager> m_InventoryManager;
+    inventory::Hotbar m_Hotbar;
     util::PlayerController m_PlayerController;
-    //PlayerFollower m_Follower;
-    //TrackFollower m_Follower;
+    world::World m_World;
+    
     bool m_Connected;
     std::thread m_UpdateThread;
 
@@ -49,10 +52,13 @@ public:
 
     protocol::packets::PacketDispatcher* GetDispatcher() { return m_Dispatcher; }
     core::Connection* GetConnection() { return &m_Connection; }
-    entity::EntityManager* GetEntityManager() { return &m_EntityManager; }
     core::PlayerManager* GetPlayerManager() { return &m_PlayerManager; }
-    world::World* GetWorld() { return &m_World; }
+    entity::EntityManager* GetEntityManager() { return &m_EntityManager; }
+    inventory::InventoryManager* GetInventoryManager() { return m_InventoryManager.get(); }
+    inventory::Hotbar& GetHotbar() { return m_Hotbar; }
     util::PlayerController* GetPlayerController() { return &m_PlayerController; }
+    world::World* GetWorld() { return &m_World; }
+
 };
 
 } // ns core

@@ -248,6 +248,7 @@ public:
         dispatcher->RegisterHandler(State::Play, play::Disconnect, this);
         dispatcher->RegisterHandler(State::Play, play::EntityLookAndRelativeMove, this);
         dispatcher->RegisterHandler(State::Play, play::BlockChange, this);
+        dispatcher->RegisterHandler(State::Play, play::MultiBlockChange, this);
     }
 
     ~Logger() {
@@ -259,6 +260,32 @@ public:
         std::string message = mc::util::ParseChatNode(packet->GetChatData());
 
         std::cout << message << std::endl;
+
+        if (message.find("!selected") != std::string::npos) {
+            mc::inventory::Slot item = m_Client->GetHotbar().GetCurrentItem();
+
+            std::cout << "Selected item: " << item.GetItemId() << ":" << item.GetItemDamage() << " (" << item.GetItemCount() << ")" << std::endl;
+        } else if (message.find("!select") != std::string::npos) {
+            std::string amountStr = message.substr(message.find("!select ") + 8);
+            int slotIndex = strtol(amountStr.c_str(), nullptr, 10);
+
+
+            if (slotIndex >= 0 && slotIndex < 9) {
+                m_Client->GetHotbar().SelectSlot(slotIndex);
+            } else {
+                std::cout << "Bad slot index." << std::endl;
+            }
+        } else if (message.find("!find ") != std::string::npos) {
+            std::string toFind = message.substr(message.find("!find ") + 6);
+            
+            s32 itemId = strtol(toFind.c_str(), nullptr, 10);
+            mc::inventory::Inventory* inv = m_Client->GetInventoryManager()->GetPlayerInventory();
+            if (inv) {
+                bool contained = inv->Contains(itemId);
+
+                std::cout << "Contains " << itemId << ": " << std::boolalpha << contained << std::endl;
+            }
+        }
     }
 
     void HandlePacket(mc::protocol::packets::in::EntityLookAndRelativeMovePacket* packet) {
@@ -272,6 +299,17 @@ public:
         s32 blockId = packet->GetBlockId();
 
         std::cout << "Block changed at " << pos << " to " << blockId << std::endl;
+    }
+
+    void HandlePacket(mc::protocol::packets::in::MultiBlockChangePacket* packet) {
+        auto chunkX = packet->GetChunkX();
+        auto chunkZ = packet->GetChunkZ();
+
+        for (const auto& change : packet->GetBlockChanges()) {
+            Vector3i pos(chunkX + change.x, change.y + chunkZ + change.z);
+
+            std::cout << "Block changed at " << pos << " to " << change.blockData << std::endl;
+        }
     }
 
     void HandlePacket(mc::protocol::packets::in::DisconnectPacket* packet) {
