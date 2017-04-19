@@ -2,10 +2,24 @@
 
 #include <mclib/common/DataBuffer.h>
 
+#include <array>
 #include <utf8.h>
 
 namespace mc {
 namespace nbt {
+
+std::string to_string(mc::nbt::TagType type) {
+    static const std::array<std::string, 12> typeStr = {
+        "End", "Byte", "Short", "Int", "Long", "Float", "Double", "ByteArray", "String", "List", "Compound", "IntArray"
+    };
+
+    return typeStr[static_cast<int>(type)];
+}
+
+std::ostream& operator<<(std::ostream& os, TagType type) {
+    os << to_string(type);
+    return os;
+}
 
 std::wstring Tag::GetName() const noexcept {
     return m_Name;
@@ -201,6 +215,10 @@ TagType TagList::GetType() const noexcept {
 }
 
 void TagList::AddItem(TagPtr item) {
+    if (item->GetType() != m_ListType) {
+        std::string message = "Tried to add " + to_string(item->GetType()) + " to list containing " + to_string(m_ListType) + ".";
+        throw std::invalid_argument(message.c_str());
+    }
     m_Tags.push_back(item);
 }
 

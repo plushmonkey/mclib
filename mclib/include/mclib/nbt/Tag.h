@@ -6,6 +6,7 @@
 
 #include <memory>
 #include <vector>
+#include <iosfwd>
 
 namespace mc {
 
@@ -14,6 +15,9 @@ class DataBuffer;
 namespace nbt {
 
 enum class TagType { End, Byte, Short, Int, Long, Float, Double, ByteArray, String, List, Compound, IntArray };
+
+MCLIB_API std::string to_string(mc::nbt::TagType type);
+MCLIB_API std::ostream& operator<<(std::ostream& os, TagType type);
 
 class TagList;
 class TagCompound;
