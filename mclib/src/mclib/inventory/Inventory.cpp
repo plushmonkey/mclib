@@ -82,6 +82,7 @@ InventoryManager::InventoryManager(protocol::packets::PacketDispatcher* dispatch
     using namespace protocol;
     dispatcher->RegisterHandler(State::Play, play::SetSlot, this);
     dispatcher->RegisterHandler(State::Play, play::WindowItems, this);
+    dispatcher->RegisterHandler(State::Play, play::OpenWindow, this);
 }
 
 InventoryManager::~InventoryManager() {
@@ -123,6 +124,12 @@ void InventoryManager::HandlePacket(protocol::packets::in::WindowItemsPacket* pa
     for (std::size_t i = 0; i < slots.size(); ++i) {
         SetSlot(packet->GetWindowId(), i, slots[i]);
     }
+}
+
+void InventoryManager::HandlePacket(protocol::packets::in::OpenWindowPacket* packet) {
+    m_Inventories.erase((s32)packet->GetWindowId());
+    auto newInventory = std::make_unique<Inventory>(m_Connection, packet->GetWindowId());
+    m_Inventories.insert(std::make_pair(packet->GetWindowId(), std::move(newInventory)));
 }
 
 } // ns inventory

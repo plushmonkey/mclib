@@ -38,6 +38,8 @@ public:
     s16 GetItemDamage() const noexcept { return m_ItemDamage; }
     const nbt::NBT& GetNBT() const noexcept { return m_NBT; }
 
+    static MCLIB_API Slot FromNBT(nbt::TagCompound& compound);
+
     friend MCLIB_API DataBuffer& operator<<(DataBuffer& out, const Slot& slot);
     friend MCLIB_API DataBuffer& operator>>(DataBuffer& in, Slot& slot);
 };

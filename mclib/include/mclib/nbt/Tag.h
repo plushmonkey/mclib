@@ -122,7 +122,7 @@ public:
 
     TagType MCLIB_API GetType() const noexcept;
     TagType MCLIB_API GetListType() const noexcept { return m_ListType; }
-    std::vector<TagPtr> MCLIB_API GetList() const { return m_Tags; }
+    const std::vector<TagPtr>& GetList() const { return m_Tags; }
 
     void MCLIB_API AddItem(TagPtr item);
     friend MCLIB_API DataBuffer& operator<<(DataBuffer& out, const TagList& tag);

@@ -51,6 +51,7 @@ public:
 
     MCLIB_API void HandlePacket(protocol::packets::in::SetSlotPacket* packet);
     MCLIB_API void HandlePacket(protocol::packets::in::WindowItemsPacket* packet);
+    MCLIB_API void HandlePacket(protocol::packets::in::OpenWindowPacket* packet);
 
     MCLIB_API Inventory* GetInventory(s32 windowId);
     MCLIB_API Inventory* GetPlayerInventory();

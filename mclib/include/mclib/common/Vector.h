@@ -284,6 +284,19 @@ inline Vector3i ToVector3i(const Vector3d& d) {
     return Vector3i((Vector3i::value_type)std::floor(d.x), (Vector3i::value_type)std::floor(d.y), (Vector3i::value_type)std::floor(d.z));
 }
 
+inline Vector3f ToVector3f(const Vector3i& v) {
+    return Vector3f((float)v.x, (float)v.y, (float)v.z);
+}
+
+inline Vector3f ToVector3f(const Vector3s& v) {
+    return Vector3f((float)v.x, (float)v.y, (float)v.z);
+}
+
+inline Vector3f ToVector3f(const Vector3d& v) {
+    return Vector3f((float)v.x, (float)v.y, (float)v.z);
+}
+
+
 } // ns mc
 
 #endif

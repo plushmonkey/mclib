@@ -262,6 +262,9 @@ Packet* PlayPacketFactory::CreatePacket(DataBuffer& data, std::size_t length) {
     case protocol::play::UnloadChunk:
         packet = new in::UnloadChunkPacket();
         break;
+    case protocol::play::OpenWindow:
+        packet = new in::OpenWindowPacket();
+        break;
     default:
         throw protocol::UnfinishedProtocolException(vid, protocol::State::Play);
     }

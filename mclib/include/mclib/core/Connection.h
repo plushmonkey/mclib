@@ -85,6 +85,7 @@ public:
     void MCLIB_API Ping();
     void MCLIB_API Login(const std::string& username, const std::string& password);
     void MCLIB_API SendPacket(protocol::packets::Packet* packet);
+    void MCLIB_API SendPacket(protocol::packets::Packet&& packet);
 };
 
 } // ns core

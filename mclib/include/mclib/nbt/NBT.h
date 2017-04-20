@@ -32,6 +32,8 @@ public:
     const TagCompound& GetRoot() const noexcept { return m_Root; }
     bool HasData() const { return m_Root.begin() != m_Root.end(); }
 
+    void SetRoot(const TagCompound& compound) { m_Root = compound; }
+
     friend MCLIB_API DataBuffer& operator>>(DataBuffer& out, NBT& nbt);
 };
 

@@ -352,6 +352,14 @@ void Connection::SendPacket(protocol::packets::Packet* packet) {
     m_Socket->Send(encrypted);
 }
 
+void Connection::SendPacket(protocol::packets::Packet&& packet) {
+    DataBuffer packetBuffer = packet.Serialize();
+    DataBuffer compressed = m_Compressor->Compress(packetBuffer);
+    DataBuffer encrypted = m_Encrypter->Encrypt(compressed);
+
+    m_Socket->Send(encrypted);
+}
+
 void Connection::HandlePacket(protocol::packets::in::status::ResponsePacket* packet) {
     std::wstring response = packet->GetResponse();
 
