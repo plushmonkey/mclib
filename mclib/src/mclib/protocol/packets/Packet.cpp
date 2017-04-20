@@ -1874,25 +1874,32 @@ bool EntityPropertiesPacket::Deserialize(DataBuffer& data, std::size_t packetLen
     data >> propertyCount;
 
     for (s32 i = 0; i < propertyCount; ++i) {
-        Property property;
         MCString key;
+        double value;
 
         data >> key;
-        data >> property.value;
+        data >> value;
+
+        mc::entity::Attribute attribute(key.GetUTF16(), value);
 
         VarInt modifierCount;
         data >> modifierCount;
 
         for (s32 j = 0; j < modifierCount.GetInt(); ++j) {
-            Property::Modifier modifier;
-            data >> modifier.uuid;
-            data >> modifier.amount;
-            data >> modifier.operation;
+            UUID uuid;
+            double amount;
+            u8 operation;
 
-            property.modifiers.push_back(modifier);
+            data >> uuid;
+            data >> amount;
+            data >> operation;
+
+            mc::entity::Modifier modifier(uuid, amount, (mc::entity::ModifierOperation)operation);
+
+            attribute.AddModifier(modifier);
         }
 
-        m_Properties[key.GetUTF16()] = property;
+        m_Properties.insert(std::make_pair(attribute.GetKey(), attribute));
     }
     return true;
 }
@@ -2405,7 +2412,7 @@ DataBuffer PlayerAbilitiesPacket::Serialize() const {
     return buffer;
 }
 
-PlayerDiggingPacket::PlayerDiggingPacket(Status status, Vector3i position, u8 face)
+PlayerDiggingPacket::PlayerDiggingPacket(Status status, Vector3i position, Face face)
     : m_Status(status), m_Position(position), m_Face(face)
 {
     m_Id = 0x13;
@@ -2418,7 +2425,7 @@ DataBuffer PlayerDiggingPacket::Serialize() const {
     buffer << m_Id;
     buffer << (u8)m_Status;
     buffer << location;
-    buffer << m_Face;
+    buffer << (u8)m_Face;
 
     return buffer;
 }
@@ -2555,7 +2562,7 @@ DataBuffer SpectatePacket::Serialize() const {
     return buffer;
 }
 
-PlayerBlockPlacementPacket::PlayerBlockPlacementPacket(Vector3i position, u8 face, Hand hand, Vector3f cursorPos) 
+PlayerBlockPlacementPacket::PlayerBlockPlacementPacket(Vector3i position, Face face, Hand hand, Vector3f cursorPos) 
     : m_Position(position), m_Face(face), m_Hand(hand), m_CursorPos(cursorPos)
 {
     m_Id = 0x1C;
@@ -2564,7 +2571,7 @@ PlayerBlockPlacementPacket::PlayerBlockPlacementPacket(Vector3i position, u8 fac
 DataBuffer PlayerBlockPlacementPacket::Serialize() const {
     DataBuffer buffer;
     Position location((s32)m_Position.x, (s32)m_Position.y, (s32)m_Position.z);
-    VarInt face(m_Face), hand((int)m_Hand);
+    VarInt face((u8)m_Face), hand((int)m_Hand);
 
     buffer << m_Id;
     buffer << location;

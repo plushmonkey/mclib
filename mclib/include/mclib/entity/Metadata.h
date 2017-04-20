@@ -21,40 +21,67 @@ public:
 
     struct ByteType : public Type {
         u8 value;
+
+        ByteType() = default;
+        ByteType(u8 value) : value(value) { }
     };
 
     struct VarIntType : public Type {
         VarInt value;
+
+        VarIntType() = default;
+        VarIntType(VarInt value) : value(value) { }
     };
 
     struct FloatType : public Type {
         float value;
+
+        FloatType() = default;
+        FloatType(float value) : value(value) { }
     };
 
     struct StringType : public Type {
         std::wstring value;
+
+        StringType() = default;
+        StringType(const std::wstring& value) : value(value) { }
     };
 
     struct SlotType : public Type {
         inventory::Slot value;
+
+        SlotType() = default;
+        SlotType(const inventory::Slot& value) : value(value) { }
     };
 
     struct BooleanType : public Type {
         bool value;
+
+        BooleanType() = default;
+        BooleanType(bool value) : value(value) { }
     };
 
     struct RotationType : public Type {
         Vector3f value;
+
+        RotationType() = default;
+        RotationType(Vector3f value) : value(value) { }
     };
 
     struct PositionType : public Type {
         bool exists;
         Position value;
+
+        PositionType() = default;
+        PositionType(bool exists, Position value) : exists(exists), value(value) { }
     };
 
     struct UUIDType : public Type {
         bool exists;
         UUID value;
+
+        UUIDType() = default;
+        UUIDType(bool exists, UUID value) : exists(exists), value(value) { }
     };
 
 private:
@@ -73,8 +100,8 @@ public:
     EntityMetadata& operator=(EntityMetadata&& rhs) = default;
 
     template <typename T>
-    T* GetIndex(std::size_t index) {
-        return dynamic_cast<T*>(m_Metadata[index]);
+    T* GetIndex(std::size_t index) const {
+        return dynamic_cast<T*>(m_Metadata[index].first.get());
     }
 
     friend MCLIB_API DataBuffer& operator<<(DataBuffer& out, const EntityMetadata& metadata);

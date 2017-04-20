@@ -6,6 +6,7 @@
 #include <mclib/common/MCString.h>
 #include <mclib/common/Position.h>
 #include <mclib/inventory/Slot.h>
+#include <mclib/entity/Attribute.h>
 #include <mclib/entity/Metadata.h>
 #include <mclib/protocol/Protocol.h>
 #include <mclib/world/Chunk.h>
@@ -1506,21 +1507,9 @@ public:
 };
 
 class EntityPropertiesPacket : public InboundPacket { // 0x4A
-public:
-    struct Property {
-        struct Modifier {
-            UUID uuid;
-            double amount;
-            u8 operation;
-        };
-
-        double value;
-        std::vector<Modifier> modifiers;
-    };
-
 private:
     EntityId m_EntityId;
-    std::map<std::wstring, Property> m_Properties;
+    std::map<std::wstring, mc::entity::Attribute> m_Properties;
 
 public:
     MCLIB_API EntityPropertiesPacket();
@@ -1528,7 +1517,7 @@ public:
     void MCLIB_API Dispatch(PacketHandler* handler);
 
     EntityId GetEntityId() const { return m_EntityId; }
-    const std::map<std::wstring, Property>& GetProperties() const { return m_Properties; }
+    const std::map<std::wstring, mc::entity::Attribute>& GetProperties() const { return m_Properties; }
 };
 
 class EntityEffectPacket : public InboundPacket { // 0x4B
@@ -1849,10 +1838,10 @@ public:
 private:
     Status m_Status;
     Vector3i m_Position;
-    u8 m_Face;
+    Face m_Face;
 
 public:
-    MCLIB_API PlayerDiggingPacket(Status status, Vector3i position, u8 face);
+    MCLIB_API PlayerDiggingPacket(Status status, Vector3i position, Face face);
     DataBuffer MCLIB_API Serialize() const;
 };
 
@@ -1955,13 +1944,13 @@ public:
 class PlayerBlockPlacementPacket : public OutboundPacket { // 0x1C
 private:
     Vector3i m_Position;
-    u8 m_Face;
+    Face m_Face;
     Hand m_Hand;
     Vector3f m_CursorPos;
 
 public:
     // Cursor position is the position of the crosshair on the block
-    MCLIB_API PlayerBlockPlacementPacket(Vector3i position, u8 face, Hand hand, Vector3f cursorPos);
+    MCLIB_API PlayerBlockPlacementPacket(Vector3i position, Face face, Hand hand, Vector3f cursorPos);
     DataBuffer MCLIB_API Serialize() const;
 };
 

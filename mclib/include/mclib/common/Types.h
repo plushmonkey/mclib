@@ -36,6 +36,15 @@ enum class SkinPart {
     Hat = 0x40
 };
 
+enum class Face {
+    Bottom = 0,
+    Top,
+    North,
+    South,
+    West,
+    East
+};
+
 } // ns mc
 
 #include <mclib/mclib.h>

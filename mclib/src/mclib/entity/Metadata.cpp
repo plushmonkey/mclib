@@ -213,6 +213,7 @@ DataBuffer& operator>>(DataBuffer& in, EntityMetadata& md) {
             {
                 std::unique_ptr<EntityMetadata::PositionType> value = std::make_unique<EntityMetadata::PositionType>();
                 in >> *value;
+                value->exists = true;
                 md.m_Metadata[index].first = std::move(value);
             }
             break;
@@ -246,8 +247,43 @@ DataBuffer& operator>>(DataBuffer& in, EntityMetadata& md) {
 
 void EntityMetadata::CopyOther(const EntityMetadata& other) {
     for (std::size_t i = 0; i < MetadataCount; ++i) {
-        m_Metadata[i].first = std::make_unique<Type>(*other.m_Metadata[i].first);
-        m_Metadata[i].second = other.m_Metadata[i].second;
+        auto type = m_Metadata[i].second = other.m_Metadata[i].second;
+
+        switch (type) {
+            case DataType::Byte:
+                m_Metadata[i].first = std::make_unique<ByteType>(dynamic_cast<ByteType*>(other.m_Metadata[i].first.get())->value);
+                break;
+            case DataType::Direction:
+            case DataType::OptBlockID:
+            case DataType::VarInt:
+                m_Metadata[i].first = std::make_unique<VarIntType>(dynamic_cast<VarIntType*>(other.m_Metadata[i].first.get())->value);
+                break;
+            case DataType::Float:
+                m_Metadata[i].first = std::make_unique<FloatType>(dynamic_cast<FloatType*>(other.m_Metadata[i].first.get())->value);
+                break;
+            case DataType::String:
+            case DataType::Chat:
+                m_Metadata[i].first = std::make_unique<StringType>(dynamic_cast<StringType*>(other.m_Metadata[i].first.get())->value);
+                break;
+            case DataType::Slot:
+                m_Metadata[i].first = std::make_unique<SlotType>(dynamic_cast<SlotType*>(other.m_Metadata[i].first.get())->value);
+                break;
+            case DataType::Boolean:
+                m_Metadata[i].first = std::make_unique<BooleanType>(dynamic_cast<BooleanType*>(other.m_Metadata[i].first.get())->value);
+                break;
+            case DataType::Rotation:
+                m_Metadata[i].first = std::make_unique<RotationType>(dynamic_cast<RotationType*>(other.m_Metadata[i].first.get())->value);
+                break;
+            case DataType::OptPosition:
+            case DataType::Position:
+                m_Metadata[i].first = std::make_unique<PositionType>(dynamic_cast<PositionType*>(other.m_Metadata[i].first.get())->exists, 
+                                                                     dynamic_cast<PositionType*>(other.m_Metadata[i].first.get())->value);
+                break;
+            case DataType::OptUUID:
+                m_Metadata[i].first = std::make_unique<UUIDType>(dynamic_cast<UUIDType*>(other.m_Metadata[i].first.get())->exists,
+                                                                 dynamic_cast<UUIDType*>(other.m_Metadata[i].first.get())->value);
+                break;
+        }   
     }
 }
 

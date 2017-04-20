@@ -3,16 +3,118 @@
 
 #include <mclib/common/DataBuffer.h>
 #include <mclib/common/Types.h>
+#include <mclib/entity/Attribute.h>
 #include <mclib/entity/Metadata.h>
 
 #include <string>
 #include <memory>
+#include <unordered_map>
 
 namespace mc {
 namespace entity {
 
+enum class EntityType {
+    Item = 1,
+    XPOrb,
+    AreaEffectCloud,
+    ElderGuardian,
+    WitherSkeleton,
+    Stray,
+    ThrownEgg,
+    LeashKnot,
+    Painting,
+    Arrow,
+    Snowball,
+    Fireball,
+    SmallFireball,
+    ThrownEnderpearl,
+    EyeOfEnderSignal,
+    ThrownPotion,
+    ThrownExpBottle,
+    ItemFrame,
+    WitherSkull,
+    PrimedTnt,
+    FallingSand,
+    FireworksRocketEntity,
+    Husk,
+    SpectralArrow,
+    ShulkerBullet,
+    DragonFireball,
+    ZombieVillager,
+    SkeletonHorse,
+    ZombieHorse,
+    ArmorStand,
+    Donkey,
+    Mule,
+    EvocationFangs,
+    EvocationIllager,
+    Vex,
+    VindicationIllager,
+
+    MinecartCommandBlock = 40,
+    Boat,
+    MinecartRideable,
+    MinecartChest,
+    MinecartFurnace,
+    MinecartTNT,
+    MinecartHopper,
+    MinecartSpawner,
+
+    Creeper = 50,
+    Skeleton,
+    Spider,
+    Giant,
+    Zombie,
+    Slime,
+    Ghast,
+    PigZombie,
+    Enderman,
+    CaveSpider,
+    Silverfish,
+    Blaze,
+    LavaSlime,
+    EnderDragon,
+    WitherBoss,
+    Bat,
+    Witch,
+    Endermite,
+    Guardian,
+    Shulker,
+
+    Pig = 90,
+    Sheep,
+    Cow,
+    Chicken,
+    Squid,
+    Wolf,
+    Mooshroom,
+    SnowMan,
+    Ocelot,
+    IronGolem,
+    Horse,
+    Rabbit,
+    PolarBear,
+    Llama,
+    LlamaSpit,
+
+    Villager = 120,
+
+    EnderCrystal = 200,
+
+    // Not part of protocol
+    Lightning= 251,
+    FallingObject = 252,
+    FishingHook = 253,
+    Player = 254,
+    Unknown
+};
+
 class Entity {
+public:
+    using AttributeMap = std::unordered_map<std::wstring, Attribute>;
+
 protected:
+    AttributeMap m_Attributes;
     EntityMetadata m_Metadata;
     Vector3d m_Position;
     Vector3d m_Velocity;
@@ -20,9 +122,10 @@ protected:
     // Stored in radians
     float m_Yaw, m_Pitch, m_HeadPitch;
     EntityId m_VehicleId;
+    EntityType m_Type;
 
 public:
-    Entity(EntityId id) noexcept : m_EntityId(id), m_VehicleId(-1) { }
+    Entity(EntityId id) noexcept : m_EntityId(id), m_VehicleId(-1), m_Type(EntityType::Unknown) { }
     virtual ~Entity() { }
 
     Entity(const Entity& rhs) = default;
@@ -37,14 +140,31 @@ public:
     float GetYaw() const noexcept { return m_Yaw; }
     float GetPitch() const noexcept { return m_Pitch; }
     float GetHeadPitch() const noexcept { return m_HeadPitch; }
-
+    EntityType GetType() const noexcept { return m_Type; }
     const EntityMetadata& GetMetadata() const noexcept { return m_Metadata; }
+    const AttributeMap& GetAttributes() const noexcept { return m_Attributes; }
+
+    const Attribute& GetAttribute(const std::wstring& key) {
+        auto iter = m_Attributes.find(key);
+        if (iter == m_Attributes.end()) return Attribute(key, 0);
+        return iter->second;
+    }
 
     void SetPosition(const Vector3d& pos) noexcept { m_Position = pos; }
     void SetVelocity(const Vector3d& vel) noexcept { m_Velocity = vel; }
     void SetYaw(float yaw) noexcept { m_Yaw = yaw; }
     void SetPitch(float pitch) noexcept { m_Pitch = pitch; }
+    void SetHeadPitch(float pitch) noexcept { m_HeadPitch = pitch; }
     void SetVehicleId(EntityId vid) noexcept { m_VehicleId = vid; }
+    void SetType(EntityType type) { m_Type = type; }
+    void SetMetadata(const EntityMetadata& metadata) { m_Metadata = metadata; }
+
+    void SetAttribute(const std::wstring& key, const Attribute& attrib) { 
+        m_Attributes.erase(key);
+        m_Attributes.insert(std::make_pair(key, attrib));
+    }
+
+    void ClearAttributes() { m_Attributes.clear(); }
 };
 
 typedef std::shared_ptr<Entity> EntityPtr;

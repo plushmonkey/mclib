@@ -28,6 +28,7 @@
     <ClInclude Include="include\mclib\core\Connection.h" />
     <ClInclude Include="include\mclib\core\Encryption.h" />
     <ClInclude Include="include\mclib\core\PlayerManager.h" />
+    <ClInclude Include="include\mclib\entity\Attribute.h" />
     <ClInclude Include="include\mclib\entity\Creeper.h" />
     <ClInclude Include="include\mclib\entity\Entity.h" />
     <ClInclude Include="include\mclib\entity\EntityFactory.h" />
@@ -35,7 +36,9 @@
     <ClInclude Include="include\mclib\entity\LivingEntity.h" />
     <ClInclude Include="include\mclib\entity\Metadata.h" />
     <ClInclude Include="include\mclib\entity\Monster.h" />
+    <ClInclude Include="include\mclib\entity\Painting.h" />
     <ClInclude Include="include\mclib\entity\Player.h" />
+    <ClInclude Include="include\mclib\entity\XPOrb.h" />
     <ClInclude Include="include\mclib\inventory\Hotbar.h" />
     <ClInclude Include="include\mclib\inventory\Inventory.h" />
     <ClInclude Include="include\mclib\inventory\Slot.h" />

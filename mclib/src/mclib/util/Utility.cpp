@@ -978,7 +978,7 @@ public:
             PlayerDiggingPacket::Status status = PlayerDiggingPacket::Status::DropItemStack;
             Vector3i pos(0, 0, 0);
 
-            PlayerDiggingPacket packet(status, pos, 0);
+            PlayerDiggingPacket packet(status, pos, Face::Bottom);
 
             m_Connection->SendPacket(&packet);
 
