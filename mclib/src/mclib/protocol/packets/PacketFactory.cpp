@@ -265,6 +265,63 @@ Packet* PlayPacketFactory::CreatePacket(DataBuffer& data, std::size_t length) {
     case protocol::play::OpenWindow:
         packet = new in::OpenWindowPacket();
         break;
+    case protocol::play::ConfirmTransaction:
+        packet = new in::ConfirmTransactionPacket();
+        break;
+    case protocol::play::BossBar:
+        packet = new in::BossBarPacket();
+        break;
+    case protocol::play::TabComplete:
+        packet = new in::TabCompletePacket();
+        break;
+    case protocol::play::CloseWindow:
+        packet = new in::CloseWindowPacket();
+        break;
+    case protocol::play::WindowProperty:
+        packet = new in::WindowPropertyPacket();
+        break;
+    case protocol::play::SetCooldown:
+        packet = new in::SetCooldownPacket();
+        break;
+    case protocol::play::NamedSoundEffect:
+        packet = new in::NamedSoundEffectPacket();
+        break;
+    case protocol::play::Map:
+        packet = new in::MapPacket();
+        break;
+    case protocol::play::VehicleMove:
+        packet = new in::VehicleMovePacket();
+        break;
+    case protocol::play::OpenSignEditor:
+        packet = new in::OpenSignEditorPacket();
+        break;
+    case protocol::play::ResourcePackSend:
+        packet = new in::ResourcePackSendPacket();
+        break;
+    case protocol::play::Camera:
+        packet = new in::CameraPacket();
+        break;
+    case protocol::play::DisplayScoreboard:
+        packet = new in::DisplayScoreboardPacket();
+        break;
+    case protocol::play::ScoreboardObjective:
+        packet = new in::ScoreboardObjectivePacket();
+        break;
+    case protocol::play::SetPassengers:
+        packet = new in::SetPassengersPacket();
+        break;
+    case protocol::play::Teams:
+        packet = new in::TeamsPacket();
+        break;
+    case protocol::play::UpdateScore:
+        packet = new in::UpdateScorePacket();
+        break;
+    case protocol::play::Title:
+        packet = new in::TitlePacket();
+        break;
+    case protocol::play::PlayerListHeaderAndFooter:
+        packet = new in::PlayerListHeaderAndFooterPacket();
+        break;
     default:
         throw protocol::UnfinishedProtocolException(vid, protocol::State::Play);
     }

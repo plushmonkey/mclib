@@ -159,10 +159,12 @@ void TagIntArray::Read(DataBuffer& buffer) {
 
 void TagList::Write(DataBuffer& buffer) const {
     u8 type = (u8)m_ListType;
-    s32 size = m_Tags.size();
+    s32 size = (m_ListType != TagType::End) ? m_Tags.size() : 0;
 
     buffer << type;
     buffer << size;
+
+    if (m_ListType == TagType::End) return;
 
     for (TagPtr tag : m_Tags)
         tag->Write(buffer);
