@@ -17,19 +17,6 @@
 #pragma comment(lib, "../lib/jsoncpp/lib/jsoncpp-msvc-2017.lib")
 #endif
 
-s64 GetTime() {
-    return std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
-}
-
-enum class Face {
-    Bottom = 0,
-    Top,
-    North,
-    South,
-    West,
-    East
-};
-
 using mc::Vector3i;
 using mc::Vector3d;
 
@@ -44,7 +31,11 @@ private:
 
 public:
     BlockPlacer(mc::protocol::packets::PacketDispatcher* dispatcher, mc::core::Client* client, mc::util::PlayerController* pc, mc::world::World* world) 
-        : mc::protocol::packets::PacketHandler(dispatcher), m_Client(client), m_PlayerController(pc), m_World(world), m_LastUpdate(GetTime())
+        : mc::protocol::packets::PacketHandler(dispatcher), 
+          m_Client(client), 
+          m_PlayerController(pc), 
+          m_World(world), 
+          m_LastUpdate(mc::util::GetTime())
     {
         m_Target = mc::Vector3i(-2, 62, 275);
         world->RegisterListener(this);
@@ -74,7 +65,7 @@ public:
     }
 
     void OnTick() {
-        s64 time = GetTime();
+        s64 time = mc::util::GetTime();
         if (time - m_LastUpdate < 5000) return;
         m_LastUpdate = time;
 
@@ -87,7 +78,7 @@ public:
             mc::block::BlockPtr block = m_World->GetBlock(m_Target + Vector3i(0, 1, 0)).GetBlock();
             
             if (!block || block->GetType() == 0) {
-                mc::protocol::packets::out::PlayerBlockPlacementPacket blockPlacePacket(m_Target, (u8)Face::Top, mc::Hand::Main, mc::Vector3f(0.5, 0, 0.5));
+                mc::protocol::packets::out::PlayerBlockPlacementPacket blockPlacePacket(m_Target, mc::Face::Top, mc::Hand::Main, mc::Vector3f(0.5, 0, 0.5));
 
                 m_Client->GetConnection()->SendPacket(&blockPlacePacket);
                 std::wcout << "Placing block" << std::endl;
@@ -95,7 +86,7 @@ public:
                 using namespace mc::protocol::packets::out;
                 {
                     PlayerDiggingPacket::Status status = PlayerDiggingPacket::Status::StartedDigging;
-                    PlayerDiggingPacket packet(status, m_Target + Vector3i(0, 1, 0), (u8)Face::West);
+                    PlayerDiggingPacket packet(status, m_Target + Vector3i(0, 1, 0), mc::Face::West);
 
                     m_Client->GetConnection()->SendPacket(&packet);
                 }
@@ -104,7 +95,7 @@ public:
 
                 {
                     PlayerDiggingPacket::Status status = PlayerDiggingPacket::Status::FinishedDigging;
-                    PlayerDiggingPacket packet(status, m_Target + Vector3i(0, 1, 0), (u8)Face::West);
+                    PlayerDiggingPacket packet(status, m_Target + Vector3i(0, 1, 0), mc::Face::West);
 
                     m_Client->GetConnection()->SendPacket(&packet);
                 }
@@ -202,7 +193,7 @@ public:
         : m_Client(client), 
           m_PlayerManager(client->GetPlayerManager()), 
           m_Connection(client->GetConnection()),
-          m_StartTime(GetTime())
+          m_StartTime(mc::util::GetTime())
     {
         m_PlayerManager->RegisterListener(this);
         m_Client->RegisterListener(this);
@@ -214,7 +205,7 @@ public:
     }
 
     void OnTick() override {
-        s64 ticks = GetTime() - m_StartTime;
+        s64 ticks = mc::util::GetTime() - m_StartTime;
         float pitch = (((float)std::sin(ticks * 3 * 3.14 / 1000) * 0.5f + 0.5f) * 360.0f) - 180.0f;
         pitch = (pitch / 5.5f) + 130.0f;
 
@@ -373,12 +364,12 @@ public:
 
         for (s32 i = 0; i < m_DigPerTick; ++i) {
             PlayerDiggingPacket::Status status = PlayerDiggingPacket::Status::StartedDigging;
-            PlayerDiggingPacket packet(status, m_Target + Vector3i(0, 1, 0), (u8)Face::West);
+            PlayerDiggingPacket packet(status, m_Target + Vector3i(0, 1, 0), mc::Face::West);
 
             m_Client->GetConnection()->SendPacket(&packet);
 
             status = PlayerDiggingPacket::Status::FinishedDigging;
-            packet = PlayerDiggingPacket(status, m_Target + Vector3i(0, 1, 0), (u8)Face::West);
+            packet = PlayerDiggingPacket(status, m_Target + Vector3i(0, 1, 0), mc::Face::West);
 
             m_Client->GetConnection()->SendPacket(&packet);
     }
