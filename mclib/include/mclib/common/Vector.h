@@ -24,9 +24,9 @@ public:
 
     typedef VecType value_type;
 
-    Vector3() noexcept : x(0), y(0), z(0) { }
-    Vector3(VecType x, VecType y) noexcept : x(x), y(y), z(0) { }
-    Vector3(VecType x, VecType y, VecType z) noexcept : x(x), y(y), z(z) { }
+    constexpr Vector3() noexcept : x(0), y(0), z(0) { }
+    constexpr Vector3(VecType x, VecType y) noexcept : x(x), y(y), z(0) { }
+    constexpr Vector3(VecType x, VecType y, VecType z) noexcept : x(x), y(y), z(z) { }
 
     Vector3& operator=(const Vector3& other) noexcept {
         x = other.x;

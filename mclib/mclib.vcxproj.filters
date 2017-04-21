@@ -237,6 +237,21 @@
     <ClInclude Include="include\mclib\entity\XPOrb.h">
       <Filter>Header Files\entity</Filter>
     </ClInclude>
+    <ClInclude Include="include\mclib\block\Banner.h">
+      <Filter>Header Files\block</Filter>
+    </ClInclude>
+    <ClInclude Include="include\mclib\block\Chest.h">
+      <Filter>Header Files\block</Filter>
+    </ClInclude>
+    <ClInclude Include="include\mclib\common\DyeColor.h">
+      <Filter>Header Files\common</Filter>
+    </ClInclude>
+    <ClInclude Include="include\mclib\common\Nameable.h">
+      <Filter>Header Files\common</Filter>
+    </ClInclude>
+    <ClInclude Include="include\mclib\block\Sign.h">
+      <Filter>Header Files\block</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\mclib\block\Block.cpp">
@@ -346,6 +361,18 @@
     </ClCompile>
     <ClCompile Include="src\mclib\inventory\Inventory.cpp">
       <Filter>Source Files\inventory</Filter>
+    </ClCompile>
+    <ClCompile Include="src\mclib\block\Banner.cpp">
+      <Filter>Source Files\block</Filter>
+    </ClCompile>
+    <ClCompile Include="src\mclib\block\Chest.cpp">
+      <Filter>Source Files\block</Filter>
+    </ClCompile>
+    <ClCompile Include="src\mclib\block\Sign.cpp">
+      <Filter>Source Files\block</Filter>
+    </ClCompile>
+    <ClCompile Include="src\mclib\common\DyeColor.cpp">
+      <Filter>Source Files\common</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

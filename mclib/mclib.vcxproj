@@ -11,12 +11,17 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="include\mclib\block\Banner.h" />
     <ClInclude Include="include\mclib\block\Block.h" />
     <ClInclude Include="include\mclib\block\BlockEntity.h" />
+    <ClInclude Include="include\mclib\block\Chest.h" />
+    <ClInclude Include="include\mclib\block\Sign.h" />
     <ClInclude Include="include\mclib\common\AABB.h" />
     <ClInclude Include="include\mclib\common\Common.h" />
     <ClInclude Include="include\mclib\common\DataBuffer.h" />
+    <ClInclude Include="include\mclib\common\DyeColor.h" />
     <ClInclude Include="include\mclib\common\MCString.h" />
+    <ClInclude Include="include\mclib\common\Nameable.h" />
     <ClInclude Include="include\mclib\common\Position.h" />
     <ClInclude Include="include\mclib\common\Types.h" />
     <ClInclude Include="include\mclib\common\UUID.h" />
@@ -65,9 +70,13 @@
     <ClInclude Include="include\mclib\world\World.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="src\mclib\block\Banner.cpp" />
     <ClCompile Include="src\mclib\block\Block.cpp" />
     <ClCompile Include="src\mclib\block\BlockEntity.cpp" />
+    <ClCompile Include="src\mclib\block\Chest.cpp" />
+    <ClCompile Include="src\mclib\block\Sign.cpp" />
     <ClCompile Include="src\mclib\common\DataBuffer.cpp" />
+    <ClCompile Include="src\mclib\common\DyeColor.cpp" />
     <ClCompile Include="src\mclib\common\MCString.cpp" />
     <ClCompile Include="src\mclib\common\Position.cpp" />
     <ClCompile Include="src\mclib\common\UUID.cpp" />

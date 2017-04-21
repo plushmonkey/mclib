@@ -124,6 +124,11 @@ public:
     TagType MCLIB_API GetListType() const noexcept { return m_ListType; }
     const std::vector<TagPtr>& GetList() const { return m_Tags; }
 
+    std::vector<TagPtr>::iterator MCLIB_API begin() { return m_Tags.begin(); }
+    std::vector<TagPtr>::iterator MCLIB_API end() { return m_Tags.end(); }
+    std::vector<TagPtr>::const_iterator MCLIB_API begin() const { return m_Tags.begin(); }
+    std::vector<TagPtr>::const_iterator MCLIB_API end() const { return m_Tags.end(); }
+
     void MCLIB_API AddItem(TagPtr item);
     friend MCLIB_API DataBuffer& operator<<(DataBuffer& out, const TagList& tag);
     friend MCLIB_API DataBuffer& operator<<(DataBuffer& out, const Tag& tag);

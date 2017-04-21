@@ -1,5 +1,8 @@
 #include <mclib/block/BlockEntity.h>
 
+#include <mclib/block/Banner.h>
+#include <mclib/block/Chest.h>
+#include <mclib/block/Sign.h>
 #include <unordered_map>
 
 namespace mc {
@@ -84,12 +87,16 @@ std::unique_ptr<BlockEntity> BlockEntity::CreateFromNBT(nbt::NBT* nbt) {
     std::unique_ptr<BlockEntity> entity;
 
     switch (type) {
-        case BlockEntityType::Sign:
-            entity = std::make_unique<SignBlockEntity>(type, position);
+        case BlockEntityType::Banner:
+            entity = std::make_unique<Banner>(type, position);
             break;
         case BlockEntityType::Chest:
-            entity = std::make_unique<ChestBlockEntity>(type, position);
+            entity = std::make_unique<Chest>(type, position);
             break;
+        case BlockEntityType::Sign:
+            entity = std::make_unique<Sign>(type, position);
+            break;
+        
         default:
             entity = std::make_unique<BlockEntity>(type, position);
     }
@@ -98,76 +105,9 @@ std::unique_ptr<BlockEntity> BlockEntity::CreateFromNBT(nbt::NBT* nbt) {
         // The nbt data didn't contain enough information to construct the block entity
         return nullptr;
     }
+
     entity->m_NBT = *nbt;
     return entity;
-}
-
-
-bool SignBlockEntity::ImportNBT(nbt::NBT* nbt) {
-    auto& root = nbt->GetRoot();
-    s32 textCount = 0;
-
-    for (auto iter = root.begin(); iter != root.end(); ++iter) {
-        if (iter->second->GetName().find(L"Text") == 0 && iter->second->GetType() == nbt::TagType::String) {
-            int index = iter->second->GetName()[4] - L'0' - 1;
-            m_Text[index] = ((nbt::TagString*)iter->second.get())->GetValue();
-            textCount++;
-        }
-    }
-
-    return textCount == 4;
-}
-
-const std::wstring& SignBlockEntity::GetText(std::size_t index) const {
-    return m_Text[index];
-}
-
-
-bool ChestBlockEntity::ImportNBT(nbt::NBT* nbt) {
-    auto& root = nbt->GetRoot();
-    s32 textCount = 0;
-
-    m_LootTableSeed = 0;
-
-    for (auto iter = root.begin(); iter != root.end(); ++iter) {
-        auto tag = iter->second;
-        if (tag->GetName() == L"CustomName") {
-            m_Name = ((nbt::TagString*)iter->second.get())->GetValue();
-        } else if (tag->GetName() == L"Lock") {
-            m_Lock = ((nbt::TagString*)iter->second.get())->GetValue();
-        } else if (tag->GetName() == L"Items") {
-            nbt::TagList* itemListTag = (nbt::TagList*)iter->second.get();
-            const auto& list = itemListTag->GetList();
-
-            for (auto itemIter = list.begin(); itemIter != list.end(); ++itemIter) {
-                nbt::TagCompound* itemTag = (nbt::TagCompound*)itemIter->get();
-                
-                u8 slot = 0;
-                bool slotFound = false;
-                for (auto itemTagIter = itemTag->begin(); itemTagIter != itemTag->end(); ++itemTagIter) {
-                    if (itemTagIter->second->GetName() == L"Slot") {
-                        slot = ((nbt::TagByte*)itemTagIter->second.get())->GetValue();
-                        slotFound = true;
-                        break;
-                    }
-                }
-
-                if (!slotFound) {
-                    return false;
-                }
-
-                inventory::Slot item = inventory::Slot::FromNBT(*itemTag);
-                m_Items.insert(std::make_pair(slot, item));
-            }
-        } else if (tag->GetName() == L"LootTable") {
-            m_LootTable = ((nbt::TagString*)iter->second.get())->GetValue();
-        } else if (tag->GetName() == L"LootTableSeed") {
-            m_LootTableSeed = ((nbt::TagLong*)iter->second.get())->GetValue();
-        }
-
-    }
-
-    return true;
 }
 
 } // ns block
