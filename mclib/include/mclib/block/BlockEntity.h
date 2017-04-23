@@ -39,6 +39,7 @@ enum class BlockEntityType {
     Sign,
     Skull,
     StructureBlock,
+    TrappedChest,
 
     Unknown
 };

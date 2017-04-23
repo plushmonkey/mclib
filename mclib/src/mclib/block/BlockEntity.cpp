@@ -33,7 +33,8 @@ static const std::unordered_map<std::wstring, BlockEntityType> blockEntityTypes 
     { L"minecraft:piston", BlockEntityType::Piston },
     { L"minecraft:sign", BlockEntityType::Sign },
     { L"minecraft:skull", BlockEntityType::Skull },
-    { L"minecraft:structure_block", BlockEntityType::StructureBlock }
+    { L"minecraft:structure_block", BlockEntityType::StructureBlock },
+    { L"minecraft:trapped_chest", BlockEntityType::TrappedChest }
 };
 
 BlockEntityType GetTypeFromString(const std::wstring& str) {
@@ -50,36 +51,18 @@ BlockEntity::BlockEntity(BlockEntityType type, Vector3i position) noexcept
 }
 
 std::unique_ptr<BlockEntity> BlockEntity::CreateFromNBT(nbt::NBT* nbt) {
-    auto& root = nbt->GetRoot();
+    auto idTag = nbt->GetTag<nbt::TagString>(L"id");
+    auto xTag = nbt->GetTag<nbt::TagInt>(L"x");
+    auto yTag = nbt->GetTag<nbt::TagInt>(L"y");
+    auto zTag = nbt->GetTag<nbt::TagInt>(L"z");
 
-    std::wstring id;
-    s32 x, y, z;
-    s32 tagCount = 0;
-    for (auto iter = root.begin(); iter != root.end(); ++iter) {
-        nbt::Tag* tag = iter->second.get();
+    if (idTag == nullptr || xTag == nullptr || yTag == nullptr || zTag == nullptr)
+        return nullptr;
 
-        if (tag->GetName().compare(L"id") == 0 && tag->GetType() == nbt::TagType::String) {
-            id = ((nbt::TagString*)tag)->GetValue();
-            tagCount++;
-        }
-
-        if (tag->GetName().compare(L"x") == 0 && tag->GetType() == nbt::TagType::Int) {
-            x = ((nbt::TagInt*)tag)->GetValue();
-            tagCount++;
-        }
-
-        if (tag->GetName().compare(L"y") == 0 && tag->GetType() == nbt::TagType::Int) {
-            y = ((nbt::TagInt*)tag)->GetValue();
-            tagCount++;
-        }
-
-        if (tag->GetName().compare(L"z") == 0 && tag->GetType() == nbt::TagType::Int) {
-            z = ((nbt::TagInt*)tag)->GetValue();
-            tagCount++;
-        }
-    }
-
-    if (tagCount != 4) return nullptr;
+    std::wstring id = idTag->GetValue();
+    auto x = xTag->GetValue();
+    auto y = yTag->GetValue();
+    auto z = zTag->GetValue();
 
     Vector3i position(x, y, z);
     BlockEntityType type = GetTypeFromString(id);
@@ -95,6 +78,9 @@ std::unique_ptr<BlockEntity> BlockEntity::CreateFromNBT(nbt::NBT* nbt) {
             break;
         case BlockEntityType::Sign:
             entity = std::make_unique<Sign>(type, position);
+            break;
+        case BlockEntityType::TrappedChest:
+            entity = std::make_unique<Chest>(type, position);
             break;
         
         default:

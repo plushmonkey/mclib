@@ -41,6 +41,11 @@ DataBuffer& operator<<(DataBuffer& out, const TagString& tag) {
     return out;
 }
 
+DataBuffer& operator<<(DataBuffer& out, const TagByteArray& tag) {
+    out << (Tag&)tag;
+    return out;
+}
+
 DataBuffer& operator<<(DataBuffer& out, const TagByte& tag) {
     out << (Tag&)tag;
     return out;
@@ -72,12 +77,17 @@ DataBuffer& operator<<(DataBuffer& out, const TagDouble& tag) {
 }
 
 DataBuffer& operator<<(DataBuffer& out, const TagList& tag) {
-    tag.Write(out);
+    out << (Tag&)tag;
     return out;
 }
 
 DataBuffer& operator<<(DataBuffer& out, const TagCompound& tag) {
-    tag.Write(out);
+    out << (Tag&)tag;
+    return out;
+}
+
+DataBuffer& operator<<(DataBuffer& out, const TagIntArray& tag) {
+    out << (Tag&)tag;
     return out;
 }
 

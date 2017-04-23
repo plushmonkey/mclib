@@ -18,16 +18,15 @@ public:
     using ItemMap = std::map<s32, Slot>;
 
 private:
-    core::Connection* m_Connection;
     ItemMap m_Items;
     int m_WindowId;
     s16 m_CurrentAction;
     Slot m_Cursor;
 
-    MCLIB_API void HandleTransaction(u16 action, bool accepted);
+    MCLIB_API void HandleTransaction(core::Connection& conn, u16 action, bool accepted);
 
 public:
-    MCLIB_API Inventory(core::Connection* connection, int windowId);
+    MCLIB_API Inventory(int windowId);
 
     MCLIB_API Slot GetItem(s32 index) const;
     MCLIB_API const ItemMap& GetItems() const noexcept { return m_Items; }
@@ -43,10 +42,10 @@ public:
     MCLIB_API bool ContainsAtLeast(Slot item, s32 amount) const;
 
     // Moves an item to the cursor. It will fail if something is already on cursor or if target slot is empty.
-    MCLIB_API bool PickUp(s32 index);
+    MCLIB_API bool PickUp(core::Connection& conn, s32 index);
     // Place the current cursor item into a slot. 
     // The server may set the new cursor to the item in the target slot.
-    MCLIB_API bool Place(s32 index);
+    MCLIB_API bool Place(core::Connection& conn, s32 index);
 
     friend class InventoryManager;
 };

@@ -34,6 +34,11 @@ public:
 
     void SetRoot(const TagCompound& compound) { m_Root = compound; }
 
+    template <typename T>
+    T* GetTag(const std::wstring& tagName) const {
+        return m_Root.GetTag<T>(tagName);
+    }
+
     friend MCLIB_API DataBuffer& operator>>(DataBuffer& out, NBT& nbt);
 };
 

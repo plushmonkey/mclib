@@ -252,6 +252,9 @@
     <ClInclude Include="include\mclib\block\Sign.h">
       <Filter>Header Files\block</Filter>
     </ClInclude>
+    <ClInclude Include="include\mclib\block\InventoryBlock.h">
+      <Filter>Header Files\block</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\mclib\block\Block.cpp">
@@ -373,6 +376,9 @@
     </ClCompile>
     <ClCompile Include="src\mclib\common\DyeColor.cpp">
       <Filter>Source Files\common</Filter>
+    </ClCompile>
+    <ClCompile Include="src\mclib\block\InventoryBlock.cpp">
+      <Filter>Source Files\block</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

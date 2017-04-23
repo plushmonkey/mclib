@@ -15,6 +15,7 @@
     <ClInclude Include="include\mclib\block\Block.h" />
     <ClInclude Include="include\mclib\block\BlockEntity.h" />
     <ClInclude Include="include\mclib\block\Chest.h" />
+    <ClInclude Include="include\mclib\block\InventoryBlock.h" />
     <ClInclude Include="include\mclib\block\Sign.h" />
     <ClInclude Include="include\mclib\common\AABB.h" />
     <ClInclude Include="include\mclib\common\Common.h" />
@@ -74,6 +75,7 @@
     <ClCompile Include="src\mclib\block\Block.cpp" />
     <ClCompile Include="src\mclib\block\BlockEntity.cpp" />
     <ClCompile Include="src\mclib\block\Chest.cpp" />
+    <ClCompile Include="src\mclib\block\InventoryBlock.cpp" />
     <ClCompile Include="src\mclib\block\Sign.cpp" />
     <ClCompile Include="src\mclib\common\DataBuffer.cpp" />
     <ClCompile Include="src\mclib\common\DyeColor.cpp" />

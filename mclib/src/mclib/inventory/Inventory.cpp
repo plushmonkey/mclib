@@ -8,9 +8,8 @@ namespace inventory {
 const s32 Inventory::HOTBAR_SLOT_START = 36;
 const s32 Inventory::PLAYER_INVENTORY_ID = 0;
 
-Inventory::Inventory(core::Connection* connection, int windowId)
+Inventory::Inventory(int windowId)
     : m_WindowId(windowId),
-      m_Connection(connection),
       m_CurrentAction(1)
 {
 
@@ -75,15 +74,15 @@ bool Inventory::ContainsAtLeast(Slot item, s32 amount) const {
     return iter != m_Items.end();
 }
 
-void Inventory::HandleTransaction(u16 action, bool accepted) {
+void Inventory::HandleTransaction(core::Connection& conn, u16 action, bool accepted) {
     if (!accepted) {
         // Confirm with server that the transaction failed.
         mc::protocol::packets::out::ConfirmTransactionPacket confirmation(m_WindowId, action, false);
-        m_Connection->SendPacket(&confirmation);
+        conn.SendPacket(&confirmation);
     }
 }
 
-bool Inventory::PickUp(s32 index) {
+bool Inventory::PickUp(core::Connection& conn, s32 index) {
     using namespace protocol::packets::out;
 
     if (m_Cursor.GetItemId() != -1) return false;
@@ -96,12 +95,12 @@ bool Inventory::PickUp(s32 index) {
         windowId = -2;
     
     ClickWindowPacket pickupPacket(windowId, index, 0, m_CurrentAction++, 0, iter->second);
-    m_Connection->SendPacket(&pickupPacket);
+    conn.SendPacket(&pickupPacket);
 
     return true;
 }
 
-bool Inventory::Place(s32 index) {
+bool Inventory::Place(core::Connection& conn, s32 index) {
     using namespace protocol::packets::out;
 
     if (m_Cursor.GetItemId() == -1) return false;
@@ -111,7 +110,7 @@ bool Inventory::Place(s32 index) {
         windowId = -2;
 
     ClickWindowPacket dropPacket(windowId, index, 0, m_CurrentAction++, 0, Slot());
-    m_Connection->SendPacket(&dropPacket);
+    conn.SendPacket(&dropPacket);
 
     return true;
 }
@@ -146,7 +145,7 @@ void InventoryManager::SetSlot(s32 windowId, s32 slotIndex, const Slot& slot) {
 
     Inventory* inventory = nullptr;
     if (iter == m_Inventories.end()) {
-        auto newInventory = std::make_unique<Inventory>(m_Connection, windowId);
+        auto newInventory = std::make_unique<Inventory>(windowId);
         inventory = newInventory.get();
         m_Inventories[windowId] = std::move(newInventory);
     } else {
@@ -164,7 +163,7 @@ void InventoryManager::HandlePacket(protocol::packets::in::SetSlotPacket* packet
 
         auto iter = m_Inventories.find(0);
         if (iter == m_Inventories.end()) {
-            auto newInventory = std::make_unique<Inventory>(m_Connection, windowId);
+            auto newInventory = std::make_unique<Inventory>(windowId);
             inventory = newInventory.get();
             m_Inventories[0] = std::move(newInventory);
         } else {
@@ -187,7 +186,7 @@ void InventoryManager::HandlePacket(protocol::packets::in::WindowItemsPacket* pa
 
 void InventoryManager::HandlePacket(protocol::packets::in::OpenWindowPacket* packet) {
     m_Inventories.erase((s32)packet->GetWindowId());
-    auto newInventory = std::make_unique<Inventory>(m_Connection, packet->GetWindowId());
+    auto newInventory = std::make_unique<Inventory>(packet->GetWindowId());
     m_Inventories.insert(std::make_pair(packet->GetWindowId(), std::move(newInventory)));
 }
 
@@ -206,7 +205,7 @@ void InventoryManager::HandlePacket(protocol::packets::in::ConfirmTransactionPac
         return;
     }
 
-    iter->second->HandleTransaction(action, accepted);
+    iter->second->HandleTransaction(*m_Connection, action, accepted);
 }
 
 } // ns inventory

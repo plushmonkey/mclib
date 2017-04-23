@@ -4,43 +4,34 @@ namespace mc {
 namespace block {
 
 bool Banner::ImportNBT(nbt::NBT* nbt) {
-    auto& root = nbt->GetRoot();
+    auto nameTag = nbt->GetTag<nbt::TagString>(L"CustomName");
 
-    for (auto iter = root.begin(); iter != root.end(); ++iter) {
-        auto tag = iter->second;
+    if (nameTag) {
+        this->SetCustomName(nameTag->GetValue());
+    }
 
-        if (tag->GetName() == L"CustomName") {
-            std::wstring name = ((nbt::TagString*)iter->second.get())->GetValue();
-            this->SetCustomName(name);
-        } else if (tag->GetName() == L"Base") {
-            m_Base = static_cast<DyeColor>(((nbt::TagInt*)iter->second.get())->GetValue());
-        } else if (tag->GetName() == L"Patterns") {
-            nbt::TagList* listTag = (nbt::TagList*)iter->second.get();
+    auto baseTag = nbt->GetTag<nbt::TagInt>(L"Base");
+    if (!baseTag) return false;
 
-            for (auto listIter = listTag->begin(); listIter != listTag->end(); ++listIter) {
-                nbt::TagCompound* sectionCompound = (nbt::TagCompound*)listIter->get();
-                Pattern pattern;
+    m_Base = static_cast<DyeColor>(baseTag->GetValue());
 
-                bool hasColor = false;
-                bool hasPattern = false;
+    auto patternsTag = nbt->GetTag<nbt::TagList>(L"Patterns");
+    if (!patternsTag) return true;
+    
+    for (auto iter = patternsTag->begin(); iter != patternsTag->end(); ++iter) {
+        nbt::TagCompound* sectionCompound = (nbt::TagCompound*)iter->get();
 
-                for (auto sectionIter = sectionCompound->begin(); sectionIter != sectionCompound->end(); ++sectionIter) {
-                    auto sectionTag = sectionIter->second;
-                    if (sectionTag->GetName() == L"Color") {
-                        pattern.color = static_cast<DyeColor>(((nbt::TagInt*)sectionTag.get())->GetValue());
-                        hasColor = true;
-                    } else if (sectionTag->GetName() == L"Pattern") {
-                        pattern.section = ((nbt::TagString*)sectionTag.get())->GetValue();
-                        hasPattern = true;
-                    }
-                }
+        auto colorTag = sectionCompound->GetTag<nbt::TagInt>(L"Color");
+        auto patternTag = sectionCompound->GetTag<nbt::TagString>(L"Pattern");
 
-                if (!hasColor || !hasPattern) 
-                    return false;
+        if (!colorTag || !patternTag) return false;
 
-                m_Patterns.push_back(pattern);
-            }
-        }
+        Pattern pattern;
+
+        pattern.color = static_cast<DyeColor>(colorTag->GetValue());
+        pattern.section = patternTag->GetValue();
+
+        m_Patterns.push_back(pattern);
     }
 
     return true;

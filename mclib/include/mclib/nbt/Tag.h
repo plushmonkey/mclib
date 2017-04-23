@@ -7,6 +7,7 @@
 #include <memory>
 #include <vector>
 #include <iosfwd>
+#include <algorithm>
 
 namespace mc {
 
@@ -123,6 +124,7 @@ public:
     TagType MCLIB_API GetType() const noexcept;
     TagType MCLIB_API GetListType() const noexcept { return m_ListType; }
     const std::vector<TagPtr>& GetList() const { return m_Tags; }
+    std::size_t GetSize() const { return m_Tags.size(); }
 
     std::vector<TagPtr>::iterator MCLIB_API begin() { return m_Tags.begin(); }
     std::vector<TagPtr>::iterator MCLIB_API end() { return m_Tags.end(); }
@@ -164,6 +166,17 @@ public:
     std::vector<DataType>::iterator MCLIB_API end() { return m_Tags.end(); }
     std::vector<DataType>::const_iterator MCLIB_API begin() const { return m_Tags.begin(); }
     std::vector<DataType>::const_iterator MCLIB_API end() const { return m_Tags.end(); }
+
+    template <typename T>
+    T* GetTag(const std::wstring& tagName) const {
+        auto iter = std::find_if(m_Tags.begin(), m_Tags.end(), [&](DataType entry) {
+            return entry.second->GetName() == tagName;
+        });
+
+        if (iter == m_Tags.end()) return nullptr;
+
+        return dynamic_cast<T*>(iter->second.get());
+    }
 
     friend MCLIB_API DataBuffer& operator<<(DataBuffer& out, const TagCompound& tag);
     friend MCLIB_API DataBuffer& operator<<(DataBuffer& out, const Tag& tag);

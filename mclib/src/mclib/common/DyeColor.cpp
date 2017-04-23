@@ -50,7 +50,13 @@ Vector3d GetColor(DyeColor dyeColor) {
     return colorMap.at(dyeColor);
 }
 
-std::wstring to_string(DyeColor dyeColor) {
+std::string to_string(DyeColor dyeColor) {
+    std::wstring result = stringMap.at(dyeColor);
+
+    return std::string(result.begin(), result.end());
+}
+
+std::wstring to_wstring(DyeColor dyeColor) {
     return stringMap.at(dyeColor);
 }
 

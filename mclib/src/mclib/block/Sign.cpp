@@ -4,17 +4,22 @@ namespace mc {
 namespace block {
 
 bool Sign::ImportNBT(nbt::NBT* nbt) {
-    auto& root = nbt->GetRoot();
-    s32 textCount = 0;
+    nbt::TagString* textTags[] = {
+        nbt->GetTag<nbt::TagString>(L"Text1"),
+        nbt->GetTag<nbt::TagString>(L"Text2"),
+        nbt->GetTag<nbt::TagString>(L"Text3"),
+        nbt->GetTag<nbt::TagString>(L"Text4"),
+    };
 
-    for (auto iter = root.begin(); iter != root.end(); ++iter) {
-        if (iter->second->GetName().find(L"Text") == 0 && iter->second->GetType() == nbt::TagType::String) {
-            int index = iter->second->GetName()[4] - L'0' - 1;
-            m_Text[index] = ((nbt::TagString*)iter->second.get())->GetValue();
+    s32 textCount = 0;
+    for (s32 i = 0; i < 4; ++i) {
+        if (textTags[i] != nullptr) {
+            m_Text[i] = textTags[i]->GetValue();
             textCount++;
         }
     }
 
+    // There must be 4 text lines to be considered valid.
     return textCount == 4;
 }
 
