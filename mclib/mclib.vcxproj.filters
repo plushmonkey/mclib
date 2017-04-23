@@ -255,6 +255,30 @@
     <ClInclude Include="include\mclib\block\InventoryBlock.h">
       <Filter>Header Files\block</Filter>
     </ClInclude>
+    <ClInclude Include="include\mclib\block\Beacon.h">
+      <Filter>Header Files\block</Filter>
+    </ClInclude>
+    <ClInclude Include="include\mclib\block\BrewingStand.h">
+      <Filter>Header Files\block</Filter>
+    </ClInclude>
+    <ClInclude Include="include\mclib\block\Dispenser.h">
+      <Filter>Header Files\block</Filter>
+    </ClInclude>
+    <ClInclude Include="include\mclib\block\Dropper.h">
+      <Filter>Header Files\block</Filter>
+    </ClInclude>
+    <ClInclude Include="include\mclib\block\Furnace.h">
+      <Filter>Header Files\block</Filter>
+    </ClInclude>
+    <ClInclude Include="include\mclib\block\Hopper.h">
+      <Filter>Header Files\block</Filter>
+    </ClInclude>
+    <ClInclude Include="include\mclib\block\MonsterSpawner.h">
+      <Filter>Header Files\block</Filter>
+    </ClInclude>
+    <ClInclude Include="include\mclib\block\ShulkerBox.h">
+      <Filter>Header Files\block</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\mclib\block\Block.cpp">
@@ -378,6 +402,30 @@
       <Filter>Source Files\common</Filter>
     </ClCompile>
     <ClCompile Include="src\mclib\block\InventoryBlock.cpp">
+      <Filter>Source Files\block</Filter>
+    </ClCompile>
+    <ClCompile Include="src\mclib\block\Beacon.cpp">
+      <Filter>Source Files\block</Filter>
+    </ClCompile>
+    <ClCompile Include="src\mclib\block\BrewingStand.cpp">
+      <Filter>Source Files\block</Filter>
+    </ClCompile>
+    <ClCompile Include="src\mclib\block\Dispenser.cpp">
+      <Filter>Source Files\block</Filter>
+    </ClCompile>
+    <ClCompile Include="src\mclib\block\Dropper.cpp">
+      <Filter>Source Files\block</Filter>
+    </ClCompile>
+    <ClCompile Include="src\mclib\block\Furnace.cpp">
+      <Filter>Source Files\block</Filter>
+    </ClCompile>
+    <ClCompile Include="src\mclib\block\Hopper.cpp">
+      <Filter>Source Files\block</Filter>
+    </ClCompile>
+    <ClCompile Include="src\mclib\block\MonsterSpawner.cpp">
+      <Filter>Source Files\block</Filter>
+    </ClCompile>
+    <ClCompile Include="src\mclib\block\ShulkerBox.cpp">
       <Filter>Source Files\block</Filter>
     </ClCompile>
   </ItemGroup>

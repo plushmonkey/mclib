@@ -1,7 +1,15 @@
 #include <mclib/block/BlockEntity.h>
 
 #include <mclib/block/Banner.h>
+#include <mclib/block/Beacon.h>
+#include <mclib/block/BrewingStand.h>
 #include <mclib/block/Chest.h>
+#include <mclib/block/Dispenser.h>
+#include <mclib/block/Dropper.h>
+#include <mclib/block/Furnace.h>
+#include <mclib/block/Hopper.h>
+#include <mclib/block/MonsterSpawner.h>
+#include <mclib/block/ShulkerBox.h>
 #include <mclib/block/Sign.h>
 #include <unordered_map>
 
@@ -28,7 +36,7 @@ static const std::unordered_map<std::wstring, BlockEntityType> blockEntityTypes 
     { L"minecraft:furnace", BlockEntityType::Furnace },
     { L"minecraft:hopper", BlockEntityType::Hopper },
     { L"minecraft:jukebox", BlockEntityType::Jukebox },
-    { L"minecraft:mob_spawner", BlockEntityType::MobSpawner },
+    { L"minecraft:mob_spawner", BlockEntityType::MonsterSpawner },
     { L"minecraft:noteblock", BlockEntityType::Noteblock },
     { L"minecraft:piston", BlockEntityType::Piston },
     { L"minecraft:sign", BlockEntityType::Sign },
@@ -73,8 +81,32 @@ std::unique_ptr<BlockEntity> BlockEntity::CreateFromNBT(nbt::NBT* nbt) {
         case BlockEntityType::Banner:
             entity = std::make_unique<Banner>(type, position);
             break;
+        case BlockEntityType::Beacon:
+            entity = std::make_unique<Beacon>(type, position);
+            break;
+        case BlockEntityType::BrewingStand:
+            entity = std::make_unique<BrewingStand>(type, position);
+            break;
         case BlockEntityType::Chest:
             entity = std::make_unique<Chest>(type, position);
+            break;
+        case BlockEntityType::Dispenser:
+            entity = std::make_unique<Dispenser>(type, position);
+            break;
+        case BlockEntityType::Dropper:
+            entity = std::make_unique<Dropper>(type, position);
+            break;
+        case BlockEntityType::Furnace:
+            entity = std::make_unique<Furnace>(type, position);
+            break;
+        case BlockEntityType::Hopper:
+            entity = std::make_unique<Hopper>(type, position);
+            break;
+        case BlockEntityType::MonsterSpawner:
+            entity = std::make_unique<MonsterSpawner>(type, position);
+            break;
+        case BlockEntityType::ShulkerBox:
+            entity = std::make_unique<ShulkerBox>(type, position);
             break;
         case BlockEntityType::Sign:
             entity = std::make_unique<Sign>(type, position);
@@ -89,7 +121,8 @@ std::unique_ptr<BlockEntity> BlockEntity::CreateFromNBT(nbt::NBT* nbt) {
 
     if (!entity->ImportNBT(nbt)) {
         // The nbt data didn't contain enough information to construct the block entity
-        return nullptr;
+        // Return it anyway so the player at least knows it's there.
+        return entity;
     }
 
     entity->m_NBT = *nbt;
