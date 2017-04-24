@@ -2,15 +2,25 @@
 
 #include <mclib/block/Banner.h>
 #include <mclib/block/Beacon.h>
+#include <mclib/block/Bed.h>
 #include <mclib/block/BrewingStand.h>
 #include <mclib/block/Chest.h>
 #include <mclib/block/Dispenser.h>
 #include <mclib/block/Dropper.h>
+#include <mclib/block/EnchantmentTable.h>
+#include <mclib/block/EndGateway.h>
+#include <mclib/block/FlowerPot.h>
 #include <mclib/block/Furnace.h>
 #include <mclib/block/Hopper.h>
+#include <mclib/block/Jukebox.h>
 #include <mclib/block/MonsterSpawner.h>
+#include <mclib/block/NoteBlock.h>
+#include <mclib/block/Piston.h>
+#include <mclib/block/RedstoneComparator.h>
 #include <mclib/block/ShulkerBox.h>
 #include <mclib/block/Sign.h>
+#include <mclib/block/Skull.h>
+
 #include <unordered_map>
 
 namespace mc {
@@ -20,6 +30,7 @@ static const std::unordered_map<std::wstring, BlockEntityType> blockEntityTypes 
 {
     { L"minecraft:banner", BlockEntityType::Banner },
     { L"minecraft:beacon", BlockEntityType::Beacon },
+    { L"minecraft:bed", BlockEntityType::Bed },
     { L"minecraft:cauldron", BlockEntityType::Cauldron },
     { L"minecraft:brewing_stand", BlockEntityType::BrewingStand },
     { L"minecraft:chest", BlockEntityType::Chest },
@@ -84,11 +95,17 @@ std::unique_ptr<BlockEntity> BlockEntity::CreateFromNBT(nbt::NBT* nbt) {
         case BlockEntityType::Beacon:
             entity = std::make_unique<Beacon>(type, position);
             break;
+        case BlockEntityType::Bed:
+            entity = std::make_unique<Bed>(type, position);
+            break;
         case BlockEntityType::BrewingStand:
             entity = std::make_unique<BrewingStand>(type, position);
             break;
         case BlockEntityType::Chest:
             entity = std::make_unique<Chest>(type, position);
+            break;
+        case BlockEntityType::Comparator:
+            entity = std::make_unique<RedstoneComparator>(type, position);
             break;
         case BlockEntityType::Dispenser:
             entity = std::make_unique<Dispenser>(type, position);
@@ -96,20 +113,41 @@ std::unique_ptr<BlockEntity> BlockEntity::CreateFromNBT(nbt::NBT* nbt) {
         case BlockEntityType::Dropper:
             entity = std::make_unique<Dropper>(type, position);
             break;
+        case BlockEntityType::EnchantingTable:
+            entity = std::make_unique<EnchantmentTable>(type, position);
+            break;
+        case BlockEntityType::EndGateway:
+            entity = std::make_unique<EndGateway>(type, position);
+            break;
+        case BlockEntityType::FlowerPot:
+            entity = std::make_unique<FlowerPot>(type, position);
+            break;
         case BlockEntityType::Furnace:
             entity = std::make_unique<Furnace>(type, position);
             break;
         case BlockEntityType::Hopper:
             entity = std::make_unique<Hopper>(type, position);
             break;
+        case BlockEntityType::Jukebox:
+            entity = std::make_unique<Jukebox>(type, position);
+            break;
         case BlockEntityType::MonsterSpawner:
             entity = std::make_unique<MonsterSpawner>(type, position);
+            break;
+        case BlockEntityType::Noteblock:
+            entity = std::make_unique<NoteBlock>(type, position);
+            break;
+        case BlockEntityType::Piston:
+            entity = std::make_unique<Piston>(type, position);
             break;
         case BlockEntityType::ShulkerBox:
             entity = std::make_unique<ShulkerBox>(type, position);
             break;
         case BlockEntityType::Sign:
             entity = std::make_unique<Sign>(type, position);
+            break;
+        case BlockEntityType::Skull:
+            entity = std::make_unique<Skull>(type, position);
             break;
         case BlockEntityType::TrappedChest:
             entity = std::make_unique<Chest>(type, position);
@@ -119,13 +157,9 @@ std::unique_ptr<BlockEntity> BlockEntity::CreateFromNBT(nbt::NBT* nbt) {
             entity = std::make_unique<BlockEntity>(type, position);
     }
 
-    if (!entity->ImportNBT(nbt)) {
-        // The nbt data didn't contain enough information to construct the block entity
-        // Return it anyway so the player at least knows it's there.
-        return entity;
-    }
-
+    entity->ImportNBT(nbt);
     entity->m_NBT = *nbt;
+
     return entity;
 }
 

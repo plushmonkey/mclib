@@ -17,6 +17,7 @@ namespace block {
 enum class BlockEntityType {
     Banner,
     Beacon,
+    Bed,
     Cauldron,
     BrewingStand,
     Chest,

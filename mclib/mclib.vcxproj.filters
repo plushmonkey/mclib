@@ -279,6 +279,33 @@
     <ClInclude Include="include\mclib\block\ShulkerBox.h">
       <Filter>Header Files\block</Filter>
     </ClInclude>
+    <ClInclude Include="include\mclib\block\Bed.h">
+      <Filter>Header Files\block</Filter>
+    </ClInclude>
+    <ClInclude Include="include\mclib\block\EnchantmentTable.h">
+      <Filter>Header Files\block</Filter>
+    </ClInclude>
+    <ClInclude Include="include\mclib\block\EndGateway.h">
+      <Filter>Header Files\block</Filter>
+    </ClInclude>
+    <ClInclude Include="include\mclib\block\FlowerPot.h">
+      <Filter>Header Files\block</Filter>
+    </ClInclude>
+    <ClInclude Include="include\mclib\block\Jukebox.h">
+      <Filter>Header Files\block</Filter>
+    </ClInclude>
+    <ClInclude Include="include\mclib\block\NoteBlock.h">
+      <Filter>Header Files\block</Filter>
+    </ClInclude>
+    <ClInclude Include="include\mclib\block\Piston.h">
+      <Filter>Header Files\block</Filter>
+    </ClInclude>
+    <ClInclude Include="include\mclib\block\RedstoneComparator.h">
+      <Filter>Header Files\block</Filter>
+    </ClInclude>
+    <ClInclude Include="include\mclib\block\Skull.h">
+      <Filter>Header Files\block</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\mclib\block\Block.cpp">
@@ -426,6 +453,33 @@
       <Filter>Source Files\block</Filter>
     </ClCompile>
     <ClCompile Include="src\mclib\block\ShulkerBox.cpp">
+      <Filter>Source Files\block</Filter>
+    </ClCompile>
+    <ClCompile Include="src\mclib\block\Bed.cpp">
+      <Filter>Source Files\block</Filter>
+    </ClCompile>
+    <ClCompile Include="src\mclib\block\EnchantmentTable.cpp">
+      <Filter>Source Files\block</Filter>
+    </ClCompile>
+    <ClCompile Include="src\mclib\block\EndGateway.cpp">
+      <Filter>Source Files\block</Filter>
+    </ClCompile>
+    <ClCompile Include="src\mclib\block\FlowerPot.cpp">
+      <Filter>Source Files\block</Filter>
+    </ClCompile>
+    <ClCompile Include="src\mclib\block\Jukebox.cpp">
+      <Filter>Source Files\block</Filter>
+    </ClCompile>
+    <ClCompile Include="src\mclib\block\NoteBlock.cpp">
+      <Filter>Source Files\block</Filter>
+    </ClCompile>
+    <ClCompile Include="src\mclib\block\Piston.cpp">
+      <Filter>Source Files\block</Filter>
+    </ClCompile>
+    <ClCompile Include="src\mclib\block\RedstoneComparator.cpp">
+      <Filter>Source Files\block</Filter>
+    </ClCompile>
+    <ClCompile Include="src\mclib\block\Skull.cpp">
       <Filter>Source Files\block</Filter>
     </ClCompile>
   </ItemGroup>
