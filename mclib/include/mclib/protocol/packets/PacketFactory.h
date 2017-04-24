@@ -6,12 +6,17 @@
 #include <mclib/protocol/packets/Packet.h>
 
 namespace mc {
+
+namespace core {
+    class Connection;
+} // ns core
+
 namespace protocol {
 namespace packets {
 
 class PacketFactory {
 public:
-    static MCLIB_API Packet* CreatePacket(State state, DataBuffer data, std::size_t length);
+    static MCLIB_API Packet* CreatePacket(State state, DataBuffer data, std::size_t length, core::Connection* connection = nullptr);
     static void MCLIB_API FreePacket(Packet* packet);
 };
 

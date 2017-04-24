@@ -42,6 +42,7 @@ public:
     void MCLIB_API HandlePacket(protocol::packets::in::BlockChangePacket* packet);
     void MCLIB_API HandlePacket(protocol::packets::in::ExplosionPacket* packet);
     void MCLIB_API HandlePacket(protocol::packets::in::UpdateBlockEntityPacket* packet);
+    void MCLIB_API HandlePacket(protocol::packets::in::RespawnPacket* packet);
 
     /**
      * Pos can be any world position inside of the chunk

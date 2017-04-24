@@ -1,5 +1,7 @@
 #include <mclib/protocol/packets/PacketFactory.h>
 
+#include <mclib/core/Connection.h>
+
 #include <exception>
 #include <string>
 
@@ -9,20 +11,20 @@ namespace packets {
 
 class LoginPacketFactory {
 public:
-    static Packet* CreatePacket(DataBuffer& data, std::size_t length);
+    static Packet* CreatePacket(DataBuffer& data, std::size_t length, core::Connection* connection);
 };
 
 class StatusPacketFactory {
 public:
-    static Packet* CreatePacket(DataBuffer& data, std::size_t length);
+    static Packet* CreatePacket(DataBuffer& data, std::size_t length, core::Connection* connection);
 };
 
 class PlayPacketFactory {
 public:
-    static Packet* CreatePacket(DataBuffer& data, std::size_t length);
+    static Packet* CreatePacket(DataBuffer& data, std::size_t length, core::Connection* connection);
 };
 
-Packet* LoginPacketFactory::CreatePacket(DataBuffer& data, std::size_t length) {
+Packet* LoginPacketFactory::CreatePacket(DataBuffer& data, std::size_t length, core::Connection* connection) {
     if (data.GetSize() == 0) return nullptr;
 
     VarInt vid;
@@ -49,14 +51,16 @@ Packet* LoginPacketFactory::CreatePacket(DataBuffer& data, std::size_t length) {
         throw protocol::UnfinishedProtocolException(vid, protocol::State::Login);
     }
 
-    if (packet)
+    if (packet) {
+        packet->SetConnection(connection);
         packet->Deserialize(data, length);
+    }
 
     return packet;
 }
 
 
-Packet* StatusPacketFactory::CreatePacket(DataBuffer& data, std::size_t length) {
+Packet* StatusPacketFactory::CreatePacket(DataBuffer& data, std::size_t length, core::Connection* connection) {
     if (data.GetSize() == 0) return nullptr;
 
     VarInt vid;
@@ -77,13 +81,15 @@ Packet* StatusPacketFactory::CreatePacket(DataBuffer& data, std::size_t length) 
         throw protocol::UnfinishedProtocolException(vid, protocol::State::Status);
     }
 
-    if (packet)
+    if (packet) {
+        packet->SetConnection(connection);
         packet->Deserialize(data, length);
+    }
 
     return packet;
 }
 
-Packet* PlayPacketFactory::CreatePacket(DataBuffer& data, std::size_t length) {
+Packet* PlayPacketFactory::CreatePacket(DataBuffer& data, std::size_t length, core::Connection* connection) {
     if (data.GetSize() == 0) return nullptr;
 
     VarInt vid;
@@ -326,22 +332,24 @@ Packet* PlayPacketFactory::CreatePacket(DataBuffer& data, std::size_t length) {
         throw protocol::UnfinishedProtocolException(vid, protocol::State::Play);
     }
 
-    if (packet)
+    if (packet) {
+        packet->SetConnection(connection);
         packet->Deserialize(data, length);
+    }
 
     return packet;
 }
 
-Packet* PacketFactory::CreatePacket(protocol::State state, DataBuffer data, std::size_t length) {
+Packet* PacketFactory::CreatePacket(protocol::State state, DataBuffer data, std::size_t length, core::Connection* connection) {
     switch (state) {
     case protocol::State::Handshake:
         throw std::runtime_error("Packet received during handshake (wrong protocol state).");
     case protocol::State::Play:
-        return PlayPacketFactory::CreatePacket(data, length);
+        return PlayPacketFactory::CreatePacket(data, length, connection);
     case protocol::State::Login:
-        return LoginPacketFactory::CreatePacket(data, length);
+        return LoginPacketFactory::CreatePacket(data, length, connection);
     case protocol::State::Status:
-        return StatusPacketFactory::CreatePacket(data, length);
+        return StatusPacketFactory::CreatePacket(data, length, connection);
     default:
         throw std::runtime_error("Protocol isn't in a valid state.");
     }

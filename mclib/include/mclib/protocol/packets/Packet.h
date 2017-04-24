@@ -22,6 +22,12 @@ namespace mc {
 
 enum class SoundCategory { Master, Music, Record, Weather, Block, Hostile, Neutral, Player, Ambient, Voice };
 
+namespace core {
+
+class Connection;
+
+} // ns core
+
 namespace protocol {
 namespace packets {
 
@@ -31,9 +37,11 @@ class Packet {
 protected:
     VarInt m_Id;
     protocol::State m_ProtocolState;
+    // The connection that is processing this packet.
+    core::Connection* m_Connection;
 
 public:
-    Packet() noexcept : m_Id(0xFF), m_ProtocolState(protocol::State::Play) { }
+    Packet() noexcept : m_Id(0xFF), m_ProtocolState(protocol::State::Play), m_Connection(nullptr) { }
     virtual ~Packet() { }
 
     Packet(const Packet& rhs) = default;
@@ -46,6 +54,9 @@ public:
     virtual DataBuffer Serialize() const = 0;
     virtual bool Deserialize(DataBuffer& data, std::size_t packetLength) = 0;
     virtual void Dispatch(PacketHandler* handler) = 0;
+
+    MCLIB_API void SetConnection(core::Connection* connection);
+    MCLIB_API core::Connection* GetConnection();
 };
 
 class InboundPacket : public Packet {

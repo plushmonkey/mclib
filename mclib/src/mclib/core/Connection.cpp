@@ -22,7 +22,8 @@ Connection::Connection(protocol::packets::PacketDispatcher* dispatcher, protocol
     m_Socket(std::make_unique<network::TCPSocket>()),
     m_Yggdrasil(std::make_unique<util::Yggdrasil>()),
     m_Version(version),
-    m_SentSettings(false)
+    m_SentSettings(false),
+    m_Dimension(1)
 {
     dispatcher->RegisterHandler(protocol::State::Login, protocol::login::Disconnect, this);
     dispatcher->RegisterHandler(protocol::State::Login, protocol::login::EncryptionRequest, this);
@@ -33,6 +34,8 @@ Connection::Connection(protocol::packets::PacketDispatcher* dispatcher, protocol
 
     dispatcher->RegisterHandler(protocol::State::Play, protocol::play::KeepAlive, this);
     dispatcher->RegisterHandler(protocol::State::Play, protocol::play::PlayerPositionAndLook, this);
+    dispatcher->RegisterHandler(protocol::State::Play, protocol::play::JoinGame, this);
+    dispatcher->RegisterHandler(protocol::State::Play, protocol::play::Respawn, this);
     dispatcher->RegisterHandler(protocol::State::Play, protocol::play::UpdateHealth, this);
     dispatcher->RegisterHandler(protocol::State::Play, protocol::play::Disconnect, this);
 }
@@ -43,6 +46,14 @@ Connection::~Connection() {
 
 network::Socket::Status Connection::GetSocketState() const {
     return m_Socket->GetStatus();
+}
+
+void Connection::HandlePacket(protocol::packets::in::JoinGamePacket* packet) {
+    m_Dimension = packet->GetDimension();
+}
+
+void Connection::HandlePacket(protocol::packets::in::RespawnPacket* packet) {
+    m_Dimension = packet->GetDimension();
 }
 
 void Connection::HandlePacket(protocol::packets::in::KeepAlivePacket* packet) {
@@ -217,7 +228,7 @@ protocol::packets::Packet* Connection::CreatePacketSync(DataBuffer& buffer) {
 
     DataBuffer decompressed = m_Compressor->Decompress(buffer, length.GetInt());
 
-    return protocol::packets::PacketFactory::CreatePacket(m_ProtocolState, decompressed, length.GetInt());
+    return protocol::packets::PacketFactory::CreatePacket(m_ProtocolState, decompressed, length.GetInt(), this);
 }
 
 std::future<protocol::packets::Packet*> Connection::CreatePacket(DataBuffer& buffer) {
@@ -241,7 +252,7 @@ std::future<protocol::packets::Packet*> Connection::CreatePacket(DataBuffer& buf
 
     DataBuffer decompressed = m_Compressor->Decompress(buffer, length.GetInt());
 
-    return std::async(std::launch::async, &protocol::packets::PacketFactory::CreatePacket, m_ProtocolState, decompressed, length.GetInt());
+    return std::async(std::launch::async, &protocol::packets::PacketFactory::CreatePacket, m_ProtocolState, decompressed, length.GetInt(), this);
 }
 
 void Connection::CreatePacket() {

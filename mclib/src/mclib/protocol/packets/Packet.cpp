@@ -1,5 +1,6 @@
 #include <mclib/protocol/packets/Packet.h>
 
+#include <mclib/core/Connection.h>
 #include <mclib/inventory/Slot.h>
 #include <mclib/protocol/packets/PacketHandler.h>
 
@@ -37,6 +38,13 @@ mc::DataBuffer& operator>>(mc::DataBuffer& in, FixedPointNumber<s32>& fpn) {
 namespace mc {
 namespace protocol {
 namespace packets {
+
+void Packet::SetConnection(core::Connection* connection) {
+    m_Connection = connection;
+}
+core::Connection* Packet::GetConnection() {
+    return m_Connection;
+}
 
 namespace in {
 
@@ -770,7 +778,13 @@ bool ChunkDataPacket::Deserialize(DataBuffer& data, std::size_t packetLength) {
     data >> metadata.continuous;
     VarInt mask;
     data >> mask;
+
     metadata.sectionmask = mask.GetInt();
+
+    if (m_Connection)
+        metadata.skylight = m_Connection->GetDimension() == 0;
+    else
+        metadata.skylight = true;
 
     VarInt size;
 

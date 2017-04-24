@@ -53,9 +53,6 @@ void Chunk::Load(DataBuffer& in, ChunkColumnMetadata* meta, s32 chunkIndex) {
     // Block light data
     in.SetReadOffset(in.GetReadOffset() + lightSize);
 
-    // todo: check if in overworld
-    meta->skylight = true;
-
     // Sky Light
     if (meta->skylight) {
         in.SetReadOffset(in.GetReadOffset() + lightSize);

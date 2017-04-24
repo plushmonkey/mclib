@@ -12,6 +12,7 @@ World::World(protocol::packets::PacketDispatcher* dispatcher)
     dispatcher->RegisterHandler(protocol::State::Play, protocol::play::UnloadChunk, this);
     dispatcher->RegisterHandler(protocol::State::Play, protocol::play::Explosion, this);
     dispatcher->RegisterHandler(protocol::State::Play, protocol::play::UpdateBlockEntity, this);
+    dispatcher->RegisterHandler(protocol::State::Play, protocol::play::Respawn, this);
 }
 
 World::~World() {
@@ -156,6 +157,16 @@ void World::HandlePacket(protocol::packets::in::UnloadChunkPacket* packet) {
     NotifyListeners(&WorldListener::OnChunkUnload, chunk);
 
     m_Chunks.erase(iter);
+}
+
+// Clear all chunks because the server will resend the chunks after this.
+void World::HandlePacket(protocol::packets::in::RespawnPacket* packet) {
+    for (auto entry : m_Chunks) {
+        ChunkColumnPtr chunk = entry.second;
+
+        NotifyListeners(&WorldListener::OnChunkUnload, chunk);
+    }
+    m_Chunks.clear();
 }
 
 ChunkColumnPtr World::GetChunk(Vector3i pos) const {

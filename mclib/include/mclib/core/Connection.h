@@ -48,6 +48,7 @@ private:
     protocol::Version m_Version;
     u16 m_Port;
     bool m_SentSettings;
+    s32 m_Dimension;
 
     void AuthenticateClient(const std::wstring& serverId, const std::string& sharedSecret, const std::string& pubkey);
     std::future<protocol::packets::Packet*> CreatePacket(DataBuffer& buffer);
@@ -66,6 +67,7 @@ public:
     util::Yggdrasil* GetYggdrasil() { return m_Yggdrasil.get(); }
     network::Socket::Status MCLIB_API GetSocketState() const;
     ClientSettings& GetSettings() noexcept { return m_ClientSettings; }
+    s32 GetDimension() const noexcept { return m_Dimension; }
 
     void SendSettings() noexcept { m_SentSettings = false; }
 
@@ -75,6 +77,8 @@ public:
     void MCLIB_API HandlePacket(protocol::packets::in::EncryptionRequestPacket* packet);
     void MCLIB_API HandlePacket(protocol::packets::in::LoginSuccessPacket* packet);
     void MCLIB_API HandlePacket(protocol::packets::in::SetCompressionPacket* packet);
+    void MCLIB_API HandlePacket(protocol::packets::in::JoinGamePacket* packet);
+    void MCLIB_API HandlePacket(protocol::packets::in::RespawnPacket* packet);
     void MCLIB_API HandlePacket(protocol::packets::in::UpdateHealthPacket* packet);
     void MCLIB_API HandlePacket(protocol::packets::in::status::ResponsePacket* packet);
 
