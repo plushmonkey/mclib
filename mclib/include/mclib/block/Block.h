@@ -10,6 +10,8 @@
 namespace mc {
 namespace block {
 
+class BlockState;
+
 class Block {
 protected:
     std::wstring m_Name;
@@ -65,6 +67,10 @@ public:
     }
 
     AABB GetBoundingBox() const noexcept {
+        return m_BoundingBox;
+    }
+
+    virtual AABB GetBoundingBox(const BlockState& state) const noexcept {
         return m_BoundingBox;
     }
 

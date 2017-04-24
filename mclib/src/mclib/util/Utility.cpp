@@ -325,11 +325,15 @@ bool PlayerController::HandleFall() {
         for (dist = 0.0f; dist < FallSpeed; dist += RayCastStep) {
             checkPos.y = m_Position.y - dist;
 
-            checkBlock = m_World.GetBlock(checkPos).GetBlock();
+            auto state = m_World.GetBlock(checkPos);
+            checkBlock = state.GetBlock();
+            
             if (checkBlock && checkBlock->IsSolid()) {
-                AABB blockBounds = checkBlock->GetBoundingBox();
-                Vector3d point = checkPos - ToVector3d(ToVector3i(checkPos));
-                if (blockBounds.Contains(point)) {
+                AABB stateBounds = checkBlock->GetBoundingBox(state);
+                AABB blockBounds = stateBounds + ToVector3i(checkPos);
+                AABB playerBounds = m_BoundingBox + (m_Position - Vector3d(0, dist, 0));
+
+                if (playerBounds.Intersects(blockBounds)) {
                     dist -= RayCastStep;
                     checkPos.y += RayCastStep;
                     break;

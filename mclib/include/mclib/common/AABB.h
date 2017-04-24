@@ -58,6 +58,14 @@ struct AABB {
             (point.z >= min.z && point.z <= max.z);
     }
 
+    AABB operator+(Vector3d offset) {
+        return AABB(min + offset, max + offset);
+    }
+
+    AABB operator+(Vector3i offset) {
+        return AABB(min + ToVector3d(offset), max + ToVector3d(offset));
+    }
+
     bool MCLIB_API Intersects(const AABB& other) const noexcept {
         return (max.x > other.min.x &&
             min.x < other.max.x &&

@@ -13,7 +13,7 @@ public:
     std::wstring GetName() const {
         u16 meta = GetMeta();
 
-        std::wstring names[] = { L"Stone",
+        static const std::wstring names[] = { L"Stone",
             L"Granite", L"Polished Granite",
             L"Diorite", L"Polished Diorite",
             L"Andesite", L"Polished Andesite" };
@@ -34,7 +34,7 @@ public:
     std::wstring GetName() const {
         u16 meta = GetMeta();
 
-        std::wstring names[] = { L"Dirt", L"Coarse Dirt", L"Podzol" };
+        static const std::wstring names[] = { L"Dirt", L"Coarse Dirt", L"Podzol" };
 
         return names[meta];
     }
@@ -52,7 +52,7 @@ public:
     std::wstring GetName() const {
         u16 meta = GetMeta();
 
-        std::wstring names[] = { L"Oak Wood Planks", L"Spruce Wood Planks",
+        static const std::wstring names[] = { L"Oak Wood Planks", L"Spruce Wood Planks",
             L"Birch Wood Planks", L"Jungle Wood Planks",
             L"Acacia Wood Planks", L"Dark Oak Wood Planks" };
 
@@ -73,7 +73,7 @@ public:
         u16 meta = GetMeta();
         meta &= 7;
 
-        std::wstring names[] = { L"Oak Sapling", L"Spruce Sapling",
+        static const std::wstring names[] = { L"Oak Sapling", L"Spruce Sapling",
             L"Birch Sapling", L"Jungle Sapling",
             L"Acacia Sapling", L"Dark Oak Sapling",
         };
@@ -94,7 +94,7 @@ public:
     std::wstring GetName() const {
         u16 meta = GetMeta();
 
-        std::wstring names[] = { L"Sand", L"Red Sand" };
+        static const std::wstring names[] = { L"Sand", L"Red Sand" };
 
         return names[meta];
     }
@@ -136,6 +136,40 @@ public:
         return true;
         }*/
 };
+
+class EndRodBlock : public Block {
+private:
+    static const AABB BoundsX;
+    static const AABB BoundsY;
+    static const AABB BoundsZ;
+
+public:
+    EndRodBlock(std::wstring name, u16 type, u16 meta) : Block(name, type, meta, true) {
+        m_BoundingBox = BoundsX;
+    }
+
+    virtual AABB GetBoundingBox(const BlockState& state) const noexcept {
+        u16 data = state.GetData() & 15;
+        Face face = static_cast<Face>(data);
+
+        switch (face) {
+            case Face::Bottom:
+            case Face::Top:
+                return BoundsY;
+            case Face::North:
+            case Face::South:
+                return BoundsZ;
+            case Face::West:
+            case Face::East:
+                return BoundsX;
+        }
+        return m_BoundingBox;
+    }
+};
+
+const AABB EndRodBlock::BoundsX = AABB(Vector3d(0.0, 0.375, 0.375), Vector3d(1.0, 0.625, 0.625));
+const AABB EndRodBlock::BoundsY = AABB(Vector3d(0.375, 0.0, 0.375), Vector3d(0.625, 1.0, 0.625));
+const AABB EndRodBlock::BoundsZ = AABB(Vector3d(0.375, 0.375, 0.0), Vector3d(0.625, 0.625, 1.0));
 
 BlockRegistry* BlockRegistry::GetInstance() {
     static BlockRegistry registry;
@@ -497,7 +531,7 @@ void BlockRegistry::RegisterVanillaBlocks() {
     this->RegisterBlock(new Block(L"Red Sandstone", 179, 0, true));
     this->RegisterBlock(new Block(L"Chiseled Red Sandstone", 179, 1, true));
     this->RegisterBlock(new Block(L"Smooth Red Sandstone", 179, 2, true));
-    this->RegisterBlock(new Block(L"Red Sandstone Stairs", 180, 0, true));
+    this->RegisterBlock(new StairsBlock(L"Red Sandstone Stairs", 180, 0));
     this->RegisterBlock(new Block(L"Double Red Sandstone Slab", 181, 0, true));
     this->RegisterBlock(new Block(L"Red Sandstone Slab", 182, 0, true));
     this->RegisterBlock(new Block(L"Spruce Fence Gate", 183, 0, true));
@@ -515,6 +549,100 @@ void BlockRegistry::RegisterVanillaBlocks() {
     this->RegisterBlock(new Block(L"Jungle Door Block", 195, 0, true));
     this->RegisterBlock(new Block(L"Acacia Door Block", 196, 0, true));
     this->RegisterBlock(new Block(L"Dark Oak Door Block", 197, 0, true));
+
+    this->RegisterBlock(new EndRodBlock(L"End Rod", 198, 0));
+
+    this->RegisterBlock(new Block(L"Chorus Plant", 199, 0, true));
+    this->RegisterBlock(new Block(L"Chorus Plant", 200, 0, true));
+    this->RegisterBlock(new Block(L"Purpur Block", 201, 0, true));
+    this->RegisterBlock(new Block(L"Purpur Pillar", 202, 0, true));
+    this->RegisterBlock(new StairsBlock(L"Purpur Stairs", 203, 0));
+    this->RegisterBlock(new Block(L"Purpur Double Slab", 204, 0, true));
+    this->RegisterBlock(new Block(L"Purpur Slab", 205, 0, true, LowerHalfBounds));
+    this->RegisterBlock(new Block(L"Purpur Slab", 205, 8, true, UpperHalfBounds));
+    this->RegisterBlock(new Block(L"End Stone Bricks", 206, 0, true));
+    this->RegisterBlock(new Block(L"Beetroot Block", 207, 0, false));
+    this->RegisterBlock(new Block(L"Grass Path", 208, 0, true));
+    this->RegisterBlock(new Block(L"End Gateway", 209, 0, false));
+    this->RegisterBlock(new Block(L"Repeating Command Block", 210, 0, true));
+    this->RegisterBlock(new Block(L"Chain Command Block", 211, 0, true));
+    this->RegisterBlock(new Block(L"Frosted Ice", 212, 0, true));
+    this->RegisterBlock(new Block(L"Magma Block", 213, 0, true));
+    this->RegisterBlock(new Block(L"Nether Wart Block", 214, 0, true));
+    this->RegisterBlock(new Block(L"Red Nether Brick", 215, 0, true));
+    this->RegisterBlock(new Block(L"Bone Block", 216, 0, true));
+    this->RegisterBlock(new Block(L"Structure Void", 217, 0, false));
+    this->RegisterBlock(new Block(L"Observer", 218, 0, true));
+
+    this->RegisterBlock(new Block(L"White Shulker Box", 219, 0, true));
+    this->RegisterBlock(new Block(L"Orange Shulker Box", 220, 0, true));
+    this->RegisterBlock(new Block(L"Magenta Shulker Box", 221, 0, true));
+    this->RegisterBlock(new Block(L"Light Blue Shulker Box", 222, 0, true));
+    this->RegisterBlock(new Block(L"Yellow Shulker Box", 223, 0, true));
+    this->RegisterBlock(new Block(L"Lime Shulker Box", 224, 0, true));
+    this->RegisterBlock(new Block(L"Pink Shulker Box", 225, 0, true));
+    this->RegisterBlock(new Block(L"Gray Shulker Box", 226, 0, true));
+    this->RegisterBlock(new Block(L"Light Gray Shulker Box", 227, 0, true));
+    this->RegisterBlock(new Block(L"Cyan Shulker Box", 228, 0, true));
+    this->RegisterBlock(new Block(L"Purple Shulker Box", 229, 0, true));
+    this->RegisterBlock(new Block(L"Blue Shulker Box", 230, 0, true));
+    this->RegisterBlock(new Block(L"Brown Shulker Box", 231, 0, true));
+    this->RegisterBlock(new Block(L"Green Shulker Box", 232, 0, true));
+    this->RegisterBlock(new Block(L"Red Shulker Box", 233, 0, true));
+    this->RegisterBlock(new Block(L"Black Shulker Box", 234, 0, true));
+
+    this->RegisterBlock(new Block(L"White Glazed Terracotta", 235, 0, true));
+    this->RegisterBlock(new Block(L"Orange Glazed Terracotta", 236, 0, true));
+    this->RegisterBlock(new Block(L"Magenta Glazed Terracotta", 237, 0, true));
+    this->RegisterBlock(new Block(L"Light Blue Glazed Terracotta", 238, 0, true));
+    this->RegisterBlock(new Block(L"Yellow Glazed Terracotta", 239, 0, true));
+    this->RegisterBlock(new Block(L"Lime Glazed Terracotta", 240, 0, true));
+    this->RegisterBlock(new Block(L"Pink Glazed Terracotta", 241, 0, true));
+    this->RegisterBlock(new Block(L"Gray Glazed Terracotta", 242, 0, true));
+    this->RegisterBlock(new Block(L"Light Gray Glazed Terracotta", 243, 0, true));
+    this->RegisterBlock(new Block(L"Cyan Glazed Terracotta", 244, 0, true));
+    this->RegisterBlock(new Block(L"Purple Glazed Terracotta", 245, 0, true));
+    this->RegisterBlock(new Block(L"Blue Glazed Terracotta", 246, 0, true));
+    this->RegisterBlock(new Block(L"Brown Glazed Terracotta", 247, 0, true));
+    this->RegisterBlock(new Block(L"Green Glazed Terracotta", 248, 0, true));
+    this->RegisterBlock(new Block(L"Red Glazed Terracotta", 249, 0, true));
+    this->RegisterBlock(new Block(L"Black Glazed Terracotta", 250, 0, true));
+
+    this->RegisterBlock(new Block(L"White Concrete", 251, 0, true));
+    this->RegisterBlock(new Block(L"Orange Concrete", 251, 1, true));
+    this->RegisterBlock(new Block(L"Magenta Concrete", 251, 2, true));
+    this->RegisterBlock(new Block(L"Light Blue Concrete", 251, 3, true));
+    this->RegisterBlock(new Block(L"Yellow Concrete", 251, 4, true));
+    this->RegisterBlock(new Block(L"Lime Concrete", 251, 5, true));
+    this->RegisterBlock(new Block(L"Pink Concrete", 251, 6, true));
+    this->RegisterBlock(new Block(L"Gray Concrete", 251, 7, true));
+    this->RegisterBlock(new Block(L"Light Gray Concrete", 251, 8, true));
+    this->RegisterBlock(new Block(L"Cyan Concrete", 251, 9, true));
+    this->RegisterBlock(new Block(L"Purple Concrete", 251, 10, true));
+    this->RegisterBlock(new Block(L"Blue Concrete", 251, 11, true));
+    this->RegisterBlock(new Block(L"Brown Concrete", 251, 12, true));
+    this->RegisterBlock(new Block(L"Green Concrete", 251, 13, true));
+    this->RegisterBlock(new Block(L"Red Concrete", 251, 14, true));
+    this->RegisterBlock(new Block(L"Black Concrete", 251, 15, true));
+
+    this->RegisterBlock(new Block(L"White Concrete Powder", 252, 0, true));
+    this->RegisterBlock(new Block(L"Orange Concrete Powder", 252, 1, true));
+    this->RegisterBlock(new Block(L"Magenta Concrete Powder", 252, 2, true));
+    this->RegisterBlock(new Block(L"Light Blue Concrete Powder", 252, 3, true));
+    this->RegisterBlock(new Block(L"Yellow Concrete Powder", 252, 4, true));
+    this->RegisterBlock(new Block(L"Lime Concrete Powder", 252, 5, true));
+    this->RegisterBlock(new Block(L"Pink Concrete Powder", 252, 6, true));
+    this->RegisterBlock(new Block(L"Gray Concrete Powder", 252, 7, true));
+    this->RegisterBlock(new Block(L"Light Gray Concrete Powder", 252, 8, true));
+    this->RegisterBlock(new Block(L"Cyan Concrete Powder", 252, 9, true));
+    this->RegisterBlock(new Block(L"Purple Concrete Powder", 252, 10, true));
+    this->RegisterBlock(new Block(L"Blue Concrete Powder", 252, 11, true));
+    this->RegisterBlock(new Block(L"Brown Concrete Powder", 252, 12, true));
+    this->RegisterBlock(new Block(L"Green Concrete Powder", 252, 13, true));
+    this->RegisterBlock(new Block(L"Red Concrete Powder", 252, 14, true));
+    this->RegisterBlock(new Block(L"Black Concrete Powder", 252, 15, true));
+
+    this->RegisterBlock(new Block(L"Structure Block", 255, 0, true));
 
     // Set full boudning box on fully solid blocks
     for (auto kv : m_Blocks) {
