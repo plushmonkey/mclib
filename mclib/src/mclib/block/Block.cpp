@@ -107,34 +107,70 @@ public:
 
 class StairsBlock : public Block {
 public:
+    enum class Direction { East, West, South, North };
+
+private:
+    std::pair<AABB, AABB> GetHalfBounds(const BlockState& blockState) {
+        static const AABB LowerHalfBounds(Vector3d(0, 0, 0), Vector3d(1, 0.5, 1));
+        static const AABB UpperHalfBounds(Vector3d(0, 0.5, 0), Vector3d(1, 1, 1));
+        static const AABB WestEastHalfBounds(Vector3d(0, 0.0, 0), Vector3d(0.5, 1, 1));
+        static const AABB NorthSouthHalfBounds(Vector3d(0, 0.0, 0), Vector3d(1, 1, 0.5));
+
+        bool flipped = (blockState.GetData() & 0x4) != 0;
+        Direction direction = static_cast<Direction>(blockState.GetData() & 3);
+
+        AABB vertPart;
+
+        switch (direction) {
+            case Direction::East:
+                vertPart = WestEastHalfBounds + Vector3d(0.5, 0.0, 0.0);
+                break;
+            case Direction::West:
+                vertPart = WestEastHalfBounds;
+                break;
+            case Direction::South:
+                vertPart = NorthSouthHalfBounds + Vector3d(0.0, 0.0, 0.5);
+                break;
+            case Direction::North:
+                vertPart = NorthSouthHalfBounds;
+                break;
+        }
+
+        AABB horizPart = flipped ? UpperHalfBounds : LowerHalfBounds;
+
+        return std::make_pair(horizPart, vertPart);
+    }
+
+public:
     StairsBlock(std::wstring name, u16 type, u16 meta) : Block(name, type, meta, true) {
         static const AABB FullSolidBounds(Vector3d(0, 0, 0), Vector3d(1, 1, 1));
         m_BoundingBox = FullSolidBounds;
     }
 
-    /*virtual bool CollidesWith(Vector3d at, const AABB& other) {
-        static AABB LowerHalfBounds(Vector3d(0, 0, 0), Vector3d(1, 0.5, 1));
-        static AABB UpperHalfBounds(Vector3d(0, 0.5, 0), Vector3d(1, 1, 1));
+    virtual std::vector<AABB> GetBoundingBoxes(const BlockState& blockState) {
+        std::vector<AABB> boundingBoxes;
+        
+        auto pair = GetHalfBounds(blockState);
 
-        u16 meta = GetMeta();
+        boundingBoxes.push_back(pair.first);
+        boundingBoxes.push_back(pair.second);
 
-        bool flipped = (meta & 0x4) != 0;
-        u8 dir = meta & 0x2;
+        return boundingBoxes;
+    }
 
-        AABB& flatPart = LowerHalfBounds;
-        if (flipped)
-        flatPart = UpperHalfBounds;
+    virtual std::pair<bool, AABB> CollidesWith(const BlockState& blockState, Vector3i at, const AABB& other) override {
+        auto pair = GetHalfBounds(blockState);
 
-        Vector3d ati = ToVector3d(ToVector3i(at));
-        Vector3d pointInside = at - ati;
+        AABB horizPart = pair.first + at;
+        AABB vertPart = pair.second + at;
 
-        // If the point is inside the flat part then it must be colliding
-        if (flatPart.Contains(pointInside))
-        return true;
+        bool vertIntersect = vertPart.Intersects(other);
 
-        // Determine upper collision
-        return true;
-        }*/
+        if (vertIntersect)
+            return std::make_pair(vertIntersect, vertPart);
+
+        return std::make_pair(horizPart.Intersects(other), horizPart);
+    }
 };
 
 class EndRodBlock : public Block {
@@ -324,7 +360,7 @@ void BlockRegistry::RegisterVanillaBlocks() {
     this->RegisterBlock(new Block(L"Oak Door Block", 64, 0, true));
     this->RegisterBlock(new Block(L"Ladder", 65, 0, false));
     this->RegisterBlock(new Block(L"Rail", 66, 0, false));
-    this->RegisterBlock(new Block(L"Cobblestone Stairs", 67, 0, true));
+    this->RegisterBlock(new StairsBlock(L"Cobblestone Stairs", 67, 0));
     this->RegisterBlock(new Block(L"Wall-mounted Sign Block", 68, 0, false));
     this->RegisterBlock(new Block(L"Lever", 69, 0, false));
     this->RegisterBlock(new Block(L"Stone Pressure Plate", 70, 0, false));
@@ -388,13 +424,13 @@ void BlockRegistry::RegisterVanillaBlocks() {
     this->RegisterBlock(new Block(L"Melon Stem", 105, 0, false));
     this->RegisterBlock(new Block(L"Vines", 106, 0, false));
     this->RegisterBlock(new Block(L"Oak Fence Gate", 107, 0, true));
-    this->RegisterBlock(new Block(L"Brick Stairs", 108, 0, true));
+    this->RegisterBlock(new StairsBlock(L"Brick Stairs", 108, 0));
     this->RegisterBlock(new Block(L"Stone Brick Stairs", 109, 0, true));
     this->RegisterBlock(new Block(L"Mycelium", 110, 0, true));
     this->RegisterBlock(new Block(L"Lily Pad", 111, 0, true));
     this->RegisterBlock(new Block(L"Nether Brick", 112, 0, true));
     this->RegisterBlock(new Block(L"Nether Brick Fence", 113, 0, true));
-    this->RegisterBlock(new Block(L"Nether Brick Stairs", 114, 0, true));
+    this->RegisterBlock(new StairsBlock(L"Nether Brick Stairs", 114, 0));
     this->RegisterBlock(new Block(L"Nether Wart", 115, 0, false));
     this->RegisterBlock(new Block(L"Enchantment Table", 116, 0, true));
     this->RegisterBlock(new Block(L"Brewing Stand", 117, 0, true));
@@ -424,9 +460,9 @@ void BlockRegistry::RegisterVanillaBlocks() {
     this->RegisterBlock(new Block(L"Tripwire Hook", 131, 0, false));
     this->RegisterBlock(new Block(L"Tripwire", 132, 0, false));
     this->RegisterBlock(new Block(L"Emerald Block", 133, 0, true));
-    this->RegisterBlock(new Block(L"Spruce Wood Stairs", 134, 0, true));
-    this->RegisterBlock(new Block(L"Birch Wood Stairs", 135, 0, true));
-    this->RegisterBlock(new Block(L"Jungle Wood Stairs", 136, 0, true));
+    this->RegisterBlock(new StairsBlock(L"Spruce Wood Stairs", 134, 0));
+    this->RegisterBlock(new StairsBlock(L"Birch Wood Stairs", 135, 0));
+    this->RegisterBlock(new StairsBlock(L"Jungle Wood Stairs", 136, 0));
     this->RegisterBlock(new Block(L"Command Block", 137, 0, true));
     this->RegisterBlock(new Block(L"Beacon", 138, 0, true));
     this->RegisterBlock(new Block(L"Cobblestone Wall", 139, 0, true));
@@ -449,7 +485,7 @@ void BlockRegistry::RegisterVanillaBlocks() {
     this->RegisterBlock(new Block(L"Quartz Block", 155, 0, true));
     this->RegisterBlock(new Block(L"Chiseled Quartz Block", 155, 1, true));
     this->RegisterBlock(new Block(L"Pillar Quartz Block", 155, 2, true));
-    this->RegisterBlock(new Block(L"Quartz Stairs", 156, 0, true));
+    this->RegisterBlock(new StairsBlock(L"Quartz Stairs", 156, 0));
     this->RegisterBlock(new Block(L"Activator Rail", 157, 0, false));
     this->RegisterBlock(new Block(L"Dropper", 158, 0, true));
     this->RegisterBlock(new Block(L"White Stained Clay", 159, 0, true));
@@ -488,8 +524,8 @@ void BlockRegistry::RegisterVanillaBlocks() {
     this->RegisterBlock(new Block(L"Dark Oak Leaves", 161, 1, true));
     this->RegisterBlock(new Block(L"Acacia Wood", 162, 0, true));
     this->RegisterBlock(new Block(L"Dark Oak Wood", 162, 1, true));
-    this->RegisterBlock(new Block(L"Acacia Wood Stairs", 163, 0, true));
-    this->RegisterBlock(new Block(L"Dark Oak Wood Stairs", 164, 0, true));
+    this->RegisterBlock(new StairsBlock(L"Acacia Wood Stairs", 163, 0));
+    this->RegisterBlock(new StairsBlock(L"Dark Oak Wood Stairs", 164, 0));
     this->RegisterBlock(new Block(L"Slime Block", 165, 0, true));
     this->RegisterBlock(new Block(L"Barrier", 166, 0, true));
     this->RegisterBlock(new Block(L"Iron Trapdoor", 167, 0, true));

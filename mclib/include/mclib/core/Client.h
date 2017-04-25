@@ -10,11 +10,17 @@
 #include <mclib/network/Network.h>
 #include <mclib/protocol/packets/PacketDispatcher.h>
 #include <mclib/util/ObserverSubject.h>
-#include <mclib/util/Utility.h>
 #include <mclib/world/World.h>
 #include <thread>
 
 namespace mc {
+
+namespace util {
+
+class PlayerController;
+
+} // ns util
+
 namespace core {
 
 class ClientListener {
@@ -30,7 +36,7 @@ private:
     core::PlayerManager m_PlayerManager;
     std::unique_ptr<inventory::InventoryManager> m_InventoryManager;
     inventory::Hotbar m_Hotbar;
-    util::PlayerController m_PlayerController;
+    std::unique_ptr<util::PlayerController> m_PlayerController;
     world::World m_World;
     
     bool m_Connected;
@@ -56,7 +62,7 @@ public:
     entity::EntityManager* GetEntityManager() { return &m_EntityManager; }
     inventory::InventoryManager* GetInventoryManager() { return m_InventoryManager.get(); }
     inventory::Hotbar& GetHotbar() { return m_Hotbar; }
-    util::PlayerController* GetPlayerController() { return &m_PlayerController; }
+    util::PlayerController* GetPlayerController() { return m_PlayerController.get(); }
     world::World* GetWorld() { return &m_World; }
 
 };

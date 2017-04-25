@@ -1,5 +1,6 @@
 ﻿#include <mclib/util/Utility.h>
 
+#include <mclib/block/Block.h>
 #include <mclib/common/DataBuffer.h>
 #include <mclib/core/Connection.h>
 #include <mclib/core/PlayerManager.h>
@@ -149,7 +150,7 @@ PlayerController::PlayerController(core::Connection* connection, world::World& w
       m_Connection(connection),
       m_World(world),
       m_Position(0, 0, 0),
-      m_BoundingBox(Vector3d(0, 0, 0), Vector3d(0.6, 1.8, 0.6)),
+      m_BoundingBox(Vector3d(-0.3, 0, -0.3), Vector3d(0.3, 1.8, 0.3)),
       m_EntityId(-1),
       m_LastUpdate(GetTime()),
       m_Sprinting(false),
@@ -160,6 +161,7 @@ PlayerController::PlayerController(core::Connection* connection, world::World& w
     m_PlayerManager.RegisterListener(this);
 
     //console.SetImpl(new LoggerConsole("PlayerController.log"));
+    //console.SetImpl(new StandardConsole());
 }
 
 PlayerController::~PlayerController() {
@@ -167,16 +169,11 @@ PlayerController::~PlayerController() {
 }
 
 AABB PlayerController::GetBoundingBox() const {
-    Vector3d pos = m_Position;
-    Vector3d min = m_BoundingBox.min;
-    Vector3d max = m_BoundingBox.max;
-
-    pos -= Vector3d(max.x / 2, 0.0, max.z / 2);
-
-    return AABB(pos + min, pos + max);
+    return m_BoundingBox + m_Position;
 }
 
 bool PlayerController::ClearPath(Vector3d target) {
+    return true;
     Vector3d position = m_Position;
 
     double dist = target.Distance(position);
@@ -278,28 +275,42 @@ void PlayerController::UpdateDigging() {
 
 }
 
-bool PlayerController::HandleJump() {
-    const float FullCircle = 2.0f * 3.14159f;
-    AABB playerBounds = GetBoundingBox();
-    const float CheckWidth = (float)m_BoundingBox.max.x / 2.0f;
+std::vector<block::BlockState> PlayerController::GetNearbyBlocks(const s32 radius) {
+    std::vector<block::BlockState> nearbyBlocks;
 
-    for (float angle = 0.0f; angle < FullCircle; angle += FullCircle / 8) {
-        Vector3d checkPos = m_Position + Vector3RotateAboutY(Vector3d(0, 0, CheckWidth), angle);
+    for (s32 x = -radius; x < radius; ++x) {
+        for (s32 y = -radius; y < radius; ++y) {
+            for (s32 z = -radius; z < radius; ++z) {
+                Vector3d checkPos = m_Position + Vector3d(x, y, z);
 
-        block::BlockPtr checkBlock = m_World.GetBlock(checkPos).GetBlock();
-        if (checkBlock && checkBlock->IsSolid()) {
-            Vector3i pos = ToVector3i(checkPos);
-            /*AABB bounds = checkBlock->GetBoundingBox(pos);
+                auto state = m_World.GetBlock(checkPos);
 
-            if (playerBounds.Intersects(bounds)) {
-                m_Position.y += checkBlock->GetBoundingBox().max.y;
-                return true;
-            }*/
-
-            if (checkBlock->CollidesWith(m_Position, playerBounds)) {
-                m_Position.y += checkBlock->GetBoundingBox().max.y;
-                return true;
+                if (state.GetBlock() && state.GetBlock()->IsSolid())
+                    nearbyBlocks.push_back(state);
             }
+        }
+    }
+
+    std::sort(nearbyBlocks.begin(), nearbyBlocks.end(), [](const block::BlockState& a, const block::BlockState& b) {
+        if (a.GetBlock() == b.GetBlock()) return a.GetData() < b.GetData();
+        return a.GetBlock() < b.GetBlock();
+    });
+
+    nearbyBlocks.erase(std::unique(nearbyBlocks.begin(), nearbyBlocks.end()), nearbyBlocks.end());
+
+    return nearbyBlocks;
+}
+
+bool PlayerController::HandleJump() {
+    AABB playerBounds = m_BoundingBox + m_Position;
+
+    for (const auto& state : GetNearbyBlocks(2)) {
+        block::BlockPtr checkBlock = state.GetBlock();
+
+        auto result = checkBlock->CollidesWith(state, state.GetPosition(), playerBounds);
+        if (result.first) {
+            m_Position.y = result.second.max.y;
+            return true;
         }
     }
 
@@ -307,59 +318,34 @@ bool PlayerController::HandleJump() {
 }
 
 bool PlayerController::HandleFall() {
-    // Ray cast downards FallSpeed magnitude, use collision spot as new height
-    const float FullCircle = 2.0f * 3.14159f;
-    const float CheckWidth = (float)m_BoundingBox.max.x / 2.0f;
-    const float RayCastStep = 0.05f;
     double bestDist = FallSpeed;
     block::BlockPtr bestBlock = nullptr;
 
     if (!InLoadedChunk())
         return false;
 
-    for (float angle = 0.0f; angle < FullCircle; angle += FullCircle / 8) {
-        Vector3d checkPos = m_Position + Vector3RotateAboutY(Vector3d(0, 0, CheckWidth), angle);
-        float dist = 0.0f;
-        block::BlockPtr checkBlock = nullptr;
+    AABB playerBounds = m_BoundingBox + (m_Position - Vector3d(0, FallSpeed, 0));
 
-        for (dist = 0.0f; dist < FallSpeed; dist += RayCastStep) {
-            checkPos.y = m_Position.y - dist;
+    for (const auto& state : GetNearbyBlocks(2)) {
+        auto checkBlock = state.GetBlock();        
 
-            auto state = m_World.GetBlock(checkPos);
-            checkBlock = state.GetBlock();
-            
-            if (checkBlock && checkBlock->IsSolid()) {
-                AABB stateBounds = checkBlock->GetBoundingBox(state);
-                AABB blockBounds = stateBounds + ToVector3i(checkPos);
-                AABB playerBounds = m_BoundingBox + (m_Position - Vector3d(0, dist, 0));
+        auto boundingBoxes = checkBlock->GetBoundingBoxes(state);
+        for (auto blockBounds : boundingBoxes) {
+            AABB checkBounds = blockBounds + state.GetPosition();
 
-                if (playerBounds.Intersects(blockBounds)) {
-                    dist -= RayCastStep;
-                    checkPos.y += RayCastStep;
-                    break;
-                }
+            if (checkBounds.Intersects(playerBounds)) {
+                double penetration = checkBounds.max.y - playerBounds.min.y;
+                double dist = FallSpeed - penetration;
+
+                if (dist < bestDist)
+                    bestDist = dist;
             }
-        }
-
-        if (dist < bestDist) {
-            bestDist = dist;
-            bestBlock = m_World.GetBlock(checkPos).GetBlock();
         }
     }
 
-    m_Position.y -= bestDist;
-    // Drop down through the block then move back up to top of bounding box.
-    m_Position.y = (double)(u64)m_Position.y;
-    if (bestBlock)
-        m_Position.y += bestBlock->GetBoundingBox().max.y;
-    /*if (m_Position.y - (u64)m_Position.y < RayCastStep)
-        m_Position.y = (u64)m_Position.y;*/
+    m_Position -= Vector3d(0.0, bestDist, 0.0);
 
-//      Minecraft::BlockPtr currentBlock = m_World.GetBlock(m_Position - Vector3d(0, FallSpeed, 0));
-
-//        Vector3d highestPos = ToVector3d(ToVector3i(m_Position)) + Vector3d(0, currentBlock->GetBoundingBox().max.y, 0);
-
-    return false;
+    return bestDist == FallSpeed;
 }
 
 void PlayerController::SetTargetPosition(Vector3d target) {
@@ -385,12 +371,13 @@ void PlayerController::UpdatePosition() {
     static int counter = 0;
 
     if (++counter == 30) {
-        console << "Current pos: " << GetPosition();
+        console << "Current pos: " << GetPosition() << "\n";
         counter = 0;
     }
 
     Vector3d target = m_TargetPos;
     Vector3d toTarget = target - GetPosition();
+    toTarget.y = 0;
     double dist = toTarget.Length();
 
     if (!ClearPath(target))
@@ -409,46 +396,40 @@ void PlayerController::UpdatePosition() {
 
 void PlayerController::Update() {
     if (!m_LoadedIn) return;
+
     UpdatePosition();
 
-    static s64 lastSend = 0;
-    static u64 StartTime = GetTime();
+    bool onGround = true;
 
-    if (GetTime() - lastSend >= 50) {
-        bool onGround = true;
+    if (HandleJump()) {
+        console << "Jumping\n";
+    } else {
+        if (!m_HandleFall) {
+            const float FullCircle = 2.0f * 3.14159f;
+            const float CheckWidth = 0.3f;
+            onGround = false;
+            for (float angle = 0.0f; angle < FullCircle; angle += FullCircle / 8) {
+                Vector3d checkPos = m_Position + Vector3RotateAboutY(Vector3d(0, 0, CheckWidth), angle) - Vector3d(0, 1, 0);
 
-        if (HandleJump()) {
-            console << "Jumping\n";
-        } else {
-            if (!m_HandleFall) {
-                const float FullCircle = 2.0f * 3.14159f;
-                const float CheckWidth = (float)m_BoundingBox.max.x / 2.0f;
-                onGround = false;
-                for (float angle = 0.0f; angle < FullCircle; angle += FullCircle / 8) {
-                    Vector3d checkPos = m_Position + Vector3RotateAboutY(Vector3d(0, 0, CheckWidth), angle) - Vector3d(0, 1, 0);
-
-                    block::BlockPtr checkBlock = m_World.GetBlock(checkPos).GetBlock();
-                    if (checkBlock && checkBlock->IsSolid()) {
-                        onGround = true;
-                        break;
-                    }
+                block::BlockPtr checkBlock = m_World.GetBlock(checkPos).GetBlock();
+                if (checkBlock && checkBlock->IsSolid()) {
+                    onGround = true;
+                    break;
                 }
-            } else if (HandleFall()) {
-                console << "Falling\n";
-                onGround = false;
             }
-            
+        } else if (HandleFall()) {
+            console << "Falling\n";
+            onGround = false;
         }
-
-        protocol::packets::out::PlayerPositionAndLookPacket response(m_Position,
-            m_Yaw * 180.0f / 3.14159f, m_Pitch * 180.0f / 3.14159f, onGround);
-
-        m_Connection->SendPacket(&response);
-
-        UpdateDigging();
-
-        lastSend = GetTime();
+            
     }
+
+    protocol::packets::out::PlayerPositionAndLookPacket response(m_Position,
+        m_Yaw * 180.0f / 3.14159f, m_Pitch * 180.0f / 3.14159f, onGround);
+
+    m_Connection->SendPacket(&response);
+
+    UpdateDigging();
 }
 
 bool PlayerController::InLoadedChunk() const {
@@ -747,125 +728,144 @@ public:
     }
 };
 
-class PlayerFollower : public core::PlayerListener {
-private:
-    core::PlayerManager& m_PlayerManager;
-    entity::EntityManager& m_EntityManager;
-    core::PlayerPtr m_Following;
-    PlayerController& m_PlayerController;
-    std::wstring m_Target;
-    u64 m_LastUpdate;
-    
-public:
-    PlayerFollower(protocol::packets::PacketDispatcher* dispatcher, core::PlayerManager& playerManager, entity::EntityManager& emanager, PlayerController& playerController)
-        : m_PlayerManager(playerManager),
-          m_EntityManager(emanager),
-          m_PlayerController(playerController),
-          m_Target(L"")
-    {
-        m_PlayerManager.RegisterListener(this);
+
+PlayerFollower::PlayerFollower(protocol::packets::PacketDispatcher* dispatcher, core::Client* client)
+    : m_Client(client),
+      m_PlayerManager(*client->GetPlayerManager()),
+      m_EntityManager(*client->GetEntityManager()),
+      m_PlayerController(*client->GetPlayerController()),
+      m_Target(L"")
+{
+    client->RegisterListener(this);
+    m_PlayerManager.RegisterListener(this);
+}
+
+PlayerFollower::~PlayerFollower() {
+    m_Client->UnregisterListener(this);
+    m_PlayerManager.UnregisterListener(this);
+}
+
+void PlayerFollower::UpdateRotation() {
+    if (!m_Following || !m_Following->GetEntity()) return;
+
+    m_PlayerController.LookAt(m_Following->GetEntity()->GetPosition());
+    /*static u64 lastUpdate = GetTime();
+    u64 ticks = GetTime();
+    float dt = (ticks - lastUpdate) / 1000.0f;
+    lastUpdate = ticks;
+
+    static float yaw = 0.0f;
+    static float RotationsPerSecond = 0.6f;
+
+    yaw += dt * 360.0f / (1.0f / RotationsPerSecond);*/
+
+    // std::wcout << yaw << std::endl;
+
+    //m_Pitch = (((float)std::sin(ticks * 0.5 * 3.14 / 1000) * 0.5f + 0.5f) * 360.0f) - 180.0f;
+    //float yaw = (((float)std::sin(ticks * 0.5 * 3.14 / 1000))) * 360.0f;
+
+    //std::wcout << yaw << std::endl;
+
+    //m_PlayerController.SetYaw(yaw);
+    //m_PlayerController.LookAt(m_Following->GetEntity()->GetPosition());
+}
+
+void PlayerFollower::OnTick() {
+    UpdateRotation();
+
+    if (!m_Following || !m_Following->GetEntity()) {
+        m_PlayerController.SetTargetPosition(m_PlayerController.GetPosition());
+        return;
     }
 
-    ~PlayerFollower() {
-        m_PlayerManager.UnregisterListener(this);
-    }
+    auto entity = m_Following->GetEntity();
+    EntityId vid = entity->GetVehicleId();
+    Vector3d targetPosition = entity->GetPosition();
 
-    void UpdateRotation() {
-        if (!m_Following || !m_Following->GetEntity()) return;
+    if (vid != -1)
+        targetPosition = m_EntityManager.GetEntity(vid)->GetPosition();
 
-        static u64 lastUpdate = GetTime();
-        u64 ticks = GetTime();
-        float dt = (ticks - lastUpdate) / 1000.0f;
-        lastUpdate = ticks;
+    float yaw = (entity->GetYaw() / 256.0f) * 360.0f;
+    float pitch = (entity->GetPitch() / 256.0f) * 360.0f;
+    const float toRads = 3.14159f / 180.0f;
 
-        static float yaw = 0.0f;
-        static float RotationsPerSecond = 0.6f;
+    if ((yaw += 90) >= 360.0) yaw -= 360;
 
-        yaw += dt * 360.0f / (1.0f / RotationsPerSecond);
+    Vector3d heading(
+        std::cos(yaw * toRads) * std::cos(pitch * toRads),
+        0.0,
+        std::sin(yaw * toRads) * std::cos(pitch * toRads)
+    );
 
-       // std::wcout << yaw << std::endl;
+    Vector3d newPosition = targetPosition + Vector3Normalize(heading) * 0.4;
 
-        //m_Pitch = (((float)std::sin(ticks * 0.5 * 3.14 / 1000) * 0.5f + 0.5f) * 360.0f) - 180.0f;
-        //float yaw = (((float)std::sin(ticks * 0.5 * 3.14 / 1000))) * 360.0f;
+    if ((yaw -= 180.0f + 90.0f) < 0.0f) yaw += 360.0f;
+    //m_PlayerController.SetYaw(yaw);
+    m_PlayerController.SetMoveSpeed(4.3 * 1.3);
+    m_PlayerController.SetTargetPosition(newPosition);
+}
 
-        //std::wcout << yaw << std::endl;
+bool PlayerFollower::IsIgnored(const std::wstring& name) {
+    static const std::vector<std::wstring> IgnoreList = {
+        L"Traced_", L"Judam"
+    };
 
-        m_PlayerController.SetYaw(yaw);
-        //m_PlayerController.LookAt(m_Following->GetEntity()->GetPosition());
-    }
+    return std::find(IgnoreList.begin(), IgnoreList.end(), name) != IgnoreList.end();
+}
 
-    void Update() {
-        UpdateRotation();
-
-        if (!m_Following || !m_Following->GetEntity()) {
-            m_PlayerController.SetTargetPosition(m_PlayerController.GetPosition());
-            return;
-        }
-
-        auto entity = m_Following->GetEntity();
-        EntityId vid = entity->GetVehicleId();
-        Vector3d targetPosition = entity->GetPosition();
-
-        if (vid != -1)
-            targetPosition = m_EntityManager.GetEntity(vid)->GetPosition();
-
-        float yaw = (entity->GetYaw() / 256.0f) * 360.0f;
-        float pitch = (entity->GetPitch() / 256.0f) * 360.0f;
-        const float toRads = 3.14159f / 180.0f;
-
-        if ((yaw += 90) >= 360.0) yaw -= 360;
-
-        Vector3d heading(
-            std::cos(yaw * toRads) * std::cos(pitch * toRads),
-            0.0,
-            std::sin(yaw * toRads) * std::cos(pitch * toRads)
-        );
-
-        Vector3d newPosition = targetPosition + Vector3Normalize(heading) * 0.4;
-
-        if ((yaw -= 180.0f + 90.0f) < 0.0f) yaw += 360.0f;
-        m_PlayerController.SetYaw(yaw);
-        m_PlayerController.SetMoveSpeed(8.6);
-        m_PlayerController.SetTargetPosition(newPosition);
-    }
-
-    bool IsIgnored(const std::wstring& name) {
-        static const std::vector<std::wstring> IgnoreList = {
-            L"Traced_", L"Judam"
-        };
-
-        return std::find(IgnoreList.begin(), IgnoreList.end(), name) != IgnoreList.end();
-    }
-
-    void FindClosestPlayer() {
-        double closest = std::numeric_limits<double>::max();
+void PlayerFollower::FindClosestPlayer() {
+    double closest = std::numeric_limits<double>::max();
         
 
-        m_Following = nullptr;
+    m_Following = nullptr;
 
-        if (!m_Target.empty()) {
-            for (auto& kv : m_PlayerManager) {
-                auto player = kv.second;
-                auto entity = player->GetEntity();
+    if (!m_Target.empty()) {
+        for (auto& kv : m_PlayerManager) {
+            auto player = kv.second;
+            auto entity = player->GetEntity();
 
-                if (entity && player->GetName() == m_Target)
-                    m_Following = player;
+            if (entity && player->GetName() == m_Target)
+                m_Following = player;
+        }
+    }
+
+    if (!m_Following) {
+        for (auto& kv : m_PlayerManager) {
+            core::PlayerPtr player = kv.second;
+
+            if (IsIgnored(player->GetName())) continue;
+
+            auto entity = player->GetEntity();
+
+            if (!entity) continue;
+
+            EntityId peid = m_EntityManager.GetPlayerEntity()->GetEntityId();
+            if (entity->GetEntityId() == peid) continue;
+
+            Vector3d pos = entity->GetPosition();
+            EntityId vid = entity->GetVehicleId();
+            if (vid != -1) {
+                entity::EntityPtr vehicle = m_EntityManager.GetEntity(vid);
+                if (vehicle)
+                    pos = vehicle->GetPosition();
+            }
+
+            double dist = pos.Distance(m_PlayerController.GetPosition());
+
+            if (dist < closest) {
+                closest = dist;
+                m_Following = player;
             }
         }
+    }
 
-        if (!m_Following) {
-            for (auto& kv : m_PlayerManager) {
-                core::PlayerPtr player = kv.second;
+    static u64 lastOutput = 0;
 
-                if (IsIgnored(player->GetName())) continue;
-
-                auto entity = player->GetEntity();
-
-                if (!entity) continue;
-
-                EntityId peid = m_EntityManager.GetPlayerEntity()->GetEntityId();
-                if (entity->GetEntityId() == peid) continue;
-
+    if (GetTime() - lastOutput >= 3000) {
+        lastOutput = GetTime();
+        if (m_Following) {
+            auto entity = m_Following->GetEntity();
+            if (entity) {
                 Vector3d pos = entity->GetPosition();
                 EntityId vid = entity->GetVehicleId();
                 if (vid != -1) {
@@ -873,71 +873,46 @@ public:
                     if (vehicle)
                         pos = vehicle->GetPosition();
                 }
+                double dist = m_PlayerController.GetPosition().Distance(pos);
+                std::wstring followName = m_Following->GetName();
 
-                double dist = pos.Distance(m_PlayerController.GetPosition());
+                std::string followMesg = "Tracking " + std::string(followName.begin(), followName.end()) + " dist: " + std::to_string(dist) + "\n";
 
-                if (dist < closest) {
-                    closest = dist;
-                    m_Following = player;
-                }
+                console << followMesg;
             }
         }
-
-        static u64 lastOutput = 0;
-
-        if (GetTime() - lastOutput >= 3000) {
-            lastOutput = GetTime();
-            if (m_Following) {
-                auto entity = m_Following->GetEntity();
-                if (entity) {
-                    Vector3d pos = entity->GetPosition();
-                    EntityId vid = entity->GetVehicleId();
-                    if (vid != -1) {
-                        entity::EntityPtr vehicle = m_EntityManager.GetEntity(vid);
-                        if (vehicle)
-                            pos = vehicle->GetPosition();
-                    }
-                    double dist = m_PlayerController.GetPosition().Distance(pos);
-                    std::wstring followName = m_Following->GetName();
-
-                    std::string followMesg = "Tracking " + std::string(followName.begin(), followName.end()) + " dist: " + std::to_string(dist) + "\n";
-
-                    console << followMesg;
-                }
-            }
-        }
-
-        if (!m_Following)
-            console << "Not tracking anyone\n";
-        else
-            m_PlayerController.SetTargetPosition(m_Following->GetEntity()->GetPosition());
     }
 
-    void OnPlayerJoin(core::PlayerPtr player) {
-        FindClosestPlayer();
-        UpdateRotation();
-    }
+    if (!m_Following)
+        console << "Not tracking anyone\n";
+    else
+        m_PlayerController.SetTargetPosition(m_Following->GetEntity()->GetPosition());
+}
 
-    void OnPlayerLeave(core::PlayerPtr player) {
-        FindClosestPlayer();
-        UpdateRotation();
-    }
+void PlayerFollower::OnPlayerJoin(core::PlayerPtr player) {
+    FindClosestPlayer();
+    UpdateRotation();
+}
 
-    void OnPlayerSpawn(core::PlayerPtr player) {
-        FindClosestPlayer();
-        UpdateRotation();
-    }
+void PlayerFollower::OnPlayerLeave(core::PlayerPtr player) {
+    FindClosestPlayer();
+    UpdateRotation();
+}
 
-    void OnPlayerDestroy(core::PlayerPtr player, EntityId eid) {
-        FindClosestPlayer();
-        UpdateRotation();
-    }
+void PlayerFollower::OnPlayerSpawn(core::PlayerPtr player) {
+    FindClosestPlayer();
+    UpdateRotation();
+}
 
-    void OnPlayerMove(core::PlayerPtr player, Vector3d oldPos, Vector3d newPos) {
-        FindClosestPlayer();
-        UpdateRotation();
-    }
-};
+void PlayerFollower::OnPlayerDestroy(core::PlayerPtr player, EntityId eid) {
+    FindClosestPlayer();
+    UpdateRotation();
+}
+
+void PlayerFollower::OnPlayerMove(core::PlayerPtr player, Vector3d oldPos, Vector3d newPos) {
+    FindClosestPlayer();
+    UpdateRotation();
+}
 
 class CreativeCreator : public protocol::packets::PacketHandler {
 private:

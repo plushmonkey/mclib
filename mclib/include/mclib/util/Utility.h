@@ -3,6 +3,7 @@
 
 #include <mclib/common/AABB.h>
 #include <mclib/common/Vector.h>
+#include <mclib/core/Client.h>
 #include <mclib/core/Connection.h>
 #include <mclib/core/PlayerManager.h>
 #include <mclib/world/World.h>
@@ -51,6 +52,8 @@ private:
     // todo: gravity
     const float FallSpeed = 8.3f * (50.0f / 1000.0f);
 
+    std::vector<block::BlockState> GetNearbyBlocks(const s32 radius);
+
 public:
     MCLIB_API PlayerController(core::Connection* connection, world::World& world, core::PlayerManager& playerManager);
     MCLIB_API ~PlayerController();
@@ -81,6 +84,35 @@ public:
     void MCLIB_API SetMoveSpeed(double speed);
     void MCLIB_API SetTargetPosition(Vector3d target);
     void MCLIB_API SetHandleFall(bool handle);
+};
+
+class PlayerFollower : public core::PlayerListener, public core::ClientListener {
+private:
+    core::Client* m_Client;
+    core::PlayerManager& m_PlayerManager;
+    entity::EntityManager& m_EntityManager;
+    core::PlayerPtr m_Following;
+    PlayerController& m_PlayerController;
+    std::wstring m_Target;
+    u64 m_LastUpdate;
+
+public:
+    MCLIB_API PlayerFollower(protocol::packets::PacketDispatcher* dispatcher, core::Client* client);
+
+    MCLIB_API ~PlayerFollower();
+
+    MCLIB_API void UpdateRotation();
+
+    MCLIB_API void OnTick() override;
+    MCLIB_API bool IsIgnored(const std::wstring& name);
+
+    MCLIB_API void FindClosestPlayer();
+
+    MCLIB_API void OnPlayerJoin(core::PlayerPtr player);
+    MCLIB_API void OnPlayerLeave(core::PlayerPtr player);
+    MCLIB_API void OnPlayerSpawn(core::PlayerPtr player);
+    MCLIB_API void OnPlayerDestroy(core::PlayerPtr player, EntityId eid);
+    MCLIB_API void OnPlayerMove(core::PlayerPtr player, Vector3d oldPos, Vector3d newPos);
 };
 
 class IConsole {

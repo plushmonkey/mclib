@@ -58,11 +58,11 @@ struct AABB {
             (point.z >= min.z && point.z <= max.z);
     }
 
-    AABB operator+(Vector3d offset) {
+    AABB operator+(Vector3d offset) const {
         return AABB(min + offset, max + offset);
     }
 
-    AABB operator+(Vector3i offset) {
+    AABB operator+(Vector3i offset) const {
         return AABB(min + ToVector3d(offset), max + ToVector3d(offset));
     }
 

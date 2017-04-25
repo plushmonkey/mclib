@@ -87,8 +87,14 @@ public:
         return GetBoundingBox(ToVector3i(at));
     }
 
-    virtual bool CollidesWith(Vector3d at, const AABB& other) {
-        return GetBoundingBox(ToVector3i(at)).Intersects(other);
+    virtual std::pair<bool, AABB> CollidesWith(const BlockState& blockState, Vector3i at, const AABB& other) {
+        AABB boundingBox = GetBoundingBox(blockState) + at;
+        return std::make_pair(boundingBox.Intersects(other), boundingBox);
+    }
+
+    // Returns the raw unmodified-by-position bounding boxes.
+    virtual std::vector<AABB> GetBoundingBoxes(const BlockState& blockState) {
+        return std::vector<AABB>(1, m_BoundingBox);
     }
 
     friend class BlockRegistry;
@@ -98,12 +104,16 @@ typedef Block* BlockPtr;
 class BlockState {
 private:
     BlockPtr m_Block;
+    Vector3i m_Position;
     u16 m_Data;
 
 public:
-    BlockState(BlockPtr block, u16 data) noexcept : m_Block(block), m_Data(data) { }
+    BlockState(BlockPtr block, u16 data, Vector3i position) noexcept : m_Block(block), m_Data(data), m_Position(position) { }
+
+    bool operator==(const BlockState& other) { return m_Block == other.m_Block && m_Data == other.m_Data && m_Position == other.m_Position; }
 
     BlockPtr GetBlock() const noexcept { return m_Block; }
+    Vector3i GetPosition() const noexcept { return m_Position; }
     u16 GetData() const noexcept { return m_Data; }
 };
 

@@ -60,7 +60,9 @@ void Chunk::Load(DataBuffer& in, ChunkColumnMetadata* meta, s32 chunkIndex) {
 }
 
 block::BlockState Chunk::GetBlock(Vector3i chunkPosition) {
-    if (chunkPosition.y < 0 || chunkPosition.y > 15) return block::BlockState(block::BlockRegistry::GetInstance()->GetBlock(0, 0), 0);
+    Vector3i pos(chunkPosition.x, chunkPosition.y, chunkPosition.z);
+
+    if (chunkPosition.y < 0 || chunkPosition.y > 15) return block::BlockState(block::BlockRegistry::GetInstance()->GetBlock(0, 0), 0, pos);
 
     std::size_t index = (std::size_t)(chunkPosition.y * 16 * 16 + chunkPosition.z * 16 + chunkPosition.x);
     s32 bitIndex = index * m_BitsPerBlock;
@@ -86,7 +88,7 @@ block::BlockState Chunk::GetBlock(Vector3i chunkPosition) {
     } else {
         blockType = value;
     }
-    return block::BlockState(block::BlockRegistry::GetInstance()->GetBlock(blockType), blockType);
+    return block::BlockState(block::BlockRegistry::GetInstance()->GetBlock(blockType), blockType, pos);
 }
 
 void Chunk::SetBlock(Vector3i chunkPosition, block::BlockState blockState) {
@@ -142,7 +144,7 @@ block::BlockState ChunkColumn::GetBlock(Vector3i position) {
     s32 chunkIndex = (s32)(position.y / 16);
     Vector3i relativePosition(position.x, position.y % 16, position.z);
 
-    if (chunkIndex < 0 || chunkIndex > 15 || !m_Chunks[chunkIndex]) return block::BlockState(block::BlockRegistry::GetInstance()->GetBlock(0, 0), 0);
+    if (chunkIndex < 0 || chunkIndex > 15 || !m_Chunks[chunkIndex]) return block::BlockState(block::BlockRegistry::GetInstance()->GetBlock(0, 0), 0, position);
 
     return m_Chunks[chunkIndex]->GetBlock(relativePosition);
 }
