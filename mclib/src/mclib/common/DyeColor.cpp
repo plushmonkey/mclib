@@ -2,6 +2,17 @@
 
 #include <unordered_map>
 
+namespace std {
+
+template <>
+struct hash<mc::DyeColor> {
+    std::size_t operator()(const mc::DyeColor& color) const {
+        return std::hash<int>()(static_cast<int>(color));
+    }
+};
+
+} // ns std
+
 namespace mc {
 
 constexpr Vector3d normRGB(int x, int y, int z) {

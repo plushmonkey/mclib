@@ -2,6 +2,17 @@
 
 #include <unordered_map>
 
+namespace std {
+
+template <>
+struct hash<mc::block::SkullType> {
+    std::size_t operator()(const mc::block::SkullType& type) const {
+        return std::hash<int>()(static_cast<int>(type));
+    }
+};
+
+} // ns std
+
 namespace mc {
 namespace block {
 
