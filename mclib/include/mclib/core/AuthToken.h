@@ -1,0 +1,46 @@
+#ifndef MCLIB_CORE_AUTHTOKEN_H_
+#define MCLIB_CORE_AUTHTOKEN_H_
+
+#include <mclib/mclib.h>
+#include <string>
+#include <memory>
+
+namespace mc {
+
+namespace util {
+
+class Yggdrasil;
+
+} // ns util
+
+namespace core {
+
+class AuthToken {
+private:
+    std::unique_ptr<util::Yggdrasil> m_Yggdrasil;
+    std::string m_AccessToken;
+    std::string m_ClientToken;
+    std::string m_ProfileId;
+    bool m_Valid;
+
+public:
+    MCLIB_API AuthToken(const std::string& accessToken, const std::string& clientToken, const std::string& profileId);
+
+    MCLIB_API AuthToken(const AuthToken& rhs);
+    MCLIB_API AuthToken& operator=(const AuthToken& rhs);
+    MCLIB_API AuthToken(AuthToken&& rhs) = default;
+    MCLIB_API AuthToken& operator=(AuthToken&& rhs) = default;
+
+    // Checks the api to see if the access token is valid. It will try to refresh the token if it isn't.
+    MCLIB_API bool Validate();
+
+    inline bool IsValid() const noexcept { return m_Valid; }
+    inline const std::string& GetAccessToken() const noexcept { return m_AccessToken; }
+    inline const std::string& GetClientToken() const noexcept { return m_ClientToken; }
+    std::unique_ptr<util::Yggdrasil>& GetYggdrasil() { return m_Yggdrasil; }
+};
+
+} // ns core
+} // ns mc
+
+#endif

@@ -306,6 +306,9 @@
     <ClInclude Include="include\mclib\block\Skull.h">
       <Filter>Header Files\block</Filter>
     </ClInclude>
+    <ClInclude Include="include\mclib\core\AuthToken.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\mclib\block\Block.cpp">
@@ -481,6 +484,9 @@
     </ClCompile>
     <ClCompile Include="src\mclib\block\Skull.cpp">
       <Filter>Source Files\block</Filter>
+    </ClCompile>
+    <ClCompile Include="src\mclib\core\AuthToken.cpp">
+      <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

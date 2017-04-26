@@ -45,6 +45,7 @@
     <ClInclude Include="include\mclib\common\UUID.h" />
     <ClInclude Include="include\mclib\common\VarInt.h" />
     <ClInclude Include="include\mclib\common\Vector.h" />
+    <ClInclude Include="include\mclib\core\AuthToken.h" />
     <ClInclude Include="include\mclib\core\Client.h" />
     <ClInclude Include="include\mclib\core\ClientSettings.h" />
     <ClInclude Include="include\mclib\core\Compression.h" />
@@ -117,6 +118,7 @@
     <ClCompile Include="src\mclib\common\Position.cpp" />
     <ClCompile Include="src\mclib\common\UUID.cpp" />
     <ClCompile Include="src\mclib\common\VarInt.cpp" />
+    <ClCompile Include="src\mclib\core\AuthToken.cpp" />
     <ClCompile Include="src\mclib\core\Client.cpp" />
     <ClCompile Include="src\mclib\core\ClientSettings.cpp" />
     <ClCompile Include="src\mclib\core\Compression.cpp" />

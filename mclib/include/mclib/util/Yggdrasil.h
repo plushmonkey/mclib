@@ -39,7 +39,7 @@ private:
     std::unique_ptr<HTTPClient> m_Http;
     std::string m_PlayerName;
     std::string m_AuthUrl;
-    std::string m_SessionURL;
+    std::string m_SessionUrl;
     std::string m_AccessToken;
     std::string m_ClientToken;
     std::string m_ProfileId;
@@ -59,13 +59,15 @@ public:
         Initialize();
     }
 
-    Yggdrasil(const Yggdrasil& other) = delete;
-    Yggdrasil& operator=(const Yggdrasil& other) = delete;
+    MCLIB_API Yggdrasil(const Yggdrasil& other);
+    MCLIB_API Yggdrasil& operator=(const Yggdrasil& other);
 
     const std::string& GetAccessToken() const { return m_AccessToken; }
     const std::string& GetClientToken() const { return m_ClientToken; }
     const std::string& GetPlayerName() const { return m_PlayerName; }
     const std::string& GetProfileId() const { return m_ProfileId; }
+
+    void SetProfileId(const std::string& profileId) { m_ProfileId = profileId; }
 
     bool IsAuthenticated() const { return !m_AccessToken.empty(); }
 
@@ -103,11 +105,12 @@ public:
     /**
      * Refreshes an access token by creating a new one and invalidating the old one.
      * Passwords should never be stored on file, so this is used to keep a stored access token valid.
+     * If successful, the new accessToken will be associated with the same clientToken as before.
      * @param accessToken The access token to refresh.
      * @param clientToken This should match the clientToken used to obtain the accessToken originally.
-     * @return The access token.
+     * @return A pair containing the access token and the username.
      */
-    std::string MCLIB_API Refresh(const std::string& accessToken, const std::string& clientToken = 0);
+    std::pair<std::string, std::string> MCLIB_API Refresh(const std::string& accessToken, const std::string& clientToken = 0);
 
     /**
      * Checks if an access token is usable for authentication. The token should be refreshed if it isn't valid.

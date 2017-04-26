@@ -158,12 +158,12 @@ CurlHTTPClient::CurlHTTPClient()
 
 CurlHTTPClient::~CurlHTTPClient() = default;
 
-CurlHTTPClient::CurlHTTPClient(CurlHTTPClient& other) 
+CurlHTTPClient::CurlHTTPClient(const CurlHTTPClient& other) 
     : m_Impl(std::make_unique<Impl>(*other.m_Impl))
 {
 }
 
-CurlHTTPClient& CurlHTTPClient::operator=(CurlHTTPClient& rhs) {
+CurlHTTPClient& CurlHTTPClient::operator=(const CurlHTTPClient& rhs) {
     *m_Impl = *rhs.m_Impl;
     return *this;
 }

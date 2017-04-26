@@ -15,7 +15,30 @@ namespace util {
 
 void Yggdrasil::Initialize() {
     m_AuthUrl = "https://authserver.mojang.com/";
-    m_SessionURL = "https://sessionserver.mojang.com/session/minecraft/";
+    m_SessionUrl = "https://sessionserver.mojang.com/session/minecraft/";
+}
+
+Yggdrasil::Yggdrasil(const Yggdrasil& other)
+    : m_Http(std::make_unique<CurlHTTPClient>()),
+      m_PlayerName(other.m_PlayerName),
+      m_AuthUrl(other.m_AuthUrl),
+      m_SessionUrl(other.m_SessionUrl),
+      m_AccessToken(other.m_AccessToken),
+      m_ClientToken(other.m_ClientToken),
+      m_ProfileId(other.m_ProfileId)
+{
+
+}
+
+Yggdrasil& Yggdrasil::operator=(const Yggdrasil& other) {
+    m_Http = std::make_unique<CurlHTTPClient>();
+    m_PlayerName = other.m_PlayerName;
+    m_AuthUrl = other.m_AuthUrl;
+    m_SessionUrl = other.m_SessionUrl;
+    m_AccessToken = other.m_AccessToken;
+    m_ClientToken = other.m_ClientToken;
+    m_ProfileId = other.m_ProfileId;
+    return *this;
 }
 
 bool Yggdrasil::JoinServer(const std::wstring& serverId, const std::string& sharedSecret, const std::string& publicKey) {
@@ -44,7 +67,7 @@ bool Yggdrasil::JoinServer(const std::string& serverHash) {
     data["selectedProfile"] = m_ProfileId;
     data["serverId"] = serverHash;
 
-    HTTPResponse resp = m_Http->PostJSON(m_SessionURL + "join", data);
+    HTTPResponse resp = m_Http->PostJSON(m_SessionUrl + "join", data);
 
     // Always returns 204 No Content, but it might change in the future
     return resp.status >= 200 && resp.status < 300;
@@ -92,7 +115,7 @@ bool Yggdrasil::Authenticate(const std::string& username, const std::string& pas
     return true;
 }
 
-std::string Yggdrasil::Refresh(const std::string& accessToken, const std::string& clientToken) {
+std::pair<std::string, std::string> Yggdrasil::Refresh(const std::string& accessToken, const std::string& clientToken) {
     Json::Value payload;
 
     payload["accessToken"] = accessToken;
@@ -113,8 +136,17 @@ std::string Yggdrasil::Refresh(const std::string& accessToken, const std::string
         throw YggdrasilException(result["error"].asString(), result["errorMessage"].asString());
 
     m_AccessToken = result["accessToken"].asString();
+    m_ClientToken = clientToken;
 
-    return m_AccessToken;
+    if (!result["selectedProfile"].isNull()) {
+        if (!result["selectedProfile"]["id"].isNull())
+            m_ProfileId = result["selectedProfile"]["id"].asString();
+
+        if (!result["selectedProfile"]["name"].isNull())
+            m_PlayerName = result["selectedProfile"]["name"].asString();
+    }
+
+    return std::make_pair(m_AccessToken, m_PlayerName);
 }
 
 bool Yggdrasil::Validate(const std::string& accessToken, const std::string& clientToken) {
@@ -125,7 +157,13 @@ bool Yggdrasil::Validate(const std::string& accessToken, const std::string& clie
 
     HTTPResponse resp = m_Http->PostJSON(m_AuthUrl + "validate", payload);
 
-    return resp.status == 200 || resp.status == 204;
+    if (resp.status == 200 || resp.status == 204) {
+        m_AccessToken = accessToken;
+        m_ClientToken = clientToken;
+        return true;
+    }
+
+    return false;
 }
 
 void Yggdrasil::Signout(const std::string& username, const std::string& password) {

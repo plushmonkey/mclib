@@ -66,7 +66,7 @@ void Client::UpdateThread() {
     }
 }
 
-void Client::Login(const std::string& host, unsigned short port,
+bool Client::Login(const std::string& host, unsigned short port,
     const std::string& user, const std::string& password, bool block)
 {
     if (m_UpdateThread.joinable()) {
@@ -77,13 +77,37 @@ void Client::Login(const std::string& host, unsigned short port,
     if (!m_Connection.Connect(host, port))
         throw std::runtime_error("Could not connect to server");
 
-    m_Connection.Login(user, password);
+    if (!m_Connection.Login(user, password))
+        return false;
 
     if (!block) {
         m_UpdateThread = std::thread(&Client::UpdateThread, this);
     } else {
         UpdateThread();
     }
+    return true;
+}
+
+bool Client::Login(const std::string& host, unsigned short port,
+    const std::string& user, AuthToken token, bool block)
+{
+    if (m_UpdateThread.joinable()) {
+        m_Connected = false;
+        m_UpdateThread.join();
+    }
+
+    if (!m_Connection.Connect(host, port))
+        throw std::runtime_error("Could not connect to server");
+
+    if (!m_Connection.Login(user, token))
+        return false;
+
+    if (!block) {
+        m_UpdateThread = std::thread(&Client::UpdateThread, this);
+    } else {
+        UpdateThread();
+    }
+    return true;
 }
 
 void Client::Ping(const std::string& host, unsigned short port) {

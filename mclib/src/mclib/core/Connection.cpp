@@ -260,6 +260,9 @@ void Connection::CreatePacket() {
 
     m_Socket->Receive(buffer, 4096);
 
+    if (buffer.IsEmpty()) 
+        return;
+
     m_HandleBuffer << m_Encrypter->Decrypt(buffer);
 
     do {
@@ -331,8 +334,10 @@ void Connection::CreatePacket() {
     }
 }
 
-void Connection::Login(const std::string& username, const std::string& password) {
-    std::string fml("\0FML\0", 5);
+bool Connection::Login(const std::string& username, const std::string& password) {
+    static const std::string fml("\0FML\0", 5);
+
+    if (m_Socket->GetStatus() != network::Socket::Status::Connected) return false;
 
     protocol::packets::out::HandshakePacket handshake(static_cast<s32>(m_Version), m_Server + fml, m_Port, protocol::State::Login);
 
@@ -353,6 +358,33 @@ void Connection::Login(const std::string& username, const std::string& password)
 
     protocol::packets::out::LoginStartPacket loginStart(m_Username);
     SendPacket(&loginStart);
+
+    return true;
+}
+
+bool Connection::Login(const std::string& username, AuthToken token) {
+    static const std::string fml("\0FML\0", 5);
+
+    if (m_Socket->GetStatus() != network::Socket::Status::Connected) return false;
+
+    if (!token.IsValid()) {
+        if (!token.Validate())
+            return false;
+    }
+
+    m_Yggdrasil = std::move(token.GetYggdrasil());
+
+    protocol::packets::out::HandshakePacket handshake(static_cast<s32>(m_Version), m_Server + fml, m_Port, protocol::State::Login);
+
+    SendPacket(&handshake);
+    m_ProtocolState = protocol::State::Login;
+
+    m_Username = username;
+
+    protocol::packets::out::LoginStartPacket loginStart(m_Username);
+    SendPacket(&loginStart);
+
+    return true;
 }
 
 void Connection::SendPacket(protocol::packets::Packet* packet) {

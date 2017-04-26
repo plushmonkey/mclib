@@ -37,6 +37,7 @@ std::string DataBuffer::ToString() const {
 }
 
 std::size_t DataBuffer::GetSize() const { return m_Buffer.size(); }
+bool DataBuffer::IsEmpty() const { return m_Buffer.empty(); }
 std::size_t DataBuffer::GetRemaining() const {
     return m_Buffer.size() - m_ReadOffset;
 }

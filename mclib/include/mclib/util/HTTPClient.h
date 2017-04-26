@@ -39,8 +39,8 @@ public:
     MCLIB_API CurlHTTPClient();
     MCLIB_API ~CurlHTTPClient();
 
-    CurlHTTPClient(CurlHTTPClient& other);
-    CurlHTTPClient& operator=(CurlHTTPClient& rhs);
+    CurlHTTPClient(const CurlHTTPClient& other);
+    CurlHTTPClient& operator=(const CurlHTTPClient& rhs);
     CurlHTTPClient(CurlHTTPClient&& other);
     CurlHTTPClient& operator=(CurlHTTPClient&& rhs);
 

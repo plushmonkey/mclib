@@ -3,6 +3,7 @@
 
 #include <mclib/common/DataBuffer.h>
 #include <mclib/common/Types.h>
+#include <mclib/core/AuthToken.h>
 #include <mclib/core/ClientSettings.h>
 #include <mclib/network/Socket.h>
 #include <mclib/protocol/packets/Packet.h>
@@ -87,7 +88,8 @@ public:
     void MCLIB_API CreatePacket();
 
     void MCLIB_API Ping();
-    void MCLIB_API Login(const std::string& username, const std::string& password);
+    bool MCLIB_API Login(const std::string& username, const std::string& password);
+    bool MCLIB_API Login(const std::string& username, AuthToken token);
     void MCLIB_API SendPacket(protocol::packets::Packet* packet);
     void MCLIB_API SendPacket(protocol::packets::Packet&& packet);
 };

@@ -2,6 +2,7 @@
 #define MCLIB_CORE_CLIENT_H
 
 #include <mclib/mclib.h>
+#include <mclib/core/AuthToken.h>
 #include <mclib/core/Connection.h>
 #include <mclib/core/PlayerManager.h>
 #include <mclib/entity/EntityManager.h>
@@ -53,7 +54,8 @@ public:
 
     void MCLIB_API OnSocketStateChange(network::Socket::Status newState);
     void MCLIB_API UpdateThread();
-    void MCLIB_API Login(const std::string& host, unsigned short port, const std::string& user, const std::string& password, bool block = false);
+    bool MCLIB_API Login(const std::string& host, unsigned short port, const std::string& user, const std::string& password, bool block = false);
+    bool MCLIB_API Login(const std::string& host, unsigned short port, const std::string& user, AuthToken token, bool block = false);
     void MCLIB_API Ping(const std::string& host, unsigned short port);
 
     protocol::packets::PacketDispatcher* GetDispatcher() { return m_Dispatcher; }

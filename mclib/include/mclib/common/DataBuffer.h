@@ -139,6 +139,7 @@ public:
 
     std::string MCLIB_API ToString() const;
     std::size_t MCLIB_API GetSize() const;
+    bool MCLIB_API IsEmpty() const;
     std::size_t MCLIB_API GetRemaining() const;
 
     iterator MCLIB_API begin();
