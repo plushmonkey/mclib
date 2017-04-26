@@ -260,8 +260,12 @@ void Connection::CreatePacket() {
 
     m_Socket->Receive(buffer, 4096);
 
-    if (buffer.IsEmpty()) 
+    if (buffer.IsEmpty()) {
+        if (m_Socket->GetStatus() != network::Socket::Connected) {
+            NotifyListeners(&ConnectionListener::OnSocketStateChange, m_Socket->GetStatus());
+        }
         return;
+    }
 
     m_HandleBuffer << m_Encrypter->Decrypt(buffer);
 

@@ -307,7 +307,7 @@
       <Filter>Header Files\block</Filter>
     </ClInclude>
     <ClInclude Include="include\mclib\core\AuthToken.h">
-      <Filter>Header Files</Filter>
+      <Filter>Header Files\core</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -486,7 +486,7 @@
       <Filter>Source Files\block</Filter>
     </ClCompile>
     <ClCompile Include="src\mclib\core\AuthToken.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>Source Files\core</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>
