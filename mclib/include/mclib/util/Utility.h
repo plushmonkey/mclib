@@ -3,6 +3,7 @@
 
 #include <mclib/common/AABB.h>
 #include <mclib/common/Vector.h>
+#include <mclib/core/AuthToken.h>
 #include <mclib/core/Client.h>
 #include <mclib/core/Connection.h>
 #include <mclib/core/PlayerManager.h>
@@ -25,6 +26,7 @@ inline std::string to_string(const std::wstring& str) {
 
 namespace util {
 
+MCLIB_API bool GetProfileToken(const std::string& username, core::AuthToken* token);
 MCLIB_API std::string ParseChatNode(Json::Value node);
 MCLIB_API std::string StripChatMessage(const std::string& message);
 MCLIB_API s64 GetTime();

@@ -24,6 +24,7 @@ private:
     bool m_Valid;
 
 public:
+    MCLIB_API AuthToken();
     MCLIB_API AuthToken(const std::string& accessToken, const std::string& clientToken, const std::string& profileId);
 
     MCLIB_API AuthToken(const AuthToken& rhs);

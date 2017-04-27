@@ -5,6 +5,16 @@
 namespace mc {
 namespace core {
 
+AuthToken::AuthToken() 
+    : m_AccessToken(""),
+      m_ClientToken(""),
+      m_ProfileId(""),
+      m_Valid(false),
+      m_Yggdrasil(std::make_unique<util::Yggdrasil>())
+{
+
+}
+
 AuthToken::AuthToken(const std::string& accessToken, const std::string& clientToken, const std::string& profileId)
     : m_AccessToken(accessToken),
       m_ClientToken(clientToken),
@@ -31,10 +41,14 @@ AuthToken& AuthToken::operator=(const AuthToken& rhs) {
     m_ProfileId = rhs.m_ProfileId;
     m_Valid = rhs.m_Valid;
     m_Yggdrasil =std::make_unique<util::Yggdrasil>(*rhs.m_Yggdrasil);
+
     return *this;
 }
 
 bool AuthToken::Validate() {
+    if (m_AccessToken.empty() || m_ClientToken.empty())
+        return false;
+
     if (m_Yggdrasil->Validate(m_AccessToken, m_ClientToken)) {
         m_Valid = true;
         m_Yggdrasil->SetProfileId(m_ProfileId);
@@ -48,6 +62,7 @@ bool AuthToken::Validate() {
     } catch (util::YggdrasilException& e) {
         return false;
     }
+
     return true;
 }
 

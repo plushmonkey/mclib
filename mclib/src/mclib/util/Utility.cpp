@@ -31,6 +31,15 @@
 #undef max
 #undef min
 
+#ifdef _WIN32
+#include <ShlObj.h>
+#else
+#include <unistd.h>
+#include <sys/types.h>
+#include <pwd.h>
+#endif
+
+
 namespace mc {
 namespace util {
 
@@ -52,6 +61,107 @@ enum DyeColor {
     Orange = 0xEB8844,
     BoneMeal = 0xF0F0F0,
 };
+
+std::wstring to_wstring(const char* cstr) {
+    std::string str(cstr);
+    return std::wstring(str.begin(), str.end());
+}
+#ifdef _WIN32
+
+std::wstring GetAppDataPath() {
+    WCHAR* appdata = nullptr;
+
+    if (SHGetKnownFolderPath(FOLDERID_RoamingAppData, 0, NULL, &appdata) != S_OK)
+        return false;
+
+    std::wstring result(appdata);
+
+    CoTaskMemFree(appdata);
+
+    return result;
+}
+
+#else
+
+std::wstring GetAppDataPath() {
+    const char* home = nullptr;
+
+    if ((home = getenv("HOME")) == nullptr)
+        home = getpwuid(getuid())->pw_dir;
+
+    return to_wstring(home);
+}
+
+#endif
+
+bool GetProfileToken(const std::string& username, core::AuthToken* token) {
+    std::wstring appData = GetAppDataPath();
+
+    const std::wstring filename = appData + L"/.minecraft/launcher_profiles.json";
+
+    std::ifstream in(std::string(filename.begin(), filename.end()));
+
+    if (!in.is_open())
+        return false;
+
+    Json::Reader reader;
+    Json::Value root;
+
+    if (!reader.parse(in, root))
+        return false;
+
+    if (root["clientToken"].isNull() || root["authenticationDatabase"].isNull())
+        return false;
+
+    auto& authDB = root["authenticationDatabase"];
+
+    std::string accessToken;
+    std::string clientToken;
+
+    clientToken = root["clientToken"].asString();
+
+    auto dbMembers = authDB.getMemberNames();
+    for (auto& member : dbMembers) {
+        auto& account = authDB[member];
+
+        if (account["accessToken"].isNull())
+            continue;
+
+        accessToken = account["accessToken"].asString();
+
+        // Check if it's using Linux format
+        if (account["profiles"].isNull()) {
+            if (account["displayName"].isNull())
+                continue;
+
+            if (account["uuid"].isNull())
+                continue;
+
+            if (account["displayName"].asString() != username)
+                continue;
+
+            *token = mc::core::AuthToken(accessToken, clientToken, member);
+            return true;
+        } else {
+            auto& profiles = account["profiles"];
+            std::vector<std::string> profileMembers = profiles.getMemberNames();
+            for (const std::string& profileId : profileMembers) {
+                auto& profile = profiles[profileId];
+
+                if (profile["displayName"].isNull())
+                    continue;
+
+                if (profile["displayName"].asString() != username)
+                    continue;
+
+                *token = mc::core::AuthToken(accessToken, clientToken, profileId);
+                return true;
+            }
+        }
+    }
+
+    return false;
+}
 
 s64 GetTime() {
     return std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
