@@ -20,6 +20,7 @@ Client::Client(protocol::packets::PacketDispatcher* dispatcher, protocol::Versio
     m_PlayerManager(m_Dispatcher, &m_EntityManager),
     m_World(m_Dispatcher),
     m_PlayerController(std::make_unique<util::PlayerController>(&m_Connection, m_World, m_PlayerManager)),
+    m_LastUpdate(0),
     m_Connected(false),
     m_InventoryManager(std::make_unique<inventory::InventoryManager>(m_Dispatcher, &m_Connection)),
     m_Hotbar(m_Dispatcher, &m_Connection, m_InventoryManager.get())
@@ -39,40 +40,44 @@ void Client::OnSocketStateChange(network::Socket::Status newState) {
     m_Connected = (newState == network::Socket::Status::Connected);
 }
 
+void Client::Update() {
+    try {
+        m_Connection.CreatePacket();
+    } catch (std::exception& e) {
+        std::wcout << e.what() << std::endl;
+    }
+
+    entity::EntityPtr playerEntity = m_EntityManager.GetPlayerEntity();
+    if (playerEntity) {
+        // Keep entity manager and player controller in sync
+        playerEntity->SetPosition(m_PlayerController->GetPosition());
+    }
+
+    std::this_thread::sleep_for(std::chrono::milliseconds(1));
+
+    s64 time = util::GetTime();
+    if (time >= m_LastUpdate + (1000 / 20)) {
+        m_PlayerController->Update();
+        NotifyListeners(&ClientListener::OnTick);
+        m_LastUpdate = time;
+    }
+}
+
 void Client::UpdateThread() {
-    s64 lastUpdate = 0;
-
     while (m_Connected) {
-        try {
-            m_Connection.CreatePacket();
-        } catch (std::exception& e) {
-            std::wcout << e.what() << std::endl;
-        }
-
-        entity::EntityPtr playerEntity = m_EntityManager.GetPlayerEntity();
-        if (playerEntity) {
-            // Keep entity manager and player controller in sync
-            playerEntity->SetPosition(m_PlayerController->GetPosition());
-        }
-
-        std::this_thread::sleep_for(std::chrono::milliseconds(1));
-
-        s64 time = util::GetTime();
-        if (time >= lastUpdate + (1000 / 20)) {
-            m_PlayerController->Update();
-            NotifyListeners(&ClientListener::OnTick);
-            lastUpdate = time;
-        }
+        Update();
     }
 }
 
 bool Client::Login(const std::string& host, unsigned short port,
-    const std::string& user, const std::string& password, bool block)
+    const std::string& user, const std::string& password, UpdateMethod method)
 {
     if (m_UpdateThread.joinable()) {
         m_Connected = false;
         m_UpdateThread.join();
     }
+
+    m_LastUpdate = 0;
 
     if (!m_Connection.Connect(host, port))
         throw std::runtime_error("Could not connect to server");
@@ -80,21 +85,23 @@ bool Client::Login(const std::string& host, unsigned short port,
     if (!m_Connection.Login(user, password))
         return false;
 
-    if (!block) {
+    if (method == UpdateMethod::Threaded) {
         m_UpdateThread = std::thread(&Client::UpdateThread, this);
-    } else {
+    } else if (method == UpdateMethod::Block) {
         UpdateThread();
     }
     return true;
 }
 
 bool Client::Login(const std::string& host, unsigned short port,
-    const std::string& user, AuthToken token, bool block)
+    const std::string& user, AuthToken token, UpdateMethod method)
 {
     if (m_UpdateThread.joinable()) {
         m_Connected = false;
         m_UpdateThread.join();
     }
+
+    m_LastUpdate = 0;
 
     if (!m_Connection.Connect(host, port))
         throw std::runtime_error("Could not connect to server");
@@ -102,9 +109,9 @@ bool Client::Login(const std::string& host, unsigned short port,
     if (!m_Connection.Login(user, token))
         return false;
 
-    if (!block) {
+    if (method == UpdateMethod::Threaded) {
         m_UpdateThread = std::thread(&Client::UpdateThread, this);
-    } else {
+    } else if (method == UpdateMethod::Block) {
         UpdateThread();
     }
     return true;

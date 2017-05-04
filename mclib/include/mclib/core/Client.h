@@ -29,6 +29,12 @@ public:
     virtual void OnTick() = 0;
 };
 
+enum class UpdateMethod {
+    Block,
+    Threaded,
+    Manual
+};
+
 class Client : public util::ObserverSubject<ClientListener>, public core::ConnectionListener {
 private:
     protocol::packets::PacketDispatcher* m_Dispatcher;
@@ -39,7 +45,7 @@ private:
     inventory::Hotbar m_Hotbar;
     std::unique_ptr<util::PlayerController> m_PlayerController;
     world::World m_World;
-    
+    s64 m_LastUpdate;
     bool m_Connected;
     std::thread m_UpdateThread;
 
@@ -54,8 +60,9 @@ public:
 
     void MCLIB_API OnSocketStateChange(network::Socket::Status newState);
     void MCLIB_API UpdateThread();
-    bool MCLIB_API Login(const std::string& host, unsigned short port, const std::string& user, const std::string& password, bool block = false);
-    bool MCLIB_API Login(const std::string& host, unsigned short port, const std::string& user, AuthToken token, bool block = false);
+    void MCLIB_API Update();
+    bool MCLIB_API Login(const std::string& host, unsigned short port, const std::string& user, const std::string& password, UpdateMethod method = UpdateMethod::Block);
+    bool MCLIB_API Login(const std::string& host, unsigned short port, const std::string& user, AuthToken token, UpdateMethod method = UpdateMethod::Block);
     void MCLIB_API Ping(const std::string& host, unsigned short port);
 
     protocol::packets::PacketDispatcher* GetDispatcher() { return m_Dispatcher; }

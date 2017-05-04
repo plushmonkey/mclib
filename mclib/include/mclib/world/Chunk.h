@@ -42,7 +42,7 @@ public:
     /**
      * Position is relative to this chunk position
      */
-    block::BlockState MCLIB_API GetBlock(Vector3i chunkPosition);
+    block::BlockState MCLIB_API GetBlock(Vector3i chunkPosition) const;
 
     /**
     * Position is relative to this chunk position
@@ -67,6 +67,8 @@ public:
 
     typedef std::array<ChunkPtr, ChunksPerColumn>::iterator iterator;
     typedef std::array<ChunkPtr, ChunksPerColumn>::reference reference;
+    typedef std::array<ChunkPtr, ChunksPerColumn>::const_iterator const_iterator;
+    typedef std::array<ChunkPtr, ChunksPerColumn>::const_reference const_reference;
 
 private:
     std::array<ChunkPtr, ChunksPerColumn> m_Chunks;
@@ -90,6 +92,18 @@ public:
     }
 
     reference MCLIB_API operator[](std::size_t index) {
+        return m_Chunks[index];
+    }
+
+    const_iterator MCLIB_API begin() const {
+        return m_Chunks.begin();
+    }
+
+    const_iterator MCLIB_API end() const {
+        return m_Chunks.end();
+    }
+
+    const_reference MCLIB_API operator[](std::size_t index) const {
         return m_Chunks[index];
     }
 

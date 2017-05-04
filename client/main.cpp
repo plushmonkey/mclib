@@ -413,7 +413,7 @@ int main(void) {
     //BlockDigStressTest stressTest(&gameClient, 100);
     try {
         std::cout << "Logging in." << std::endl;
-        gameClient.Login(server, port, "testplayer", "", true);
+        gameClient.Login(server, port, "testplayer", "", mc::core::UpdateMethod::Block);
     } catch (std::exception& e) {
         std::wcout << e.what() << std::endl;
         return 1;

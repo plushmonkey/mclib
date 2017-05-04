@@ -59,35 +59,31 @@ void Chunk::Load(DataBuffer& in, ChunkColumnMetadata* meta, s32 chunkIndex) {
     }
 }
 
-block::BlockState Chunk::GetBlock(Vector3i chunkPosition) {
-    Vector3i pos(chunkPosition.x, chunkPosition.y, chunkPosition.z);
+block::BlockState Chunk::GetBlock(Vector3i chunkPosition) const {
+    const Vector3i pos(chunkPosition.x, chunkPosition.y, chunkPosition.z);
 
-    if (chunkPosition.y < 0 || chunkPosition.y > 15) return block::BlockState(block::BlockRegistry::GetInstance()->GetBlock(0, 0), 0, pos);
+    if (chunkPosition.y < 0 || chunkPosition.y > 15) 
+        return block::BlockState(block::BlockRegistry::GetInstance()->GetBlock(0, 0), 0, pos);
 
-    std::size_t index = (std::size_t)(chunkPosition.y * 16 * 16 + chunkPosition.z * 16 + chunkPosition.x);
-    s32 bitIndex = index * m_BitsPerBlock;
-    s32 startIndex = bitIndex / 64;
-    s32 endIndex = (((index + 1) * m_BitsPerBlock) - 1) / 64;
-    s32 startSubIndex = bitIndex % 64;
+    const std::size_t index = (std::size_t)(chunkPosition.y * 16 * 16 + chunkPosition.z * 16 + chunkPosition.x);
+    const s32 bitIndex = index * m_BitsPerBlock;
+    const s32 startIndex = bitIndex / 64;
+    const s32 endIndex = (((index + 1) * m_BitsPerBlock) - 1) / 64;
+    const s32 startSubIndex = bitIndex % 64;
 
-    s64 maxValue = (1 << m_BitsPerBlock) - 1;
+    const s64 maxValue = (1 << m_BitsPerBlock) - 1;
     u32 value;
 
     if (startIndex == endIndex) {
         value = (u32)((m_Data[startIndex] >> startSubIndex) & maxValue);
     } else {
-        s32 endSubIndex = 64 - startSubIndex;
+        const s32 endSubIndex = 64 - startSubIndex;
 
         value = (u32)(((m_Data[startIndex] >> startSubIndex) | (m_Data[endIndex] << endSubIndex)) & maxValue);
     }
 
-    u16 blockType;
+    const u16 blockType = m_BitsPerBlock < 9 ? m_Palette[value] : value;
 
-    if (m_BitsPerBlock < 9) {
-        blockType = m_Palette[value];
-    } else {
-        blockType = value;
-    }
     return block::BlockState(block::BlockRegistry::GetInstance()->GetBlock(blockType), blockType, pos);
 }
 
