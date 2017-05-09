@@ -49,7 +49,8 @@ bool AuthToken::Validate() {
     if (m_AccessToken.empty() || m_ClientToken.empty())
         return false;
 
-    if (m_Yggdrasil->Validate(m_AccessToken, m_ClientToken)) {
+    // Only try to validate the token if the profile id is stored.
+    if (!m_ProfileId.empty() && m_Yggdrasil->Validate(m_AccessToken, m_ClientToken)) {
         m_Valid = true;
         m_Yggdrasil->SetProfileId(m_ProfileId);
         return true;
