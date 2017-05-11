@@ -372,7 +372,7 @@ bool Connection::Login(const std::string& username, AuthToken token) {
     if (m_Socket->GetStatus() != network::Socket::Status::Connected) return false;
 
     if (!token.IsValid()) {
-        if (!token.Validate())
+        if (!token.Validate(username))
             return false;
     }
 
