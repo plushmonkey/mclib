@@ -110,11 +110,11 @@ public:
 
     MCLIB_API void FindClosestPlayer();
 
-    MCLIB_API void OnPlayerJoin(core::PlayerPtr player);
-    MCLIB_API void OnPlayerLeave(core::PlayerPtr player);
-    MCLIB_API void OnPlayerSpawn(core::PlayerPtr player);
-    MCLIB_API void OnPlayerDestroy(core::PlayerPtr player, EntityId eid);
-    MCLIB_API void OnPlayerMove(core::PlayerPtr player, Vector3d oldPos, Vector3d newPos);
+    MCLIB_API void OnPlayerJoin(core::PlayerPtr player) override;
+    MCLIB_API void OnPlayerLeave(core::PlayerPtr player) override;
+    MCLIB_API void OnPlayerSpawn(core::PlayerPtr player) override;
+    MCLIB_API void OnPlayerDestroy(core::PlayerPtr player, EntityId eid) override;
+    MCLIB_API void OnPlayerMove(core::PlayerPtr player, Vector3d oldPos, Vector3d newPos) override;
 };
 
 class IConsole {
@@ -217,19 +217,19 @@ public:
         m_Out.close();
     }
 
-    void Output(const std::string& str) {
+    void Output(const std::string& str) override {
         m_Out << str << std::endl;
     }
 
-    void Output(const std::wstring& str) {
+    void Output(const std::wstring& str) override {
         m_Out << std::string(str.begin(), str.end()) << std::endl;
     }
 
-    IConsole& operator<<(const std::string& str) {
+    IConsole& operator<<(const std::string& str) override {
         Output(str);
         return *this;
     }
-    IConsole& operator<<(const std::wstring& str) {
+    IConsole& operator<<(const std::wstring& str) override {
         Output(str);
         return *this;
     }

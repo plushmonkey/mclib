@@ -144,7 +144,7 @@ public:
     const EntityMetadata& GetMetadata() const noexcept { return m_Metadata; }
     const AttributeMap& GetAttributes() const noexcept { return m_Attributes; }
 
-    const Attribute& GetAttribute(const std::wstring& key) {
+    Attribute GetAttribute(const std::wstring& key) {
         auto iter = m_Attributes.find(key);
         if (iter == m_Attributes.end()) return Attribute(key, 0);
         return iter->second;

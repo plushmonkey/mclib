@@ -283,7 +283,9 @@ void EntityMetadata::CopyOther(const EntityMetadata& other) {
                 m_Metadata[i].first = std::make_unique<UUIDType>(dynamic_cast<UUIDType*>(other.m_Metadata[i].first.get())->exists,
                                                                  dynamic_cast<UUIDType*>(other.m_Metadata[i].first.get())->value);
                 break;
-        }   
+            default:
+                break;
+        }
     }
 }
 

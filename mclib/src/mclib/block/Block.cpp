@@ -147,7 +147,7 @@ public:
         m_BoundingBox = FullSolidBounds;
     }
 
-    virtual std::vector<AABB> GetBoundingBoxes(const BlockState& blockState) {
+    virtual std::vector<AABB> GetBoundingBoxes(const BlockState& blockState) override {
         std::vector<AABB> boundingBoxes;
         
         auto pair = GetHalfBounds(blockState);

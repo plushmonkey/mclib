@@ -247,7 +247,7 @@ public:
         m_Client->UnregisterListener(this);
     }
 
-    void HandlePacket(mc::protocol::packets::in::ChatPacket* packet) {
+    void HandlePacket(mc::protocol::packets::in::ChatPacket* packet) override {
         std::string message = mc::util::ParseChatNode(packet->GetChatData());
 
         std::cout << message << std::endl;
@@ -279,20 +279,20 @@ public:
         }
     }
 
-    void HandlePacket(mc::protocol::packets::in::EntityLookAndRelativeMovePacket* packet) {
+    void HandlePacket(mc::protocol::packets::in::EntityLookAndRelativeMovePacket* packet) override {
         Vector3d delta = mc::ToVector3d(packet->GetDelta()) / (128.0 * 32.0);
 
         //std::cout << delta << std::endl;
     }
 
-    void HandlePacket(mc::protocol::packets::in::BlockChangePacket* packet) {
+    void HandlePacket(mc::protocol::packets::in::BlockChangePacket* packet) override {
         Vector3i pos = packet->GetPosition();
         s32 blockId = packet->GetBlockId();
 
         std::cout << "Block changed at " << pos << " to " << blockId << std::endl;
     }
 
-    void HandlePacket(mc::protocol::packets::in::MultiBlockChangePacket* packet) {
+    void HandlePacket(mc::protocol::packets::in::MultiBlockChangePacket* packet) override {
         auto chunkX = packet->GetChunkX();
         auto chunkZ = packet->GetChunkZ();
 
@@ -303,7 +303,7 @@ public:
         }
     }
 
-    void HandlePacket(mc::protocol::packets::in::DisconnectPacket* packet) {
+    void HandlePacket(mc::protocol::packets::in::DisconnectPacket* packet) override {
         std::wcout << L"Disconnected: " << packet->GetReason() << std::endl;
     }
 
@@ -341,7 +341,7 @@ public:
         m_Client->UnregisterListener(this);
     }
 
-    void OnTick() {
+    void OnTick() override {
         const Vector3i offset(0, 2, 0);
 
         m_Target = ToVector3i(m_PlayerController->GetPosition()) + offset;

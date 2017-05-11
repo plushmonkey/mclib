@@ -1140,15 +1140,15 @@ public:
                 }
             }
             std::wcout << m_CreateQueue.size() << std::endl;
-            /*for (int colorIndex = 0; colorIndex < colors.size(); ++colorIndex) {
+            for (int colorIndex = 0; colorIndex < colors.size(); ++colorIndex) {
                 for (int type = 0; type < 5; ++type) {
                     Minecraft::Slot slot = CreateFirework(true, true, type, 1, std::vector<int>{colors[colorIndex]});
 
                     m_CreateQueue.push(slot);
                 }
-            }*/
+            }
 
-            /*if (!m_CreateQueue.empty()) {
+            if (!m_CreateQueue.empty()) {
                 Minecraft::Packets::Outbound::CreativeInventoryActionPacket packet(36, m_CreateQueue.front());
                 m_CreateQueue.pop();
                 m_Connection->SendPacket(&packet);

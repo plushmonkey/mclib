@@ -7,7 +7,7 @@ namespace core {
 constexpr auto FullSkin = (u8)((u8)SkinPart::Cape | (u8)SkinPart::Jacket | (u8)SkinPart::LeftSleeve | (u8)SkinPart::RightSleeve | (u8)SkinPart::LeftPants | (u8)SkinPart::RightPants | (u8)SkinPart::Hat);
 
 ClientSettings::ClientSettings()
-    : m_Locale(L"en-GB"),
+    : m_Locale(L"en_GB"),
       m_ChatMode(ChatMode::Enabled),
       m_MainHand(MainHand::Right),
       m_ViewDistance(16),
