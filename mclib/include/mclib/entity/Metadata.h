@@ -94,10 +94,10 @@ private:
 public:
     MCLIB_API EntityMetadata();
 
-    EntityMetadata(const EntityMetadata& rhs);
-    EntityMetadata& operator=(const EntityMetadata& rhs);
-    EntityMetadata(EntityMetadata&& rhs) = default;
-    EntityMetadata& operator=(EntityMetadata&& rhs) = default;
+    MCLIB_API EntityMetadata(const EntityMetadata& rhs);
+    MCLIB_API EntityMetadata& operator=(const EntityMetadata& rhs);
+    MCLIB_API EntityMetadata(EntityMetadata&& rhs) = default;
+    MCLIB_API EntityMetadata& operator=(EntityMetadata&& rhs) = default;
 
     template <typename T>
     T* GetIndex(std::size_t index) const {

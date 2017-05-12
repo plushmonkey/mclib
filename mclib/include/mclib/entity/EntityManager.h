@@ -26,6 +26,11 @@ public:
 };
 
 class EntityManager : public protocol::packets::PacketHandler, public util::ObserverSubject<EntityListener> {
+public:
+    using EntityMap = std::unordered_map<EntityId, EntityPtr>;
+    using iterator = EntityMap::iterator;
+    using const_iterator = EntityMap::const_iterator;
+
 private:
     std::unordered_map<EntityId, EntityPtr> m_Entities;
     // Entity Id for the client player
@@ -52,6 +57,12 @@ public:
         if (iter == m_Entities.end()) return nullptr;
         return iter->second;
     }
+
+    iterator begin() { return m_Entities.begin(); }
+    iterator end() { return m_Entities.end(); }
+
+    const_iterator begin() const { return m_Entities.begin(); }
+    const_iterator end() const { return m_Entities.end(); }
 
     void MCLIB_API HandlePacket(protocol::packets::in::JoinGamePacket* packet);
     void MCLIB_API HandlePacket(protocol::packets::in::PlayerPositionAndLookPacket* packet);
