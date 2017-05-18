@@ -84,8 +84,15 @@ public:
         UUIDType(bool exists, UUID value) : exists(exists), value(value) { }
     };
 
+    struct NBTType : public Type {
+        nbt::NBT value;
+
+        NBTType() = default;
+        NBTType(nbt::NBT value) : value(value) { }
+    };
+
 private:
-    enum DataType { Byte, VarInt, Float, String, Chat, Slot, Boolean, Rotation, Position, OptPosition, Direction, OptUUID, OptBlockID, None };
+    enum DataType { Byte, VarInt, Float, String, Chat, Slot, Boolean, Rotation, Position, OptPosition, Direction, OptUUID, OptBlockID, NBT, None };
 
     enum { MetadataCount = 36 };
     std::array<std::pair<std::unique_ptr<Type>, DataType>, MetadataCount> m_Metadata;
@@ -118,6 +125,7 @@ MCLIB_API DataBuffer& operator<<(DataBuffer& out, const EntityMetadata::BooleanT
 MCLIB_API DataBuffer& operator<<(DataBuffer& out, const EntityMetadata::RotationType& value);
 MCLIB_API DataBuffer& operator<<(DataBuffer& out, const EntityMetadata::PositionType& value);
 MCLIB_API DataBuffer& operator<<(DataBuffer& out, const EntityMetadata::UUIDType& value);
+MCLIB_API DataBuffer& operator<<(DataBuffer& out, const EntityMetadata::NBTType& value);
 
 MCLIB_API DataBuffer& operator>>(DataBuffer& in, EntityMetadata& metadata);
 MCLIB_API DataBuffer& operator>>(DataBuffer& in, EntityMetadata::ByteType& value);
@@ -129,6 +137,7 @@ MCLIB_API DataBuffer& operator>>(DataBuffer& in, EntityMetadata::BooleanType& va
 MCLIB_API DataBuffer& operator>>(DataBuffer& in, EntityMetadata::RotationType& value);
 MCLIB_API DataBuffer& operator>>(DataBuffer& in, EntityMetadata::PositionType& value);
 MCLIB_API DataBuffer& operator>>(DataBuffer& in, EntityMetadata::UUIDType& value);
+MCLIB_API DataBuffer& operator>>(DataBuffer& in, EntityMetadata::NBTType& value);
 
 } // ns entity
 } // ns mc

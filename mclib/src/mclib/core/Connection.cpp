@@ -7,6 +7,8 @@
 #include <mclib/network/TCPSocket.h>
 #include <mclib/protocol/packets/PacketDispatcher.h>
 #include <mclib/protocol/packets/PacketFactory.h>
+#include <mclib/util/Utility.h>
+#include <utf8.h>
 
 #include <future>
 #include <thread>
@@ -21,7 +23,7 @@ Connection::Connection(protocol::packets::PacketDispatcher* dispatcher, protocol
     m_Compressor(std::make_unique<CompressionNone>()),
     m_Socket(std::make_unique<network::TCPSocket>()),
     m_Yggdrasil(std::make_unique<util::Yggdrasil>()),
-    m_Version(version),
+    m_Protocol(protocol::Protocol::GetProtocol(version)),
     m_SentSettings(false),
     m_Dimension(1)
 {
@@ -228,7 +230,7 @@ protocol::packets::Packet* Connection::CreatePacketSync(DataBuffer& buffer) {
 
     DataBuffer decompressed = m_Compressor->Decompress(buffer, length.GetInt());
 
-    return protocol::packets::PacketFactory::CreatePacket(m_ProtocolState, decompressed, length.GetInt(), this);
+    return protocol::packets::PacketFactory::CreatePacket(m_Protocol, m_ProtocolState, decompressed, length.GetInt(), this);
 }
 
 std::future<protocol::packets::Packet*> Connection::CreatePacket(DataBuffer& buffer) {
@@ -252,7 +254,7 @@ std::future<protocol::packets::Packet*> Connection::CreatePacket(DataBuffer& buf
 
     DataBuffer decompressed = m_Compressor->Decompress(buffer, length.GetInt());
 
-    return std::async(std::launch::async, &protocol::packets::PacketFactory::CreatePacket, m_ProtocolState, decompressed, length.GetInt(), this);
+    return std::async(std::launch::async, &protocol::packets::PacketFactory::CreatePacket, m_Protocol, m_ProtocolState, decompressed, length.GetInt(), this);
 }
 
 void Connection::CreatePacket() {
@@ -343,7 +345,7 @@ bool Connection::Login(const std::string& username, const std::string& password)
 
     if (m_Socket->GetStatus() != network::Socket::Status::Connected) return false;
 
-    protocol::packets::out::HandshakePacket handshake(static_cast<s32>(m_Version), m_Server + fml, m_Port, protocol::State::Login);
+    protocol::packets::out::HandshakePacket handshake(static_cast<s32>(m_Protocol.GetVersion()), m_Server + fml, m_Port, protocol::State::Login);
 
     SendPacket(&handshake);
     m_ProtocolState = protocol::State::Login;
@@ -378,7 +380,7 @@ bool Connection::Login(const std::string& username, AuthToken token) {
 
     m_Yggdrasil = std::move(token.GetYggdrasil());
 
-    protocol::packets::out::HandshakePacket handshake(static_cast<s32>(m_Version), m_Server + fml, m_Port, protocol::State::Login);
+    protocol::packets::out::HandshakePacket handshake(static_cast<s32>(m_Protocol.GetVersion()), m_Server + fml, m_Port, protocol::State::Login);
 
     SendPacket(&handshake);
     m_ProtocolState = protocol::State::Login;
@@ -391,32 +393,21 @@ bool Connection::Login(const std::string& username, AuthToken token) {
     return true;
 }
 
-void Connection::SendPacket(protocol::packets::Packet* packet) {
-    DataBuffer packetBuffer = packet->Serialize();
-    DataBuffer compressed = m_Compressor->Compress(packetBuffer);
-    DataBuffer encrypted = m_Encrypter->Encrypt(compressed);
-
-    m_Socket->Send(encrypted);
-}
-
-void Connection::SendPacket(protocol::packets::Packet&& packet) {
-    DataBuffer packetBuffer = packet.Serialize();
-    DataBuffer compressed = m_Compressor->Compress(packetBuffer);
-    DataBuffer encrypted = m_Encrypter->Encrypt(compressed);
-
-    m_Socket->Send(encrypted);
-}
-
 void Connection::HandlePacket(protocol::packets::in::status::ResponsePacket* packet) {
-    std::wstring response = packet->GetResponse();
+    std::string response = mc::to_string(packet->GetResponse());
 
-    NotifyListeners(&ConnectionListener::OnPingResponse, response);
+    Json::Value data;
+    Json::Reader reader;
+
+    reader.parse(response, data);
+
+    NotifyListeners(&ConnectionListener::OnPingResponse, data);
 }
 
 void Connection::Ping() {
     std::string fml("\0FML\0", 5);
 
-    protocol::packets::out::HandshakePacket handshake(static_cast<s32>(m_Version), m_Server + fml, m_Port, protocol::State::Status);
+    protocol::packets::out::HandshakePacket handshake(static_cast<s32>(m_Protocol.GetVersion()), m_Server + fml, m_Port, protocol::State::Status);
     SendPacket(&handshake);
 
     m_ProtocolState = protocol::State::Status;

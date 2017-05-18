@@ -5,7 +5,10 @@
 #include <mclib/common/Types.h>
 #include <mclib/core/AuthToken.h>
 #include <mclib/core/ClientSettings.h>
+#include <mclib/core/Compression.h>
+#include <mclib/core/Encryption.h>
 #include <mclib/network/Socket.h>
+#include <mclib/protocol/Protocol.h>
 #include <mclib/protocol/packets/Packet.h>
 #include <mclib/protocol/packets/PacketHandler.h>
 #include <mclib/util/ObserverSubject.h>
@@ -19,9 +22,6 @@
 namespace mc {
 namespace core {
 
-struct EncryptionStrategy;
-class CompressionStrategy;
-
 class ConnectionListener {
 public:
     virtual MCLIB_API ~ConnectionListener() { }
@@ -29,7 +29,7 @@ public:
     virtual void MCLIB_API OnSocketStateChange(network::Socket::Status newStatus) { }
     virtual void MCLIB_API OnLogin(bool success) { }
     virtual void MCLIB_API OnAuthentication(bool success, std::string error) { }
-    virtual void MCLIB_API OnPingResponse(std::wstring response) { }
+    virtual void MCLIB_API OnPingResponse(const Json::Value& node) { }
 };
 
 class Connection : public protocol::packets::PacketHandler, public util::ObserverSubject<ConnectionListener> {
@@ -45,8 +45,8 @@ private:
     std::string m_Username;
     std::string m_Password;
     DataBuffer m_HandleBuffer;
+    protocol::Protocol& m_Protocol;
     protocol::State m_ProtocolState;
-    protocol::Version m_Version;
     u16 m_Port;
     bool m_SentSettings;
     s32 m_Dimension;
@@ -90,8 +90,23 @@ public:
     void MCLIB_API Ping();
     bool MCLIB_API Login(const std::string& username, const std::string& password);
     bool MCLIB_API Login(const std::string& username, AuthToken token);
-    void MCLIB_API SendPacket(protocol::packets::Packet* packet);
-    void MCLIB_API SendPacket(protocol::packets::Packet&& packet);
+
+    template <typename T>
+    void SendPacket(T&& packet) {
+        s32 id = m_Protocol.GetPacketId(packet);
+        packet.SetId(id);
+        packet.SetProtocolVersion(m_Protocol.GetVersion());
+        DataBuffer packetBuffer = packet.Serialize();
+        DataBuffer compressed = m_Compressor->Compress(packetBuffer);
+        DataBuffer encrypted = m_Encrypter->Encrypt(compressed);
+
+        m_Socket->Send(encrypted);
+    }
+
+    template <typename T>
+    void SendPacket(T* packet) {
+        SendPacket(*packet);
+    }
 };
 
 } // ns core

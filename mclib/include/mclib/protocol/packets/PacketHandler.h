@@ -45,6 +45,7 @@ public:
     virtual void HandlePacket(in::SpawnPlayerPacket* packet) { } // 0x05
     virtual void HandlePacket(in::AnimationPacket* packet) { } // 0x06
     virtual void HandlePacket(in::StatisticsPacket* packet) { } // 0x07
+    virtual void HandlePacket(in::AdvancementsPacket* packet) { }
     virtual void HandlePacket(in::BlockBreakAnimationPacket* packet) { } // 0x08
     virtual void HandlePacket(in::UpdateBlockEntityPacket* packet) { } // 0x09
     virtual void HandlePacket(in::BlockActionPacket* packet) { } // 0x0A
@@ -86,6 +87,7 @@ public:
     virtual void HandlePacket(in::PlayerPositionAndLookPacket* packet) { } // 0x2E
     virtual void HandlePacket(in::UseBedPacket* packet) { } // 0x2F
     virtual void HandlePacket(in::DestroyEntitiesPacket* packet) { } // 0x30
+    virtual void HandlePacket(in::UnlockRecipesPacket* packet) { }
     virtual void HandlePacket(in::RemoveEntityEffectPacket* packet) { } // 0x31
     virtual void HandlePacket(in::ResourcePackSendPacket* packet) { } // 0x32
     virtual void HandlePacket(in::RespawnPacket* packet) { } // 0x33
@@ -113,6 +115,7 @@ public:
     virtual void HandlePacket(in::EntityTeleportPacket* packet) { } // 0x49
     virtual void HandlePacket(in::EntityPropertiesPacket* packet) { } // 0x4A
     virtual void HandlePacket(in::EntityEffectPacket* packet) { } // 0x4B
+    virtual void HandlePacket(in::AdvancementProgressPacket* packet) { }
 };
 
 } // ns packets

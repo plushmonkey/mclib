@@ -96,6 +96,7 @@ enum class EntityType {
     PolarBear,
     Llama,
     LlamaSpit,
+    Parrot,
 
     Villager = 120,
 

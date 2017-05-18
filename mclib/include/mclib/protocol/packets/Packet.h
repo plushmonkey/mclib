@@ -8,10 +8,11 @@
 #include <mclib/inventory/Slot.h>
 #include <mclib/entity/Attribute.h>
 #include <mclib/entity/Metadata.h>
-#include <mclib/protocol/Protocol.h>
+#include <mclib/protocol/ProtocolState.h>
 #include <mclib/world/Chunk.h>
 
 #include <map>
+#include <unordered_map>
 #include <json/json.h>
 
 /**
@@ -37,11 +38,19 @@ class Packet {
 protected:
     VarInt m_Id;
     protocol::State m_ProtocolState;
+    protocol::Version m_ProtocolVersion;
     // The connection that is processing this packet.
     core::Connection* m_Connection;
 
 public:
-    Packet() noexcept : m_Id(0xFF), m_ProtocolState(protocol::State::Play), m_Connection(nullptr) { }
+    Packet() noexcept 
+        : m_Id(0xFF), 
+          m_ProtocolState(protocol::State::Play), 
+          m_Connection(nullptr), 
+          m_ProtocolVersion(protocol::Version::Minecraft_1_11_2) 
+    {
+    }
+
     virtual ~Packet() { }
 
     Packet(const Packet& rhs) = default;
@@ -50,11 +59,15 @@ public:
     Packet& operator=(Packet&& rhs) = default;
 
     protocol::State GetProtocolState() const noexcept { return m_ProtocolState; }
+    protocol::Version GetProtocolVersion() const noexcept { return m_ProtocolVersion; }
     VarInt GetId() const noexcept{ return m_Id; }
+
     virtual DataBuffer Serialize() const = 0;
     virtual bool Deserialize(DataBuffer& data, std::size_t packetLength) = 0;
     virtual void Dispatch(PacketHandler* handler) = 0;
 
+    void SetId(s32 id) { m_Id = id; }
+    void SetProtocolVersion(protocol::Version version) noexcept { m_ProtocolVersion = version; }
     MCLIB_API void SetConnection(core::Connection* connection);
     MCLIB_API core::Connection* GetConnection();
 };
@@ -303,6 +316,55 @@ public:
     const Statistics& GetStatistics() const { return m_Statistics; }
 };
 
+
+class AdvancementsPacket : public InboundPacket {
+public:
+    enum class FrameType { Task, Challenge, Goal };
+    enum class Flags {
+        BackgroundTexture = 0x01,
+        ShowToast = 0x02,
+        Hidden = 0x04
+    };
+
+    struct AdvancementDisplay {
+        std::wstring title;
+        std::wstring description;
+        inventory::Slot icon;
+        FrameType frameType;
+        s32 flags;
+        std::wstring backgroundTexture;
+        float x;
+        float y;
+    };
+
+    struct CriterionProgress {
+        bool achieved;
+        s64 date;
+    };
+
+    struct Advancement {
+        std::wstring parentId;
+        AdvancementDisplay display;
+        std::vector<std::vector<std::wstring>> requirements;
+    };
+
+    using AdvancementProgress = std::map<std::wstring, CriterionProgress>;
+private:
+    std::map<std::wstring, Advancement> m_Advancements;
+    std::vector<std::wstring> m_RemoveIdentifiers;
+
+    std::map<std::wstring, AdvancementProgress> m_Progress;
+    bool m_Reset;
+
+
+public:
+    MCLIB_API AdvancementsPacket();
+    bool MCLIB_API Deserialize(DataBuffer& data, std::size_t packetLength);
+    void MCLIB_API Dispatch(PacketHandler* handler);
+
+    
+};
+
 class BlockBreakAnimationPacket : public InboundPacket { // 0x08
 private:
     EntityId m_EntityId;
@@ -324,12 +386,17 @@ public:
 class UpdateBlockEntityPacket : public InboundPacket { // 0x09
 public:
     enum class Action {
-        SpawnPotentials,
+        MobSpawner = 1,
         CommandBlockText,
         BeaconPowers,
         MobHead,
         FlowerPot,
-        BannerData
+        BannerData,
+        StructureData,
+        GatewayDestination,
+        SignText,
+        ShulkerBox,
+        BedColor
     };
 
 private:
@@ -1053,6 +1120,28 @@ public:
     const std::vector<EntityId>& GetEntityIds() const { return m_EntityIds; }
 };
 
+class UnlockRecipesPacket : public InboundPacket {
+public:
+    enum class Action {
+        AddAndDisplay,
+        Remove,
+        AddSilently
+    };
+
+private:
+    Action m_Action;
+    bool m_OpenCraftingBook;
+    bool m_Filter;
+
+    std::vector<s32> m_Array1;
+    std::vector<s32> m_Array2;
+
+public:
+    MCLIB_API UnlockRecipesPacket();
+    bool MCLIB_API Deserialize(DataBuffer& data, std::size_t packetLength);
+    void MCLIB_API Dispatch(PacketHandler* handler);
+};
+
 class RemoveEntityEffectPacket : public InboundPacket { // 0x31
 private:
     EntityId m_EntityId;
@@ -1555,6 +1644,17 @@ public:
     bool HasFlag(Flag flag) const { return (m_Flags & (int)flag) != 0; }
 };
 
+class AdvancementProgressPacket : public InboundPacket {
+private:
+    std::wstring m_Id;
+
+public:
+    MCLIB_API AdvancementProgressPacket();
+    bool MCLIB_API Deserialize(DataBuffer& data, std::size_t packetLength);
+    void MCLIB_API Dispatch(PacketHandler* handler);
+};
+
+
 namespace status {
 
 class ResponsePacket : public InboundPacket { // 0x00
@@ -1632,6 +1732,14 @@ private:
 
 public:
     MCLIB_API TeleportConfirmPacket(s32 teleportId);
+    DataBuffer MCLIB_API Serialize() const;
+};
+
+class PrepareCraftingGridPacket : public OutboundPacket {
+private:
+    
+public:
+    MCLIB_API PrepareCraftingGridPacket();
     DataBuffer MCLIB_API Serialize() const;
 };
 
@@ -1899,6 +2007,13 @@ public:
     DataBuffer MCLIB_API Serialize() const;
 };
 
+class CraftingBookDataPacket : public OutboundPacket {
+private:
+
+public:
+    MCLIB_API CraftingBookDataPacket();
+    DataBuffer MCLIB_API Serialize() const;
+};
 
 class HeldItemChangePacket : public OutboundPacket { // 0x17
 private:
@@ -1971,6 +2086,14 @@ private:
 
 public:
     MCLIB_API UseItemPacket(Hand hand);
+    DataBuffer MCLIB_API Serialize() const;
+};
+
+class AdvancementTabPacket : public OutboundPacket {
+private:
+
+public:
+    MCLIB_API AdvancementTabPacket();
     DataBuffer MCLIB_API Serialize() const;
 };
 

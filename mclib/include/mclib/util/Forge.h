@@ -43,6 +43,8 @@ public:
     MCLIB_API ForgeHandler(protocol::packets::PacketDispatcher* dispatcher, core::Connection* connection);
     MCLIB_API ~ForgeHandler();
 
+    MCLIB_API void SetConnection(core::Connection* conn) { m_Connection = conn; }
+
     MCLIB_API void HandlePacket(protocol::packets::in::PluginMessagePacket* packet);
     MCLIB_API void HandlePacket(protocol::packets::in::status::ResponsePacket* packet);
 

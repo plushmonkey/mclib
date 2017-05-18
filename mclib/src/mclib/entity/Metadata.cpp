@@ -41,6 +41,10 @@ DataBuffer& operator<<(DataBuffer& out, const EntityMetadata::UUIDType& value) {
     return out << value.value;
 }
 
+DataBuffer& operator<<(DataBuffer& out, const EntityMetadata::NBTType& value) {
+    return out << value.value;
+}
+
 
 DataBuffer& operator>>(DataBuffer& in, EntityMetadata::ByteType& value) {
     return in >> value.value;
@@ -83,6 +87,9 @@ DataBuffer& operator>>(DataBuffer& in, EntityMetadata::UUIDType& value) {
     return in >> value.value;
 }
 
+DataBuffer& operator>>(DataBuffer& in, EntityMetadata::NBTType& value) {
+    return in >> value.value;
+}
 
 DataBuffer& operator<<(DataBuffer& out, const EntityMetadata& md) {
     for (std::size_t i = 0; i < md.MetadataCount; ++i) {
@@ -130,6 +137,9 @@ DataBuffer& operator<<(DataBuffer& out, const EntityMetadata& md) {
         case EntityMetadata::DataType::OptUUID:
             out << ((EntityMetadata::UUIDType*)value)->exists;
             out << *((EntityMetadata::UUIDType*)value);
+            break;
+        case EntityMetadata::DataType::NBT:
+            out << *((EntityMetadata::NBTType*)value);
             break;
         default:
             break;
@@ -237,6 +247,13 @@ DataBuffer& operator>>(DataBuffer& in, EntityMetadata& md) {
                 md.m_Metadata[index].first = std::move(value);
             }
             break;
+            case EntityMetadata::DataType::NBT:
+            {
+                std::unique_ptr<EntityMetadata::NBTType> value = std::make_unique<EntityMetadata::NBTType>();
+                in >> *value;
+                md.m_Metadata[index].first = std::move(value);
+            }
+            break;
             default:
                 break;
         }
@@ -282,6 +299,9 @@ void EntityMetadata::CopyOther(const EntityMetadata& other) {
             case DataType::OptUUID:
                 m_Metadata[i].first = std::make_unique<UUIDType>(dynamic_cast<UUIDType*>(other.m_Metadata[i].first.get())->exists,
                                                                  dynamic_cast<UUIDType*>(other.m_Metadata[i].first.get())->value);
+                break;
+            case DataType::NBT:
+                m_Metadata[i].first = std::make_unique<NBTType>(dynamic_cast<NBTType*>(other.m_Metadata[i].first.get())->value);
                 break;
             default:
                 break;

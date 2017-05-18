@@ -309,6 +309,9 @@
     <ClInclude Include="include\mclib\core\AuthToken.h">
       <Filter>Header Files\core</Filter>
     </ClInclude>
+    <ClInclude Include="include\mclib\protocol\ProtocolState.h">
+      <Filter>Header Files\protocol</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\mclib\block\Block.cpp">
@@ -487,6 +490,9 @@
     </ClCompile>
     <ClCompile Include="src\mclib\core\AuthToken.cpp">
       <Filter>Source Files\core</Filter>
+    </ClCompile>
+    <ClCompile Include="src\mclib\protocol\Protocol.cpp">
+      <Filter>Source Files\protocol</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

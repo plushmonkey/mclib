@@ -250,7 +250,8 @@ public:
     void HandlePacket(mc::protocol::packets::in::ChatPacket* packet) override {
         std::string message = mc::util::ParseChatNode(packet->GetChatData());
 
-        std::cout << message << std::endl;
+        if (!message.empty())
+            std::cout << message << std::endl;
 
         if (message.find("!selected") != std::string::npos) {
             mc::inventory::Slot item = m_Client->GetHotbar().GetCurrentItem();
@@ -268,7 +269,7 @@ public:
             }
         } else if (message.find("!find ") != std::string::npos) {
             std::string toFind = message.substr(message.find("!find ") + 6);
-            
+
             s32 itemId = strtol(toFind.c_str(), nullptr, 10);
             mc::inventory::Inventory* inv = m_Client->GetInventoryManager()->GetPlayerInventory();
             if (inv) {
@@ -376,19 +377,54 @@ public:
     }
 };
 
+struct VersionFetcher : public mc::core::ConnectionListener {
+    mc::protocol::Version version;
+    bool found;
+    mc::core::Connection& conn;
+
+    VersionFetcher(mc::core::Connection& conn) : conn(conn), found(false) {
+        conn.RegisterListener(this);
+    }
+    ~VersionFetcher() {
+        conn.UnregisterListener(this);
+    }
+
+    void OnPingResponse(const Json::Value& node) override {
+        static const std::unordered_map<s32, mc::protocol::Version> mapping = {
+            { 210, mc::protocol::Version::Minecraft_1_10_2 },
+            { 315, mc::protocol::Version::Minecraft_1_11_0 },
+            { 316, mc::protocol::Version::Minecraft_1_11_2 },
+            { 331, mc::protocol::Version::Minecraft_1_12_0 },
+        };
+
+        auto&& versionNode = node["version"];
+        if (versionNode.isObject()) {
+            auto&& protocolNode = versionNode["protocol"];
+            if (protocolNode.isInt()) {
+                s32 protocol = protocolNode.asInt();
+
+                auto iter = mapping.lower_bound(protocol);
+                if (iter != mapping.end()) {
+                    version = iter->second;
+                    found = true;
+                }
+            }
+        }
+    }
+};
+
 int main(void) {
     mc::block::BlockRegistry::GetInstance()->RegisterVanillaBlocks();
     mc::protocol::packets::PacketDispatcher dispatcher;
     mc::protocol::Version version = mc::protocol::Version::Minecraft_1_11_2;
-
-    mc::core::Client gameClient(&dispatcher, version);
-    mc::util::ForgeHandler forgeHandler(&dispatcher, gameClient.GetConnection());
-
+    mc::util::ForgeHandler forgeHandler(&dispatcher, nullptr);
+    
     const std::string server("127.0.0.1");
     const u16 port = 25565;
 
     {
         mc::core::Client pingClient(&dispatcher, version);
+        VersionFetcher fetcher(*pingClient.GetConnection());
 
         try {
             pingClient.Ping(server, port);
@@ -402,18 +438,27 @@ int main(void) {
         while (!forgeHandler.HasModInfo()) {
             std::this_thread::sleep_for(std::chrono::milliseconds(100));
         }
+
+        if (fetcher.found) {
+            version = fetcher.version;
+            std::cout << "Setting version to " << (s32)version << std::endl;
+        }
     }
 
-    gameClient.GetPlayerController()->SetHandleFall(true);
-    gameClient.GetConnection()->GetSettings()
-        .SetMainHand(mc::MainHand::Right)
-        .SetViewDistance(20);
+    mc::core::Client client(&dispatcher, version);
 
-    Logger logger(&gameClient, &dispatcher);
+    forgeHandler.SetConnection(client.GetConnection());
+
+    client.GetPlayerController()->SetHandleFall(true);
+    client.GetConnection()->GetSettings()
+        .SetMainHand(mc::MainHand::Right)
+        .SetViewDistance(16);
+
+    Logger logger(&client, &dispatcher);
     //BlockDigStressTest stressTest(&gameClient, 100);
     try {
         std::cout << "Logging in." << std::endl;
-        gameClient.Login(server, port, "testplayer", "", mc::core::UpdateMethod::Block);
+        client.Login(server, port, "testplayer", "", mc::core::UpdateMethod::Block);
     } catch (std::exception& e) {
         std::wcout << e.what() << std::endl;
         return 1;

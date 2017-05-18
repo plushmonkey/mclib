@@ -50,7 +50,7 @@ namespace in {
 
 // Play packets
 SpawnObjectPacket::SpawnObjectPacket() {
-    m_Id = 0x00;
+    
 }
 
 bool SpawnObjectPacket::Deserialize(DataBuffer& data, std::size_t packetLength) {
@@ -82,7 +82,7 @@ void SpawnObjectPacket::Dispatch(PacketHandler* handler) {
 
 
 SpawnExperienceOrbPacket::SpawnExperienceOrbPacket() {
-    m_Id = 0x01;
+    
 }
 
 bool SpawnExperienceOrbPacket::Deserialize(DataBuffer& data, std::size_t packetLength) {
@@ -104,7 +104,7 @@ void SpawnExperienceOrbPacket::Dispatch(PacketHandler* handler) {
 }
 
 SpawnGlobalEntityPacket::SpawnGlobalEntityPacket() {
-    m_Id = 0x02;
+    
 }
 
 bool SpawnGlobalEntityPacket::Deserialize(DataBuffer& data, std::size_t packetLength) {
@@ -125,7 +125,7 @@ void SpawnGlobalEntityPacket::Dispatch(PacketHandler* handler) {
 
 
 SpawnMobPacket::SpawnMobPacket() {
-    m_Id = 0x03;
+    
 }
 
 bool SpawnMobPacket::Deserialize(DataBuffer& data, std::size_t packetLength) {
@@ -159,7 +159,7 @@ void SpawnMobPacket::Dispatch(PacketHandler* handler) {
 }
 
 SpawnPaintingPacket::SpawnPaintingPacket() {
-    m_Id = 0x04;
+    
 }
 
 bool SpawnPaintingPacket::Deserialize(DataBuffer& data, std::size_t packetLength) {
@@ -185,7 +185,7 @@ void SpawnPaintingPacket::Dispatch(PacketHandler* handler) {
 }
 
 SpawnPlayerPacket::SpawnPlayerPacket() {
-    m_Id = 0x05;
+
 }
 
 bool SpawnPlayerPacket::Deserialize(DataBuffer& data, std::size_t packetLength) {
@@ -213,7 +213,7 @@ void SpawnPlayerPacket::Dispatch(PacketHandler* handler) {
 }
 
 AnimationPacket::AnimationPacket() {
-    m_Id = 0x06;
+
 }
 
 bool AnimationPacket::Deserialize(DataBuffer& data, std::size_t packetLength) {
@@ -235,7 +235,7 @@ void AnimationPacket::Dispatch(PacketHandler* handler) {
 }
 
 StatisticsPacket::StatisticsPacket() {
-    m_Id = 0x07;
+
 }
 
 bool StatisticsPacket::Deserialize(DataBuffer& data, std::size_t packetLength) {
@@ -259,8 +259,139 @@ void StatisticsPacket::Dispatch(PacketHandler* handler) {
     handler->HandlePacket(this);
 }
 
+AdvancementsPacket::AdvancementsPacket() {
+
+}
+
+bool AdvancementsPacket::Deserialize(DataBuffer& data, std::size_t packetLength) {
+    data >> m_Reset;
+
+    VarInt mappingSize;
+
+    data >> mappingSize;
+
+    for (s32 i = 0; i < mappingSize.GetInt(); ++i) {
+        MCString key;
+        Advancement advancement;
+
+        data >> key;
+
+        bool hasParent;
+        data >> hasParent;
+
+        if (hasParent) {
+            MCString parent;
+            data >> parent;
+            advancement.parentId = parent.GetUTF16();
+        }
+
+        bool hasDisplay;
+        data >> hasDisplay;
+        if (hasDisplay) {
+            MCString title, description;
+            data >> title >> description;
+
+            advancement.display.title = title.GetUTF16();
+            advancement.display.description = description.GetUTF16();
+
+            data >> advancement.display.icon;
+
+            VarInt frameType;
+            data >> frameType;
+
+            advancement.display.frameType = (FrameType)frameType.GetInt();
+            data >> advancement.display.flags;
+
+            if ((advancement.display.flags & (s32)Flags::BackgroundTexture) != 0) {
+                MCString texture;
+                data >> texture;
+
+                advancement.display.backgroundTexture = texture.GetUTF16();
+            }
+
+            data >> advancement.display.x >> advancement.display.y;
+        }
+
+        VarInt criteriaSize;
+        data >> criteriaSize;
+
+        for (s32 j = 0; j < criteriaSize.GetInt(); ++j) {
+            MCString identifier;
+            data >> identifier;
+        }
+
+        VarInt requirementSize;
+        data >> requirementSize;
+
+        advancement.requirements.resize(requirementSize.GetInt());
+
+        for (s32 j = 0; j < requirementSize.GetInt(); ++j) {
+            VarInt size;
+            data >> size;
+
+            auto& requirementArray = advancement.requirements[j];
+            requirementArray.resize(size.GetInt());
+
+            for (s32 k = 0; k < size.GetInt(); ++k) {
+                MCString requirement;
+
+                data >> requirement;
+
+                requirementArray[k] = requirement.GetUTF16();
+            }
+        }
+
+        m_Advancements.insert(std::make_pair(key.GetUTF16(), advancement));
+    }
+
+    VarInt listSize;
+    data >> listSize;
+
+    for (s32 i = 0; i < listSize.GetInt(); ++i) {
+        MCString identifier;
+        data >> identifier;
+
+        m_RemoveIdentifiers.push_back(identifier.GetUTF16());
+    }
+
+    VarInt progressSize;
+    data >> progressSize;
+
+    for (s32 i = 0; i < progressSize.GetInt(); ++i) {
+        // The identifier of the advancement
+        MCString key;
+
+        data >> key;
+
+        VarInt size;
+        data >> size;
+
+        AdvancementProgress progress;
+        for (s32 j = 0; j < size.GetInt(); ++j) {
+            MCString criterionIdentifier;
+            CriterionProgress criterionProgress;
+
+            data >> criterionIdentifier;
+            
+            data >> criterionProgress.achieved;
+            if (criterionProgress.achieved)
+                data >> criterionProgress.date;
+
+            progress.insert(std::make_pair(criterionIdentifier.GetUTF16(), criterionProgress));
+        }
+
+        m_Progress.insert(std::make_pair(key.GetUTF16(), progress));
+    }
+
+    return true;
+}
+
+void AdvancementsPacket::Dispatch(PacketHandler* handler) {
+    handler->HandlePacket(this);
+}
+
 BlockBreakAnimationPacket::BlockBreakAnimationPacket() {
-    m_Id = 0x08;
+    
 }
 
 bool BlockBreakAnimationPacket::Deserialize(DataBuffer& data, std::size_t packetLength) {
@@ -282,7 +413,7 @@ void BlockBreakAnimationPacket::Dispatch(PacketHandler* handler) {
 }
 
 UpdateBlockEntityPacket::UpdateBlockEntityPacket() {
-    m_Id = 0x09;
+    
 }
 
 bool UpdateBlockEntityPacket::Deserialize(DataBuffer& data, std::size_t packetLength) {
@@ -307,7 +438,7 @@ void UpdateBlockEntityPacket::Dispatch(PacketHandler* handler) {
 }
 
 BlockActionPacket::BlockActionPacket() {
-    m_Id = 0x0A;
+    
 }
 
 bool BlockActionPacket::Deserialize(DataBuffer& data, std::size_t packetLength) {
@@ -329,7 +460,7 @@ void BlockActionPacket::Dispatch(PacketHandler* handler) {
 }
 
 BlockChangePacket::BlockChangePacket() {
-    m_Id = 0x0B;
+    
 }
 
 bool BlockChangePacket::Deserialize(DataBuffer& data, std::size_t packetLength) {
@@ -348,7 +479,7 @@ void BlockChangePacket::Dispatch(PacketHandler* handler) {
 }
 
 BossBarPacket::BossBarPacket() {
-    m_Id = 0x0C;
+    
 }
 
 bool BossBarPacket::Deserialize(DataBuffer& data, std::size_t packetLength) {
@@ -412,7 +543,7 @@ void BossBarPacket::Dispatch(PacketHandler* handler) {
 }
 
 ServerDifficultyPacket::ServerDifficultyPacket() {
-    m_Id = 0x0D;
+    
 }
 
 bool ServerDifficultyPacket::Deserialize(DataBuffer& data, std::size_t packetLength) {
@@ -425,7 +556,7 @@ void ServerDifficultyPacket::Dispatch(PacketHandler* handler) {
 }
 
 TabCompletePacket::TabCompletePacket() {
-    m_Id = 0x0E;
+    
 }
 
 bool TabCompletePacket::Deserialize(DataBuffer& data, std::size_t packetLength) {
@@ -449,7 +580,7 @@ void TabCompletePacket::Dispatch(PacketHandler* handler) {
 }
 
 ChatPacket::ChatPacket() {
-    m_Id = 0x0F;
+    
 }
 
 bool ChatPacket::Deserialize(DataBuffer& data, std::size_t packetLength) {
@@ -473,7 +604,7 @@ void ChatPacket::Dispatch(PacketHandler* handler) {
 }
 
 MultiBlockChangePacket::MultiBlockChangePacket() {
-    m_Id = 0x10;
+    
 }
 
 bool MultiBlockChangePacket::Deserialize(DataBuffer& data, std::size_t packetLength) {
@@ -504,7 +635,7 @@ void MultiBlockChangePacket::Dispatch(PacketHandler* handler) {
 }
 
 ConfirmTransactionPacket::ConfirmTransactionPacket() {
-    m_Id = 0x11;
+    
 }
 
 bool ConfirmTransactionPacket::Deserialize(DataBuffer& data, std::size_t packetLength) {
@@ -517,7 +648,7 @@ void ConfirmTransactionPacket::Dispatch(PacketHandler* handler) {
 }
 
 CloseWindowPacket::CloseWindowPacket() {
-    m_Id = 0x12;
+    
 }
 
 bool CloseWindowPacket::Deserialize(DataBuffer& data, std::size_t packetLength) {
@@ -530,7 +661,7 @@ void CloseWindowPacket::Dispatch(PacketHandler* handler) {
 }
 
 OpenWindowPacket::OpenWindowPacket() {
-    m_Id = 0x13;
+    
 }
 
 bool OpenWindowPacket::Deserialize(DataBuffer& data, std::size_t packetLength) {
@@ -553,7 +684,7 @@ void OpenWindowPacket::Dispatch(PacketHandler* handler) {
 }
 
 WindowItemsPacket::WindowItemsPacket() {
-    m_Id = 0x14;
+    
 }
 
 bool WindowItemsPacket::Deserialize(DataBuffer& data, std::size_t packetLength) {
@@ -576,7 +707,7 @@ void WindowItemsPacket::Dispatch(PacketHandler* handler) {
 }
 
 WindowPropertyPacket::WindowPropertyPacket() {
-    m_Id = 0x15;
+    
 }
 
 bool WindowPropertyPacket::Deserialize(DataBuffer& data, std::size_t packetLength) {
@@ -589,7 +720,7 @@ void WindowPropertyPacket::Dispatch(PacketHandler* handler) {
 }
 
 SetSlotPacket::SetSlotPacket() {
-    m_Id = 0x16;
+    
 }
 
 bool SetSlotPacket::Deserialize(DataBuffer& data, std::size_t packetLength) {
@@ -604,7 +735,7 @@ void SetSlotPacket::Dispatch(PacketHandler* handler) {
 }
 
 SetCooldownPacket::SetCooldownPacket() {
-    m_Id = 0x17;
+    
 }
 
 bool SetCooldownPacket::Deserialize(DataBuffer& data, std::size_t packetLength) {
@@ -622,7 +753,7 @@ void SetCooldownPacket::Dispatch(PacketHandler* handler) {
 }
 
 PluginMessagePacket::PluginMessagePacket() {
-    m_Id = 0x18;
+    
 }
 
 bool PluginMessagePacket::Deserialize(DataBuffer& data, std::size_t packetLength) {
@@ -640,7 +771,7 @@ void PluginMessagePacket::Dispatch(PacketHandler* handler) {
 }
 
 NamedSoundEffectPacket::NamedSoundEffectPacket() {
-    m_Id = 0x19;
+    
 }
 
 bool NamedSoundEffectPacket::Deserialize(DataBuffer& data, std::size_t packetLength) {
@@ -669,7 +800,7 @@ void NamedSoundEffectPacket::Dispatch(PacketHandler* handler) {
 }
 
 EntityStatusPacket::EntityStatusPacket() {
-    m_Id = 0x1B;
+    
 }
 
 bool EntityStatusPacket::Deserialize(DataBuffer& data, std::size_t packetLength) {
@@ -683,7 +814,7 @@ void EntityStatusPacket::Dispatch(PacketHandler* handler) {
 }
 
 ExplosionPacket::ExplosionPacket() {
-    m_Id = 0x1C;
+    
 }
 
 bool ExplosionPacket::Deserialize(DataBuffer& data, std::size_t packetLength) {
@@ -717,7 +848,7 @@ void ExplosionPacket::Dispatch(PacketHandler* handler) {
 }
 
 UnloadChunkPacket::UnloadChunkPacket() {
-    m_Id = 0x1D;
+    
 }
 
 bool UnloadChunkPacket::Deserialize(DataBuffer& data, std::size_t packetLength) {
@@ -730,7 +861,7 @@ void UnloadChunkPacket::Dispatch(PacketHandler* handler) {
 }
 
 ChangeGameStatePacket::ChangeGameStatePacket() {
-    m_Id = 0x1E;
+    
 }
 
 bool ChangeGameStatePacket::Deserialize(DataBuffer& data, std::size_t packetLength) {
@@ -749,7 +880,7 @@ void ChangeGameStatePacket::Dispatch(PacketHandler* handler) {
 }
 
 KeepAlivePacket::KeepAlivePacket() {
-    m_Id = 0x1F;
+    
 }
 
 bool KeepAlivePacket::Deserialize(DataBuffer& data, std::size_t packetLength) {
@@ -767,7 +898,7 @@ void KeepAlivePacket::Dispatch(PacketHandler* handler) {
 }
 
 ChunkDataPacket::ChunkDataPacket() {
-    m_Id = 0x20;
+    
 }
 
 bool ChunkDataPacket::Deserialize(DataBuffer& data, std::size_t packetLength) {
@@ -824,7 +955,7 @@ void ChunkDataPacket::Dispatch(PacketHandler* handler) {
 }
 
 EffectPacket::EffectPacket() {
-    m_Id = 0x21;
+    
 }
 
 bool EffectPacket::Deserialize(DataBuffer& data, std::size_t packetLength) {
@@ -847,7 +978,7 @@ void EffectPacket::Dispatch(PacketHandler* handler) {
 }
 
 ParticlePacket::ParticlePacket() {
-    m_Id = 0x22;
+    
 }
 
 bool ParticlePacket::Deserialize(DataBuffer& data, std::size_t packetLength) {
@@ -883,7 +1014,7 @@ void ParticlePacket::Dispatch(PacketHandler* handler) {
 }
 
 JoinGamePacket::JoinGamePacket() {
-    m_Id = 0x23;
+    
 }
 
 bool JoinGamePacket::Deserialize(DataBuffer& data, std::size_t packetLength) {
@@ -902,7 +1033,7 @@ void JoinGamePacket::Dispatch(PacketHandler* handler) {
 }
 
 MapPacket::MapPacket() {
-    m_Id = 0x24;
+    
 }
 
 bool MapPacket::Deserialize(DataBuffer& data, std::size_t packetLength) {
@@ -939,7 +1070,7 @@ void MapPacket::Dispatch(PacketHandler* handler) {
 
 
 EntityRelativeMovePacket::EntityRelativeMovePacket() {
-    m_Id = 0x25;
+    
 }
 
 bool EntityRelativeMovePacket::Deserialize(DataBuffer& data, std::size_t packetLength) {
@@ -959,7 +1090,7 @@ void EntityRelativeMovePacket::Dispatch(PacketHandler* handler) {
 }
 
 EntityLookAndRelativeMovePacket::EntityLookAndRelativeMovePacket() {
-    m_Id = 0x26;
+    
 }
 
 bool EntityLookAndRelativeMovePacket::Deserialize(DataBuffer& data, std::size_t packetLength) {
@@ -979,7 +1110,7 @@ void EntityLookAndRelativeMovePacket::Dispatch(PacketHandler* handler) {
 }
 
 EntityLookPacket::EntityLookPacket() {
-    m_Id = 0x27;
+    
 }
 
 bool EntityLookPacket::Deserialize(DataBuffer& data, std::size_t packetLength) {
@@ -999,7 +1130,7 @@ void EntityLookPacket::Dispatch(PacketHandler* handler) {
 }
 
 EntityPacket::EntityPacket() {
-    m_Id = 0x28;
+    
 }
 
 bool EntityPacket::Deserialize(DataBuffer& data, std::size_t packetLength) {
@@ -1014,7 +1145,7 @@ void EntityPacket::Dispatch(PacketHandler* handler) {
 }
 
 VehicleMovePacket::VehicleMovePacket() {
-    m_Id = 0x29;
+    
 }
 
 bool VehicleMovePacket::Deserialize(DataBuffer& data, std::size_t packetLength) {
@@ -1027,7 +1158,7 @@ void VehicleMovePacket::Dispatch(PacketHandler* handler) {
 }
 
 OpenSignEditorPacket::OpenSignEditorPacket() {
-    m_Id = 0x2A;
+    
 }
 
 bool OpenSignEditorPacket::Deserialize(DataBuffer& data, std::size_t packetLength) {
@@ -1046,7 +1177,7 @@ void OpenSignEditorPacket::Dispatch(PacketHandler* handler) {
 }
 
 PlayerAbilitiesPacket::PlayerAbilitiesPacket() {
-    m_Id = 0x2B;
+    
 }
 
 bool PlayerAbilitiesPacket::Deserialize(DataBuffer& data, std::size_t packetLength) {
@@ -1062,7 +1193,7 @@ void PlayerAbilitiesPacket::Dispatch(PacketHandler* handler) {
 }
 
 CombatEventPacket::CombatEventPacket() {
-    m_Id = 0x2C;
+    
 }
 
 bool CombatEventPacket::Deserialize(DataBuffer& data, std::size_t packetLength) {
@@ -1100,7 +1231,7 @@ void CombatEventPacket::Dispatch(PacketHandler* handler) {
 }
 
 PlayerListItemPacket::PlayerListItemPacket() {
-    m_Id = 0x2D;
+    
 }
 
 bool PlayerListItemPacket::Deserialize(DataBuffer& data, std::size_t packetLength) {
@@ -1210,7 +1341,7 @@ void PlayerListItemPacket::Dispatch(PacketHandler* handler) {
 }
 
 PlayerPositionAndLookPacket::PlayerPositionAndLookPacket() {
-    m_Id = 0x2E;
+    
 }
 
 bool PlayerPositionAndLookPacket::Deserialize(DataBuffer& data, std::size_t packetLength) {
@@ -1229,7 +1360,7 @@ void PlayerPositionAndLookPacket::Dispatch(PacketHandler* handler) {
 }
 
 UseBedPacket::UseBedPacket() {
-    m_Id = 0x2F;
+    
 }
 
 bool UseBedPacket::Deserialize(DataBuffer& data, std::size_t packetLength) {
@@ -1250,7 +1381,7 @@ void UseBedPacket::Dispatch(PacketHandler* handler) {
 }
 
 DestroyEntitiesPacket::DestroyEntitiesPacket() {
-    m_Id = 0x30;
+    
 }
 
 bool DestroyEntitiesPacket::Deserialize(DataBuffer& data, std::size_t packetLength) {
@@ -1272,8 +1403,54 @@ void DestroyEntitiesPacket::Dispatch(PacketHandler* handler) {
     handler->HandlePacket(this);
 }
 
+UnlockRecipesPacket::UnlockRecipesPacket() {
+
+}
+
+bool UnlockRecipesPacket::Deserialize(DataBuffer& data, std::size_t packetLength) {
+    s16 action;
+
+    data >> action;
+    m_Action = (Action)action;
+
+    data >> m_OpenCraftingBook;
+    data >> m_Filter;
+
+    VarInt size1;
+    data >> size1;
+
+    m_Array1.resize(size1.GetInt());
+
+    for (s32 i = 0; i < size1.GetInt(); ++i) {
+        s32 id;
+
+        data >> id;
+
+        m_Array1[i] = id;
+    }
+
+    VarInt size2;
+    data >> size2;
+
+    m_Array2.resize(size2.GetInt());
+
+    for (s32 i = 0; i < size2.GetInt(); ++i) {
+        s32 id;
+
+        data >> id;
+
+        m_Array2[i] = id;
+    }
+
+    return true;
+}
+
+void UnlockRecipesPacket::Dispatch(PacketHandler* handler) {
+    handler->HandlePacket(this);
+}
+
 RemoveEntityEffectPacket::RemoveEntityEffectPacket() {
-    m_Id = 0x31;
+    
 }
 
 bool RemoveEntityEffectPacket::Deserialize(DataBuffer& data, std::size_t packetLength) {
@@ -1288,7 +1465,7 @@ void RemoveEntityEffectPacket::Dispatch(PacketHandler* handler) {
 }
 
 ResourcePackSendPacket::ResourcePackSendPacket() {
-    m_Id = 0x32;
+    
 }
 
 bool ResourcePackSendPacket::Deserialize(DataBuffer& data, std::size_t packetLength) {
@@ -1307,7 +1484,7 @@ void ResourcePackSendPacket::Dispatch(PacketHandler* handler) {
 }
 
 RespawnPacket::RespawnPacket() {
-    m_Id = 0x33;
+    
 }
 
 bool RespawnPacket::Deserialize(DataBuffer& data, std::size_t packetLength) {
@@ -1328,7 +1505,7 @@ void RespawnPacket::Dispatch(PacketHandler* handler) {
 }
 
 EntityHeadLookPacket::EntityHeadLookPacket() {
-    m_Id = 0x34;
+    
 }
 
 bool EntityHeadLookPacket::Deserialize(DataBuffer& data, std::size_t packetLength) {
@@ -1344,7 +1521,7 @@ void EntityHeadLookPacket::Dispatch(PacketHandler* handler) {
 }
 
 WorldBorderPacket::WorldBorderPacket() {
-    m_Id = 0x35;
+    
 }
 
 bool WorldBorderPacket::Deserialize(DataBuffer& data, std::size_t packetLength) {
@@ -1417,7 +1594,7 @@ void WorldBorderPacket::Dispatch(PacketHandler* handler) {
 }
 
 CameraPacket::CameraPacket() {
-    m_Id = 0x36;
+    
 }
 
 bool CameraPacket::Deserialize(DataBuffer& data, std::size_t packetLength) {
@@ -1432,7 +1609,7 @@ void CameraPacket::Dispatch(PacketHandler* handler) {
 }
 
 HeldItemChangePacket::HeldItemChangePacket() {
-    m_Id = 0x37;
+    
 }
 
 bool HeldItemChangePacket::Deserialize(DataBuffer& data, std::size_t packetLength) {
@@ -1445,7 +1622,7 @@ void HeldItemChangePacket::Dispatch(PacketHandler* handler) {
 }
 
 DisplayScoreboardPacket::DisplayScoreboardPacket() {
-    m_Id = 0x38;
+    
 }
 
 bool DisplayScoreboardPacket::Deserialize(DataBuffer& data, std::size_t packetLength) {
@@ -1466,7 +1643,7 @@ void DisplayScoreboardPacket::Dispatch(PacketHandler* handler) {
 
 
 EntityMetadataPacket::EntityMetadataPacket() {
-    m_Id = 0x39;
+    
 }
 
 bool EntityMetadataPacket::Deserialize(DataBuffer& data, std::size_t packetLength) {
@@ -1485,7 +1662,7 @@ void EntityMetadataPacket::Dispatch(PacketHandler* handler) {
 }
 
 AttachEntityPacket::AttachEntityPacket() {
-    m_Id = 0x3A;
+    
 }
 
 bool AttachEntityPacket::Deserialize(DataBuffer& data, std::size_t packetLength) {
@@ -1500,7 +1677,7 @@ void AttachEntityPacket::Dispatch(PacketHandler* handler) {
 }
 
 EntityVelocityPacket::EntityVelocityPacket() {
-    m_Id = 0x3B;
+    
 }
 
 bool EntityVelocityPacket::Deserialize(DataBuffer& data, std::size_t packetLength) {
@@ -1518,7 +1695,7 @@ void EntityVelocityPacket::Dispatch(PacketHandler* handler) {
 }
 
 EntityEquipmentPacket::EntityEquipmentPacket() {
-    m_Id = 0x3C;
+    
 }
 
 bool EntityEquipmentPacket::Deserialize(DataBuffer& data, std::size_t packetLength) {
@@ -1540,7 +1717,7 @@ void EntityEquipmentPacket::Dispatch(PacketHandler* handler) {
 }
 
 SetExperiencePacket::SetExperiencePacket() {
-    m_Id = 0x3D;
+    
 }
 
 bool SetExperiencePacket::Deserialize(DataBuffer& data, std::size_t packetLength) {
@@ -1556,7 +1733,7 @@ void SetExperiencePacket::Dispatch(PacketHandler* handler) {
 }
 
 UpdateHealthPacket::UpdateHealthPacket() {
-    m_Id = 0x3E;
+    
 }
 
 bool UpdateHealthPacket::Deserialize(DataBuffer& data, std::size_t packetLength) {
@@ -1571,7 +1748,7 @@ void UpdateHealthPacket::Dispatch(PacketHandler* handler) {
 }
 
 ScoreboardObjectivePacket::ScoreboardObjectivePacket() {
-    m_Id = 0x3F;
+    
 }
 
 bool ScoreboardObjectivePacket::Deserialize(DataBuffer& data, std::size_t packetLength) {
@@ -1593,7 +1770,7 @@ void ScoreboardObjectivePacket::Dispatch(PacketHandler* handler) {
 }
 
 SetPassengersPacket::SetPassengersPacket() {
-    m_Id = 0x40;
+    
 }
 
 bool SetPassengersPacket::Deserialize(DataBuffer& data, std::size_t packetLength) {
@@ -1617,7 +1794,7 @@ void SetPassengersPacket::Dispatch(PacketHandler* handler) {
 }
 
 TeamsPacket::TeamsPacket() {
-    m_Id = 0x41;
+    
 }
 
 bool TeamsPacket::Deserialize(DataBuffer& data, std::size_t packetLength) {
@@ -1694,7 +1871,7 @@ void TeamsPacket::Dispatch(PacketHandler* handler) {
 }
 
 UpdateScorePacket::UpdateScorePacket() {
-    m_Id = 0x42;
+    
 }
 
 bool UpdateScorePacket::Deserialize(DataBuffer& data, std::size_t packetLength) {
@@ -1720,7 +1897,7 @@ void UpdateScorePacket::Dispatch(PacketHandler* handler) {
 }
 
 SpawnPositionPacket::SpawnPositionPacket() {
-    m_Id = 0x43;
+    
 }
 
 bool SpawnPositionPacket::Deserialize(DataBuffer& data, std::size_t packetLength) {
@@ -1733,7 +1910,7 @@ void SpawnPositionPacket::Dispatch(PacketHandler* handler) {
 }
 
 TimeUpdatePacket::TimeUpdatePacket() {
-    m_Id = 0x44;
+    
 }
 
 bool TimeUpdatePacket::Deserialize(DataBuffer& data, std::size_t packetLength) {
@@ -1747,7 +1924,7 @@ void TimeUpdatePacket::Dispatch(PacketHandler* handler) {
 }
 
 TitlePacket::TitlePacket() {
-    m_Id = 0x45;
+    
 }
 
 bool TitlePacket::Deserialize(DataBuffer& data, std::size_t packetLength) {
@@ -1785,7 +1962,7 @@ void TitlePacket::Dispatch(PacketHandler* handler) {
 }
 
 SoundEffectPacket::SoundEffectPacket() {
-    m_Id = 0x46;
+    
 }
 
 bool SoundEffectPacket::Deserialize(DataBuffer& data, std::size_t packetLength) {
@@ -1813,7 +1990,7 @@ void SoundEffectPacket::Dispatch(PacketHandler* handler) {
 }
 
 PlayerListHeaderAndFooterPacket::PlayerListHeaderAndFooterPacket() {
-    m_Id = 0x47;
+    
 }
 
 bool PlayerListHeaderAndFooterPacket::Deserialize(DataBuffer& data, std::size_t packetLength) {
@@ -1832,7 +2009,7 @@ void PlayerListHeaderAndFooterPacket::Dispatch(PacketHandler* handler) {
 }
 
 CollectItemPacket::CollectItemPacket() {
-    m_Id = 0x48;
+    
 }
 
 bool CollectItemPacket::Deserialize(DataBuffer& data, std::size_t packetLength) {
@@ -1852,7 +2029,7 @@ void CollectItemPacket::Dispatch(PacketHandler* handler) {
 }
 
 EntityTeleportPacket::EntityTeleportPacket() {
-    m_Id = 0x49;
+    
 }
 
 bool EntityTeleportPacket::Deserialize(DataBuffer& data, std::size_t packetLength) {
@@ -1875,7 +2052,7 @@ void EntityTeleportPacket::Dispatch(PacketHandler* handler) {
 }
 
 EntityPropertiesPacket::EntityPropertiesPacket() {
-    m_Id = 0x4A;
+    
 }
 
 bool EntityPropertiesPacket::Deserialize(DataBuffer& data, std::size_t packetLength) {
@@ -1923,7 +2100,7 @@ void EntityPropertiesPacket::Dispatch(PacketHandler* handler) {
 }
 
 EntityEffectPacket::EntityEffectPacket() {
-    m_Id = 0x4B;
+    
 }
 
 bool EntityEffectPacket::Deserialize(DataBuffer& data, std::size_t packetLength) {
@@ -1938,10 +2115,32 @@ void EntityEffectPacket::Dispatch(PacketHandler* handler) {
     handler->HandlePacket(this);
 }
 
+AdvancementProgressPacket::AdvancementProgressPacket() {
+
+}
+
+bool AdvancementProgressPacket::Deserialize(DataBuffer& data, std::size_t packetLength) {
+    bool hasId;
+    data >> hasId;
+
+    if (hasId) {
+        MCString id;
+
+        data >> id;
+
+        m_Id = id.GetUTF16();
+    }
+
+    return true;
+}
+
+void AdvancementProgressPacket::Dispatch(PacketHandler* handler) {
+    handler->HandlePacket(this);
+}
+
 
 // Login packets
 DisconnectPacket::DisconnectPacket() {
-    m_Id = 0x00;
     m_ProtocolState = protocol::State::Login;
 }
 
@@ -1955,7 +2154,6 @@ void DisconnectPacket::Dispatch(PacketHandler* handler) {
 }
 
 EncryptionRequestPacket::EncryptionRequestPacket() {
-    m_Id = 0x01;
     m_ProtocolState = protocol::State::Login;
 }
 
@@ -1979,7 +2177,6 @@ void EncryptionRequestPacket::Dispatch(PacketHandler* handler) {
 }
 
 LoginSuccessPacket::LoginSuccessPacket() {
-    m_Id = 0x02;
     m_ProtocolState = protocol::State::Login;
 }
 
@@ -1994,7 +2191,6 @@ void LoginSuccessPacket::Dispatch(PacketHandler* handler) {
 }
 
 SetCompressionPacket::SetCompressionPacket() {
-    m_Id = 0x03;
     m_ProtocolState = protocol::State::Login;
 }
 
@@ -2010,7 +2206,6 @@ void SetCompressionPacket::Dispatch(PacketHandler* handler) {
 namespace status {
 
 ResponsePacket::ResponsePacket() {
-    m_Id = 0x00;
     m_ProtocolState = protocol::State::Status;
 }
 
@@ -2029,7 +2224,6 @@ void ResponsePacket::Dispatch(PacketHandler* handler) {
 }
 
 PongPacket::PongPacket() {
-    m_Id = 0x01;
     m_ProtocolState = protocol::State::Status;
 }
 
@@ -2053,7 +2247,7 @@ namespace out {
 HandshakePacket::HandshakePacket(s32 protocol, std::string server, u16 port, protocol::State state) 
     : m_ProtocolVersion(protocol), m_Server(server), m_Port(port), m_NewState((s32)state)
 {
-    m_Id = 0x00;
+    
 }
 
 DataBuffer HandshakePacket::Serialize() const {
@@ -2069,7 +2263,7 @@ DataBuffer HandshakePacket::Serialize() const {
 LoginStartPacket::LoginStartPacket(const std::string& name) 
     : m_Name(name)
 {
-    m_Id = 0x00;
+    
 }
 
 DataBuffer LoginStartPacket::Serialize() const {
@@ -2082,7 +2276,7 @@ DataBuffer LoginStartPacket::Serialize() const {
 EncryptionResponsePacket::EncryptionResponsePacket(const std::string& sharedSecret, const std::string& verifyToken)
     : m_SharedSecret(sharedSecret), m_VerifyToken(verifyToken)
 {
-    m_Id = 0x01;
+    
 }
 
 DataBuffer EncryptionResponsePacket::Serialize() const {
@@ -2102,7 +2296,7 @@ DataBuffer EncryptionResponsePacket::Serialize() const {
 // Play packets
 
 TeleportConfirmPacket::TeleportConfirmPacket(s32 teleportId) : m_TeleportId(teleportId) {
-    m_Id = 0x00;
+    
 }
 
 DataBuffer TeleportConfirmPacket::Serialize() const {
@@ -2118,13 +2312,13 @@ DataBuffer TeleportConfirmPacket::Serialize() const {
 TabCompletePacket::TabCompletePacket(const std::wstring& text, bool assumeCommand) 
     : m_Text(text), m_AssumeCommand(assumeCommand), m_HasPosition(false)
 {
-    m_Id = 0x01;
+    
 }
 
 TabCompletePacket::TabCompletePacket(const std::wstring& text, bool assumeCommand, bool hasPosition, Position lookingAt)
     : m_Text(text), m_AssumeCommand(assumeCommand), m_HasPosition(hasPosition), m_LookingAt(lookingAt)
 {
-    m_Id = 0x01;
+    
 }
 
 DataBuffer TabCompletePacket::Serialize() const {
@@ -2140,11 +2334,11 @@ DataBuffer TabCompletePacket::Serialize() const {
 }
 
 ChatPacket::ChatPacket(const std::wstring& message) : m_Message(message) {
-    m_Id = 0x02;
+    
 }
 
 ChatPacket::ChatPacket(const std::string& message) : m_Message(message.begin(), message.end()) {
-    m_Id = 0x02;
+    
 }
 
 DataBuffer ChatPacket::Serialize() const {
@@ -2158,7 +2352,7 @@ DataBuffer ChatPacket::Serialize() const {
 }
 
 ClientStatusPacket::ClientStatusPacket(Action action) : m_Action(action) {
-    m_Id = 0x03;
+    
 }
 
 DataBuffer ClientStatusPacket::Serialize() const {
@@ -2175,7 +2369,7 @@ ClientSettingsPacket::ClientSettingsPacket(const std::wstring& locale, u8 viewDi
     : m_Locale(locale), m_ViewDistance(viewDistance), m_ChatMode(chatMode),
     m_ChatColors(chatColors), m_SkinFlags(skinFlags), m_MainHand(hand)
 {
-    m_Id = 0x04;
+    
 }
 
 DataBuffer ClientSettingsPacket::Serialize() const {
@@ -2199,7 +2393,7 @@ DataBuffer ClientSettingsPacket::Serialize() const {
 ConfirmTransactionPacket::ConfirmTransactionPacket(u8 windowId, s16 action, bool accepted) 
     : m_WindowId(windowId), m_Action(action), m_Accepted(accepted)
 {
-    m_Id = 0x05;
+    
 }
 
 DataBuffer ConfirmTransactionPacket::Serialize() const {
@@ -2214,7 +2408,7 @@ DataBuffer ConfirmTransactionPacket::Serialize() const {
 }
 
 EnchantItemPacket::EnchantItemPacket(u8 windowId, u8 enchantmentIndex) {
-    m_Id = 0x06;
+    
 }
 
 DataBuffer EnchantItemPacket::Serialize() const {
@@ -2228,7 +2422,7 @@ DataBuffer EnchantItemPacket::Serialize() const {
 ClickWindowPacket::ClickWindowPacket(u8 windowId, u16 slotIndex, u8 button, u16 action, s32 mode, inventory::Slot clickedItem) 
     : m_WindowId(windowId), m_SlotIndex(slotIndex), m_Button(button), m_Action(action), m_Mode(mode), m_ClickedItem(clickedItem)
 {
-    m_Id = 0x07;
+    
 }
 
 DataBuffer ClickWindowPacket::Serialize() const {
@@ -2245,7 +2439,7 @@ DataBuffer ClickWindowPacket::Serialize() const {
 CloseWindowPacket::CloseWindowPacket(u8 windowId)
     : m_WindowId(windowId)
 {
-    m_Id = 0x08;
+    
 }
 
 DataBuffer CloseWindowPacket::Serialize() const {
@@ -2260,7 +2454,7 @@ DataBuffer CloseWindowPacket::Serialize() const {
 PluginMessagePacket::PluginMessagePacket(const std::wstring& channel, const std::string& data) 
     : m_Channel(channel), m_Data(data)
 {
-    m_Id = 0x09;
+    
 }
 
 DataBuffer PluginMessagePacket::Serialize() const {
@@ -2276,7 +2470,7 @@ DataBuffer PluginMessagePacket::Serialize() const {
 UseEntityPacket::UseEntityPacket(EntityId target, Action action, Hand hand, Vector3f position)
     : m_Target(target), m_Action(action), m_Hand(hand), m_Position(position)
 {
-    m_Id = 0x0A;
+    
 }
 
 DataBuffer UseEntityPacket::Serialize() const {
@@ -2303,7 +2497,7 @@ DataBuffer UseEntityPacket::Serialize() const {
 }
 
 KeepAlivePacket::KeepAlivePacket(s64 id) : m_KeepAliveId(id) {
-    m_Id = 0x0B;
+    
 }
 
 DataBuffer KeepAlivePacket::Serialize() const {
@@ -2319,7 +2513,7 @@ DataBuffer KeepAlivePacket::Serialize() const {
 PlayerPositionPacket::PlayerPositionPacket(Vector3d position, bool onGround)
     : m_Position(position), m_OnGround(onGround)
 {
-    m_Id = 0x0C;
+    
 }
 
 DataBuffer PlayerPositionPacket::Serialize() const {
@@ -2333,7 +2527,7 @@ DataBuffer PlayerPositionPacket::Serialize() const {
 PlayerPositionAndLookPacket::PlayerPositionAndLookPacket(Vector3d position, float yaw, float pitch, bool onGround)
     : m_Position(position), m_Yaw(yaw), m_Pitch(pitch), m_OnGround(onGround)
 {
-    m_Id = 0x0D;
+    
 }
 
 DataBuffer PlayerPositionAndLookPacket::Serialize() const {
@@ -2350,7 +2544,7 @@ DataBuffer PlayerPositionAndLookPacket::Serialize() const {
 PlayerLookPacket::PlayerLookPacket(float yaw, float pitch, bool onGround)
     : m_Yaw(yaw), m_Pitch(pitch), m_OnGround(onGround)
 {
-    m_Id = 0x0E;
+    
 }
 
 DataBuffer PlayerLookPacket::Serialize() const {
@@ -2365,7 +2559,7 @@ DataBuffer PlayerLookPacket::Serialize() const {
 PlayerPacket::PlayerPacket(bool onGround)
     : m_OnGround(onGround)
 {
-    m_Id = 0x0F;
+    
 }
 
 DataBuffer PlayerPacket::Serialize() const {
@@ -2378,7 +2572,7 @@ DataBuffer PlayerPacket::Serialize() const {
 VehicleMovePacket::VehicleMovePacket(Vector3d position, float yaw, float pitch)
     : m_Position(position), m_Yaw(yaw), m_Pitch(pitch)
 {
-    m_Id = 0x10;
+    
 }
 
 DataBuffer VehicleMovePacket::Serialize() const {
@@ -2394,7 +2588,7 @@ DataBuffer VehicleMovePacket::Serialize() const {
 SteerBoatPacket::SteerBoatPacket(bool rightPaddle, bool leftPaddle)
     : m_RightPaddle(rightPaddle), m_LeftPaddle(leftPaddle)
 {
-    m_Id = 0x11;
+    
 }
 
 DataBuffer SteerBoatPacket::Serialize() const {
@@ -2409,7 +2603,7 @@ DataBuffer SteerBoatPacket::Serialize() const {
 PlayerAbilitiesPacket::PlayerAbilitiesPacket(bool isFlying)
     : m_IsFlying(isFlying)
 {
-    m_Id = 0x12;
+    
 }
 
 DataBuffer PlayerAbilitiesPacket::Serialize() const {
@@ -2429,7 +2623,7 @@ DataBuffer PlayerAbilitiesPacket::Serialize() const {
 PlayerDiggingPacket::PlayerDiggingPacket(Status status, Vector3i position, Face face)
     : m_Status(status), m_Position(position), m_Face(face)
 {
-    m_Id = 0x13;
+    
 }
 
 DataBuffer PlayerDiggingPacket::Serialize() const {
@@ -2447,7 +2641,7 @@ DataBuffer PlayerDiggingPacket::Serialize() const {
 EntityActionPacket::EntityActionPacket(EntityId eid, Action action, s32 actionData)
     : m_EntityId(eid), m_Action(action), m_ActionData(actionData)
 {
-    m_Id = 0x14;
+    
 }
 
 DataBuffer EntityActionPacket::Serialize() const {
@@ -2465,7 +2659,7 @@ DataBuffer EntityActionPacket::Serialize() const {
 SteerVehiclePacket::SteerVehiclePacket(float sideways, float forward, u8 flags)
     : m_Sideways(sideways), m_Forward(forward), m_Flags(flags)
 {
-    m_Id = 0x15;
+    
 }
 
 DataBuffer SteerVehiclePacket::Serialize() const {
@@ -2480,7 +2674,7 @@ DataBuffer SteerVehiclePacket::Serialize() const {
 ResourcePackStatusPacket::ResourcePackStatusPacket(Result result) 
     : m_Result(result)
 {
-    m_Id = 0x16;
+    
 }
 
 DataBuffer ResourcePackStatusPacket::Serialize() const {
@@ -2495,7 +2689,7 @@ DataBuffer ResourcePackStatusPacket::Serialize() const {
 HeldItemChangePacket::HeldItemChangePacket(u16 slot)
     : m_Slot(slot)
 {
-    m_Id = 0x17;
+    
 }
 
 DataBuffer HeldItemChangePacket::Serialize() const {
@@ -2511,7 +2705,7 @@ CreativeInventoryActionPacket::CreativeInventoryActionPacket(s16 slot, inventory
     : m_Slot(slot),
     m_Item(item)
 {
-    m_Id = 0x18;
+    
 }
 
 DataBuffer CreativeInventoryActionPacket::Serialize() const {
@@ -2528,7 +2722,6 @@ UpdateSignPacket::UpdateSignPacket(Vector3d position, const std::wstring& line1,
         const std::wstring& line3, const std::wstring& line4) 
     : m_Line1(line1), m_Line2(line2), m_Line3(line3), m_Line4(line4)
 {
-    m_Id = 0x19;
     m_Position = Position((s32)position.x, (s32)position.y, (s32)position.z);
 }
 
@@ -2550,7 +2743,7 @@ DataBuffer UpdateSignPacket::Serialize() const {
 AnimationPacket::AnimationPacket(Hand hand) 
     : m_Hand(hand) 
 {
-    m_Id = 0x1A;
+    
 }
 
 DataBuffer AnimationPacket::Serialize() const {
@@ -2565,7 +2758,7 @@ DataBuffer AnimationPacket::Serialize() const {
 SpectatePacket::SpectatePacket(UUID uuid)
     : m_UUID(uuid)
 {
-    m_Id = 0x1B;
+    
 }
 
 DataBuffer SpectatePacket::Serialize() const {
@@ -2579,7 +2772,7 @@ DataBuffer SpectatePacket::Serialize() const {
 PlayerBlockPlacementPacket::PlayerBlockPlacementPacket(Vector3i position, Face face, Hand hand, Vector3f cursorPos) 
     : m_Position(position), m_Face(face), m_Hand(hand), m_CursorPos(cursorPos)
 {
-    m_Id = 0x1C;
+    
 }
 
 DataBuffer PlayerBlockPlacementPacket::Serialize() const {
@@ -2601,7 +2794,7 @@ DataBuffer PlayerBlockPlacementPacket::Serialize() const {
 UseItemPacket::UseItemPacket(Hand hand)
     : m_Hand(hand)
 {
-    m_Id = 0x1D;
+    
 }
 
 DataBuffer UseItemPacket::Serialize() const {
@@ -2616,7 +2809,6 @@ DataBuffer UseItemPacket::Serialize() const {
 namespace status {
 
 RequestPacket::RequestPacket() {
-    m_Id = 0x00;
     m_ProtocolState = protocol::State::Status;
 }
 
@@ -2629,7 +2821,6 @@ DataBuffer RequestPacket::Serialize() const {
 }
 
 PingPacket::PingPacket(s64 payload) : m_Payload(payload) {
-    m_Id = 0x01;
     m_ProtocolState = protocol::State::Status;
 }
 

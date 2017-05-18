@@ -78,6 +78,7 @@
     <ClInclude Include="include\mclib\protocol\packets\PacketFactory.h" />
     <ClInclude Include="include\mclib\protocol\packets\PacketHandler.h" />
     <ClInclude Include="include\mclib\protocol\Protocol.h" />
+    <ClInclude Include="include\mclib\protocol\ProtocolState.h" />
     <ClInclude Include="include\mclib\util\Forge.h" />
     <ClInclude Include="include\mclib\util\Hash.h" />
     <ClInclude Include="include\mclib\util\HTTPClient.h" />
@@ -141,6 +142,7 @@
     <ClCompile Include="src\mclib\protocol\packets\PacketDispatcher.cpp" />
     <ClCompile Include="src\mclib\protocol\packets\PacketFactory.cpp" />
     <ClCompile Include="src\mclib\protocol\packets\PacketHandler.cpp" />
+    <ClCompile Include="src\mclib\protocol\Protocol.cpp" />
     <ClCompile Include="src\mclib\util\Forge.cpp" />
     <ClCompile Include="src\mclib\util\Hash.cpp" />
     <ClCompile Include="src\mclib\util\HTTPClient.cpp" />

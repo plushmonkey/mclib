@@ -212,6 +212,35 @@ inventory::Slot CreateFirework(bool flicker, bool trail, u8 type, u8 duration, s
 }
 
 std::string ParseChatNode(Json::Value node) {
+    if (node.isObject()) {
+        auto&& translateNode = node["translate"];
+
+        if (translateNode.isString()) {
+            std::string translate = translateNode.asString();
+            std::string message;
+
+            if (translate == "chat.type.text") {
+                auto&& withNode = node["with"];
+
+                if (withNode.isArray()) {
+                    for (auto iter = withNode.begin(); iter != withNode.end(); ++iter) {
+                        auto&& node = *iter;
+
+                        if (node.isObject()) {
+                            auto&& textNode = node["text"];
+                            if (textNode.isString())
+                                message += "<" + textNode.asString() + "> ";
+                        } else if (node.isString()) {
+                            message += node.asString();
+                        }
+                    }
+                }
+            }
+
+            return message;
+        }
+    }
+
     if (node.isNull()) return "";
     if (node.isString()) return node.asString();
     if (node.isObject()) {
