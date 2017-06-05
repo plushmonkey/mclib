@@ -50,6 +50,7 @@ enum class EntityType {
     EvocationIllager,
     Vex,
     VindicationIllager,
+    IllusionIllager,
 
     MinecartCommandBlock = 40,
     Boat,

@@ -1422,24 +1422,26 @@ bool UnlockRecipesPacket::Deserialize(DataBuffer& data, std::size_t packetLength
     m_Array1.resize(size1.GetInt());
 
     for (s32 i = 0; i < size1.GetInt(); ++i) {
-        s32 id;
+        VarInt id;
 
         data >> id;
 
-        m_Array1[i] = id;
+        m_Array1[i] = id.GetInt();
     }
 
-    VarInt size2;
-    data >> size2;
+    if (m_Action == Action::Initialize) {
+        VarInt size2;
+        data >> size2;
 
-    m_Array2.resize(size2.GetInt());
+        m_Array2.resize(size2.GetInt());
 
-    for (s32 i = 0; i < size2.GetInt(); ++i) {
-        s32 id;
+        for (s32 i = 0; i < size2.GetInt(); ++i) {
+            VarInt id;
 
-        data >> id;
+            data >> id;
 
-        m_Array2[i] = id;
+            m_Array2[i] = id.GetInt();
+        }
     }
 
     return true;

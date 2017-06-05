@@ -9,7 +9,7 @@ namespace mc {
 namespace protocol {
 
 using PacketCreator = packets::InboundPacket* (*)();
-using PacketMap = std::unordered_map<s32, PacketCreator>;
+using PacketMap = std::unordered_map<s32, s32>;
 
 class UnsupportedPacketException : public std::exception {
 private:
@@ -43,8 +43,13 @@ public:
     }
 
     virtual Version GetVersion() const noexcept { return m_Version; }
+
     // Creates an inbound packet from state and packet id
     virtual packets::InboundPacket* CreateInboundPacket(State state, s32 id);
+
+    // Convert the protocol id into a protocol agnostic id.
+    // This is used as the dispatching id.
+    bool GetAgnosticId(State state, s32 protocolId, s32& agnosticId);
 
     // Handshake
     virtual s32 GetPacketId(packets::out::HandshakePacket) { return 0x00; }

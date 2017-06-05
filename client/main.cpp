@@ -30,11 +30,11 @@ private:
     mc::inventory::Slot m_HeldItem;
 
 public:
-    BlockPlacer(mc::protocol::packets::PacketDispatcher* dispatcher, mc::core::Client* client, mc::util::PlayerController* pc, mc::world::World* world) 
-        : mc::protocol::packets::PacketHandler(dispatcher), 
-          m_Client(client), 
-          m_PlayerController(pc), 
-          m_World(world), 
+    BlockPlacer(mc::protocol::packets::PacketDispatcher* dispatcher, mc::core::Client* client, mc::util::PlayerController* pc, mc::world::World* world)
+        : mc::protocol::packets::PacketHandler(dispatcher),
+          m_Client(client),
+          m_PlayerController(pc),
+          m_World(world),
           m_LastUpdate(mc::util::GetTime())
     {
         m_Target = mc::Vector3i(-2, 62, 275);
@@ -76,7 +76,7 @@ public:
 
         if (m_HeldItem.GetItemId() != -1) {
             mc::block::BlockPtr block = m_World->GetBlock(m_Target + Vector3i(0, 1, 0)).GetBlock();
-            
+
             if (!block || block->GetType() == 0) {
                 mc::protocol::packets::out::PlayerBlockPlacementPacket blockPlacePacket(m_Target, mc::Face::Top, mc::Hand::Main, mc::Vector3f(0.5, 0, 0.5));
 
@@ -189,9 +189,9 @@ private:
     s64 m_StartTime;
 
 public:
-    SneakEnforcer(mc::core::Client* client) 
-        : m_Client(client), 
-          m_PlayerManager(client->GetPlayerManager()), 
+    SneakEnforcer(mc::core::Client* client)
+        : m_Client(client),
+          m_PlayerManager(client->GetPlayerManager()),
           m_Connection(client->GetConnection()),
           m_StartTime(mc::util::GetTime())
     {
@@ -330,9 +330,9 @@ private:
 
 public:
     BlockDigStressTest(mc::core::Client* client, s32 digPerTick)
-        : m_Client(client), 
-          m_PlayerController(client->GetPlayerController()), 
-          m_World(client->GetWorld()), 
+        : m_Client(client),
+          m_PlayerController(client->GetPlayerController()),
+          m_World(client->GetWorld()),
           m_DigPerTick(digPerTick)
     {
         client->RegisterListener(this);
@@ -373,7 +373,7 @@ public:
             packet = PlayerDiggingPacket(status, m_Target + Vector3i(0, 1, 0), mc::Face::West);
 
             m_Client->GetConnection()->SendPacket(&packet);
-    }
+        }
     }
 };
 
@@ -394,7 +394,7 @@ struct VersionFetcher : public mc::core::ConnectionListener {
             { 210, mc::protocol::Version::Minecraft_1_10_2 },
             { 315, mc::protocol::Version::Minecraft_1_11_0 },
             { 316, mc::protocol::Version::Minecraft_1_11_2 },
-            { 331, mc::protocol::Version::Minecraft_1_12_0 },
+            { 334, mc::protocol::Version::Minecraft_1_12_0 },
         };
 
         auto&& versionNode = node["version"];
@@ -418,7 +418,7 @@ int main(void) {
     mc::protocol::packets::PacketDispatcher dispatcher;
     mc::protocol::Version version = mc::protocol::Version::Minecraft_1_11_2;
     mc::util::ForgeHandler forgeHandler(&dispatcher, nullptr);
-    
+
     const std::string server("127.0.0.1");
     const u16 port = 25565;
 

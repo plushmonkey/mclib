@@ -1123,9 +1123,9 @@ public:
 class UnlockRecipesPacket : public InboundPacket {
 public:
     enum class Action {
-        AddAndDisplay,
-        Remove,
-        AddSilently
+        Initialize,
+        Add,
+        Remove
     };
 
 private:

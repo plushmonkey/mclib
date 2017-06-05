@@ -18,7 +18,7 @@ enum class Version {
     Minecraft_1_10_2 = 210,
     Minecraft_1_11_0 = 315,
     Minecraft_1_11_2 = 316,
-    Minecraft_1_12_0 = 331,
+    Minecraft_1_12_0 = 334,
 };
 
 class UnfinishedProtocolException {
