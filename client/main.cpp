@@ -394,7 +394,7 @@ struct VersionFetcher : public mc::core::ConnectionListener {
             { 210, mc::protocol::Version::Minecraft_1_10_2 },
             { 315, mc::protocol::Version::Minecraft_1_11_0 },
             { 316, mc::protocol::Version::Minecraft_1_11_2 },
-            { 334, mc::protocol::Version::Minecraft_1_12_0 },
+            { 335, mc::protocol::Version::Minecraft_1_12_0 },
         };
 
         auto&& versionNode = node["version"];
