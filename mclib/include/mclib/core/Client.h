@@ -63,7 +63,7 @@ public:
     void MCLIB_API Update();
     bool MCLIB_API Login(const std::string& host, unsigned short port, const std::string& user, const std::string& password, UpdateMethod method = UpdateMethod::Block);
     bool MCLIB_API Login(const std::string& host, unsigned short port, const std::string& user, AuthToken token, UpdateMethod method = UpdateMethod::Block);
-    void MCLIB_API Ping(const std::string& host, unsigned short port);
+    void MCLIB_API Ping(const std::string& host, unsigned short port, UpdateMethod method = UpdateMethod::Block);
 
     protocol::packets::PacketDispatcher* GetDispatcher() { return m_Dispatcher; }
     core::Connection* GetConnection() { return &m_Connection; }

@@ -117,7 +117,7 @@ bool Client::Login(const std::string& host, unsigned short port,
     return true;
 }
 
-void Client::Ping(const std::string& host, unsigned short port) {
+void Client::Ping(const std::string& host, unsigned short port, UpdateMethod method) {
     if (m_UpdateThread.joinable()) {
         m_Connected = false;
         m_UpdateThread.join();
@@ -126,9 +126,13 @@ void Client::Ping(const std::string& host, unsigned short port) {
     if (!m_Connection.Connect(host, port))
         throw std::runtime_error("Could not connect to server");
 
-    m_UpdateThread = std::thread(&Client::UpdateThread, this);
-
     m_Connection.Ping();
+
+    if (method == UpdateMethod::Threaded) {
+        m_UpdateThread = std::thread(&Client::UpdateThread, this);
+    } else if (method == UpdateMethod::Block) {
+        UpdateThread();
+    }
 }
 
 } // ns core
