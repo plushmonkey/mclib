@@ -2311,6 +2311,44 @@ DataBuffer TeleportConfirmPacket::Serialize() const {
     return buffer;
 }
 
+PrepareCraftingGridPacket::PrepareCraftingGridPacket(u8 windowId, s16 actionNumber, 
+    const std::vector<Entry>& returnEntries, const std::vector<Entry>& prepareEntries) 
+    : m_WindowId(windowId),
+      m_ActionNumber(actionNumber),
+      m_ReturnEntries(returnEntries),
+      m_PrepareEntries(prepareEntries)
+{
+
+}
+
+DataBuffer PrepareCraftingGridPacket::Serialize() const {
+    DataBuffer buffer;
+
+    buffer << m_Id;
+    buffer << m_WindowId;
+    buffer << m_ActionNumber;
+
+    s16 returnSize = static_cast<s16>(m_ReturnEntries.size());
+
+    buffer << returnSize;
+    for (auto&& entry : m_ReturnEntries) {
+        buffer << entry.item;
+        buffer << entry.craftingSlot;
+        buffer << entry.playerSlot;
+    }
+
+    s16 prepareSize = static_cast<s16>(m_PrepareEntries.size());
+
+    buffer << prepareSize;
+    for (auto&& entry : m_PrepareEntries) {
+        buffer << entry.item;
+        buffer << entry.craftingSlot;
+        buffer << entry.playerSlot;
+    }
+
+    return buffer;
+}
+
 TabCompletePacket::TabCompletePacket(const std::wstring& text, bool assumeCommand) 
     : m_Text(text), m_AssumeCommand(assumeCommand), m_HasPosition(false)
 {

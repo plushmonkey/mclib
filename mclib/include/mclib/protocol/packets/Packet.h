@@ -1736,10 +1736,20 @@ public:
 };
 
 class PrepareCraftingGridPacket : public OutboundPacket {
+public:
+    struct Entry {
+        inventory::Slot item;
+        u8 craftingSlot;
+        u8 playerSlot;
+    };
 private:
+    u8 m_WindowId;
+    s16 m_ActionNumber;
+    std::vector<Entry> m_ReturnEntries;
+    std::vector<Entry> m_PrepareEntries;
     
 public:
-    MCLIB_API PrepareCraftingGridPacket();
+    MCLIB_API PrepareCraftingGridPacket(u8 windowId, s16 actionNumber, const std::vector<Entry>& returnEntries, const std::vector<Entry>& prepareEntries);
     DataBuffer MCLIB_API Serialize() const;
 };
 
