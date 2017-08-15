@@ -2147,6 +2147,10 @@ DisconnectPacket::DisconnectPacket() {
 }
 
 bool DisconnectPacket::Deserialize(DataBuffer& data, std::size_t packetLength) {
+    // Update the protocol state so the login and play versions of this are handled correctly.
+    if (m_Connection)
+        m_ProtocolState = m_Connection->GetProtocolState();
+
     data >> m_Reason;
     return true;
 }

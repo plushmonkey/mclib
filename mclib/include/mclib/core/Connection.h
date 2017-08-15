@@ -38,7 +38,6 @@ private:
     std::unique_ptr<CompressionStrategy> m_Compressor;
     std::unique_ptr<network::Socket> m_Socket;
     std::unique_ptr<util::Yggdrasil> m_Yggdrasil;
-    std::queue<std::future<protocol::packets::Packet*>> m_FuturePackets;
     ClientSettings m_ClientSettings;
     std::string m_Server;
     std::string m_Email;
@@ -52,8 +51,7 @@ private:
     s32 m_Dimension;
 
     void AuthenticateClient(const std::wstring& serverId, const std::string& sharedSecret, const std::string& pubkey);
-    std::future<protocol::packets::Packet*> CreatePacket(DataBuffer& buffer);
-    protocol::packets::Packet* CreatePacketSync(DataBuffer& buffer);
+    protocol::packets::Packet* CreatePacket(DataBuffer& buffer);
     void SendSettingsPacket();
 
 public:
@@ -69,6 +67,7 @@ public:
     network::Socket::Status MCLIB_API GetSocketState() const;
     ClientSettings& GetSettings() noexcept { return m_ClientSettings; }
     s32 GetDimension() const noexcept { return m_Dimension; }
+    protocol::State GetProtocolState() const { return m_ProtocolState; }
 
     void SendSettings() noexcept { m_SentSettings = false; }
 

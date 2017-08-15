@@ -174,9 +174,6 @@ bool Connection::Connect(const std::string& server, u16 port) {
     m_Compressor = std::make_unique<CompressionNone>();
     m_Encrypter = std::make_unique<EncryptionStrategyNone>();
 
-    while (!m_FuturePackets.empty())
-        m_FuturePackets.pop();
-
     m_Server = server;
     m_Port = port;
 
@@ -209,7 +206,7 @@ void Connection::Disconnect() {
     NotifyListeners(&ConnectionListener::OnSocketStateChange, m_Socket->GetStatus());
 }
 
-protocol::packets::Packet* Connection::CreatePacketSync(DataBuffer& buffer) {
+protocol::packets::Packet* Connection::CreatePacket(DataBuffer& buffer) {
     std::size_t readOffset = buffer.GetReadOffset();
     VarInt length;
 
@@ -233,30 +230,6 @@ protocol::packets::Packet* Connection::CreatePacketSync(DataBuffer& buffer) {
     return protocol::packets::PacketFactory::CreatePacket(m_Protocol, m_ProtocolState, decompressed, length.GetInt(), this);
 }
 
-std::future<protocol::packets::Packet*> Connection::CreatePacket(DataBuffer& buffer) {
-    std::size_t readOffset = buffer.GetReadOffset();
-    VarInt length;
-
-    try {
-        buffer >> length;
-    } catch (const std::out_of_range&) {
-        // This will happen when the buffer only contains part of the VarInt, 
-        // so only part of the packet was received so far.
-        // The buffer read offset isn't advanced when the exception is thrown, so no need to set it back to what it was.
-        return std::future<protocol::packets::Packet*>();
-    }
-
-    if (length.GetInt() == 0 || buffer.GetRemaining() < (u32)length.GetInt()) {
-        // Reset the read offset back to what it was because the full packet hasn't been received yet.
-        buffer.SetReadOffset(readOffset);
-        return std::future<protocol::packets::Packet*>();
-    }
-
-    DataBuffer decompressed = m_Compressor->Decompress(buffer, length.GetInt());
-
-    return std::async(std::launch::async, &protocol::packets::PacketFactory::CreatePacket, m_Protocol, m_ProtocolState, decompressed, length.GetInt(), this);
-}
-
 void Connection::CreatePacket() {
     DataBuffer buffer;
 
@@ -273,28 +246,18 @@ void Connection::CreatePacket() {
 
     do {
         try {
-            //if (m_ProtocolState == Protocol::State::Login) {
-            // todo: fix async buffer manipulation
-            if (1) {
-                protocol::packets::Packet* packet = CreatePacketSync(m_HandleBuffer);
+            protocol::packets::Packet* packet = CreatePacket(m_HandleBuffer);
 
-                if (packet) {
-                    // Only send the settings after the server has accepted the new protocol state.
-                    if (!m_SentSettings && packet->GetProtocolState() == protocol::State::Play) {
-                        SendSettingsPacket();
-                    }
-
-                    this->GetDispatcher()->Dispatch(packet);
-                    protocol::packets::PacketFactory::FreePacket(packet);
-                } else {
-                    break;
+            if (packet) {
+                // Only send the settings after the server has accepted the new protocol state.
+                if (!m_SentSettings && packet->GetProtocolState() == protocol::State::Play) {
+                    SendSettingsPacket();
                 }
+
+                this->GetDispatcher()->Dispatch(packet);
+                protocol::packets::PacketFactory::FreePacket(packet);
             } else {
-                std::future<protocol::packets::Packet*> futurePacket = CreatePacket(m_HandleBuffer);
-                if (futurePacket.valid())
-                    m_FuturePackets.push(std::move(futurePacket));
-                else
-                    break;
+                break;
             }
         } catch (const protocol::UnfinishedProtocolException&) {
             // Ignore for now
@@ -306,37 +269,8 @@ void Connection::CreatePacket() {
     else if (m_HandleBuffer.GetReadOffset() != 0)
         m_HandleBuffer = DataBuffer(m_HandleBuffer, m_HandleBuffer.GetReadOffset());
 
-    while (!m_FuturePackets.empty()) {
-        auto& futurePacket = m_FuturePackets.front();
-        if (!futurePacket.valid()) {
-            m_FuturePackets.pop();
-            continue;
-        }
-
-        std::future_status status = futurePacket.wait_for(std::chrono::milliseconds(1));
-
-        if (status != std::future_status::ready) break;
-
-        try {
-            protocol::packets::Packet* packet = futurePacket.get();
-            m_FuturePackets.pop();
-
-            if (packet) {
-                this->GetDispatcher()->Dispatch(packet);
-                protocol::packets::PacketFactory::FreePacket(packet);
-            }
-        } catch (const protocol::UnfinishedProtocolException&) {
-            // Ignore
-            m_FuturePackets.pop();
-        } catch (std::exception& e) {
-            m_FuturePackets.pop();
-            throw e;
-        }
-    }
-
     if (m_Socket->GetStatus() != network::Socket::Connected) {
         NotifyListeners(&ConnectionListener::OnSocketStateChange, m_Socket->GetStatus());
-        return;
     }
 }
 

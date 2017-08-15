@@ -410,6 +410,10 @@ struct VersionFetcher : public mc::core::ConnectionListener {
                 }
             }
         }
+
+        // Sometimes the server will keep the ping connection open even after returning result.
+        // Force disconnect to end ping connection.
+        conn.Disconnect();
     }
 };
 
@@ -426,17 +430,13 @@ int main(void) {
         mc::core::Client pingClient(&dispatcher, version);
         VersionFetcher fetcher(*pingClient.GetConnection());
 
+        std::cout << "Pinging server." << std::endl;
+
         try {
-            pingClient.Ping(server, port);
+            pingClient.Ping(server, port, mc::core::UpdateMethod::Block);
         } catch (std::exception& e) {
             std::wcout << e.what() << std::endl;
             return 1;
-        }
-
-        std::cout << "Pinging server." << std::endl;
-
-        while (!forgeHandler.HasModInfo()) {
-            std::this_thread::sleep_for(std::chrono::milliseconds(100));
         }
 
         if (fetcher.found) {
