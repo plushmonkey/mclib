@@ -98,6 +98,8 @@ public:
     virtual s32 GetPacketId(packets::out::CraftingBookDataPacket) { throw UnsupportedPacketException("CraftingBookDataPacket requires protocol 1.12.0"); }
     virtual s32 GetPacketId(packets::out::AdvancementTabPacket) { throw UnsupportedPacketException("AdvancementTabPacket requires protocol 1.12.0"); }
 
+    virtual s32 GetPacketId(packets::out::CraftRecipeRequestPacket) { throw UnsupportedPacketException("CraftRecipeRequestPacket requires protocol 1.12.1"); }
+
     static Protocol& GetProtocol(Version version);
 };
 

@@ -1654,6 +1654,18 @@ public:
     void MCLIB_API Dispatch(PacketHandler* handler);
 };
 
+class CraftRecipeResponsePacket : public InboundPacket {
+private:
+    u8 m_WindowId;
+    s32 m_RecipeId;
+
+public:
+    MCLIB_API CraftRecipeResponsePacket();
+    bool MCLIB_API Deserialize(DataBuffer& data, std::size_t packetLength);
+    void MCLIB_API Dispatch(PacketHandler* handler);
+};
+
+
 
 namespace status {
 
@@ -1750,6 +1762,17 @@ private:
     
 public:
     MCLIB_API PrepareCraftingGridPacket(u8 windowId, s16 actionNumber, const std::vector<Entry>& returnEntries, const std::vector<Entry>& prepareEntries);
+    DataBuffer MCLIB_API Serialize() const;
+};
+
+class CraftRecipeRequestPacket : public OutboundPacket {
+private:
+    u8 m_WindowId;
+    s32 m_RecipeId;
+    bool m_MakeAll;
+
+public:
+    MCLIB_API CraftRecipeRequestPacket(u8 windowId, s32 recipeId, bool makeAll);
     DataBuffer MCLIB_API Serialize() const;
 };
 

@@ -2140,6 +2140,24 @@ void AdvancementProgressPacket::Dispatch(PacketHandler* handler) {
     handler->HandlePacket(this);
 }
 
+CraftRecipeResponsePacket::CraftRecipeResponsePacket() {
+    
+}
+
+bool CraftRecipeResponsePacket::Deserialize(DataBuffer& data, std::size_t packetLength) {
+    VarInt recipeId;
+
+    data >> m_WindowId >> recipeId;
+
+    m_RecipeId = recipeId.GetInt();
+    
+    return true;
+}
+
+void CraftRecipeResponsePacket::Dispatch(PacketHandler* handler) {
+    handler->HandlePacket(this);
+}
+
 
 // Login packets
 DisconnectPacket::DisconnectPacket() {
@@ -2349,6 +2367,26 @@ DataBuffer PrepareCraftingGridPacket::Serialize() const {
         buffer << entry.craftingSlot;
         buffer << entry.playerSlot;
     }
+
+    return buffer;
+}
+
+CraftRecipeRequestPacket::CraftRecipeRequestPacket(u8 windowId, s32 recipeId, bool makeAll)
+    : m_WindowId(windowId),
+      m_RecipeId(recipeId),
+      m_MakeAll(makeAll)
+{
+
+}
+
+DataBuffer CraftRecipeRequestPacket::Serialize() const {
+    VarInt recipeId(m_RecipeId);
+    DataBuffer buffer;
+
+    buffer << m_Id;
+    buffer << m_WindowId;
+    buffer << recipeId;
+    buffer << m_MakeAll;
 
     return buffer;
 }

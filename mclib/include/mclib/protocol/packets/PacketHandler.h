@@ -116,6 +116,7 @@ public:
     virtual void HandlePacket(in::EntityPropertiesPacket* packet) { } // 0x4A
     virtual void HandlePacket(in::EntityEffectPacket* packet) { } // 0x4B
     virtual void HandlePacket(in::AdvancementProgressPacket* packet) { }
+    virtual void HandlePacket(in::CraftRecipeResponsePacket* packet) { }
 };
 
 } // ns packets

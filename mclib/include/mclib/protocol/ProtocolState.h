@@ -19,6 +19,7 @@ enum class Version {
     Minecraft_1_11_0 = 315,
     Minecraft_1_11_2 = 316,
     Minecraft_1_12_0 = 335,
+    Minecraft_1_12_1 = 338,
 };
 
 class UnfinishedProtocolException {
@@ -137,6 +138,7 @@ enum ProtocolPlay {
 
     Advancements,
     UnlockRecipes,
+    CraftRecipeResponse,
 };
 
 } // ns play
