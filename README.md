@@ -2,7 +2,7 @@
 C++ library for connecting to Minecraft servers.
 
 ## Features
-- Full 1.11.2 and 1.12.0 protocol
+- Full protocol for Minecraft 1.10 through 1.12.1
 - Premium and offline mode
 - Yggdrasil API
 - Logging in with passwords or tokens
