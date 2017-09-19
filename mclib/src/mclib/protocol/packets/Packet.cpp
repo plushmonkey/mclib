@@ -884,11 +884,15 @@ KeepAlivePacket::KeepAlivePacket() {
 }
 
 bool KeepAlivePacket::Deserialize(DataBuffer& data, std::size_t packetLength) {
-    VarInt aliveId;
+    if (this->GetProtocolVersion() < Version::Minecraft_1_12_2) {
+        VarInt aliveId;
 
-    data >> aliveId;
+        data >> aliveId;
 
-    m_AliveId = aliveId.GetLong();
+        m_AliveId = aliveId.GetLong();
+    } else {
+        data >> m_AliveId;
+    }
 
     return true;
 }
@@ -2584,10 +2588,16 @@ KeepAlivePacket::KeepAlivePacket(s64 id) : m_KeepAliveId(id) {
 
 DataBuffer KeepAlivePacket::Serialize() const {
     DataBuffer buffer;
-    VarInt aliveId(m_KeepAliveId);
 
     buffer << m_Id;
-    buffer << aliveId;
+
+    if (m_ProtocolVersion < Version::Minecraft_1_12_2) {
+        VarInt aliveId(m_KeepAliveId);
+    
+        buffer << aliveId;
+    } else {
+        buffer << m_KeepAliveId;
+    }
 
     return buffer;
 }

@@ -531,10 +531,14 @@ Protocol::StateMap inboundMap_1_12_1 = {
     }
 };
 
-
-Protocol protocol_1_11_2(Version::Minecraft_1_11_2, inboundMap_1_11_2);
-Protocol_1_12_0 protocol_1_12_0(Version::Minecraft_1_12_0, inboundMap_1_12_0);
-Protocol_1_12_1 protocol_1_12_1(Version::Minecraft_1_12_1, inboundMap_1_12_1);
+const std::unordered_map<Version, std::shared_ptr<Protocol>> protocolMap = {
+    { Version::Minecraft_1_10_2, std::make_shared<Protocol>(Version::Minecraft_1_10_2, inboundMap_1_11_2) },
+    { Version::Minecraft_1_11_0, std::make_shared<Protocol>(Version::Minecraft_1_11_0, inboundMap_1_11_2) },
+    { Version::Minecraft_1_11_2, std::make_shared<Protocol>(Version::Minecraft_1_11_2, inboundMap_1_11_2) },
+    { Version::Minecraft_1_12_0, std::make_shared<Protocol_1_12_0>(Version::Minecraft_1_12_0, inboundMap_1_12_0) },
+    { Version::Minecraft_1_12_1, std::make_shared<Protocol_1_12_1>(Version::Minecraft_1_12_1, inboundMap_1_12_1) },
+    { Version::Minecraft_1_12_2, std::make_shared<Protocol_1_12_1>(Version::Minecraft_1_12_2, inboundMap_1_12_1) },
+};
 
 bool Protocol::GetAgnosticId(State state, s32 protocolId, s32& agnosticId) {
     auto& packetMap = m_InboundMap[state];
@@ -571,20 +575,13 @@ packets::InboundPacket* Protocol::CreateInboundPacket(State state, s32 protocolI
 }
 
 Protocol& Protocol::GetProtocol(Version version) {
-    if (version == Version::Minecraft_1_10_2 ||
-        version == Version::Minecraft_1_11_0 ||
-        version == Version::Minecraft_1_11_2)
-    {
-        return protocol_1_11_2;
+    auto&& iter = protocolMap.find(version);
+
+    if (iter == protocolMap.end()) {
+        throw std::runtime_error(std::string("Unknown protocol version ") + std::to_string((s32)version));
     }
 
-    if (version == Version::Minecraft_1_12_0)
-        return protocol_1_12_0;
-
-    if (version == Version::Minecraft_1_12_1)
-        return protocol_1_12_1;
-
-    throw std::runtime_error(std::string("Unknown protocol version ") + std::to_string((s32)version));
+    return *iter->second;
 }
 
 } // ns protocol

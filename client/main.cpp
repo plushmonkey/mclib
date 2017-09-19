@@ -390,12 +390,13 @@ struct VersionFetcher : public mc::core::ConnectionListener {
     }
 
     void OnPingResponse(const Json::Value& node) override {
-        static const std::unordered_map<s32, mc::protocol::Version> mapping = {
+        static const std::map<s32, mc::protocol::Version> mapping = {
             { 210, mc::protocol::Version::Minecraft_1_10_2 },
             { 315, mc::protocol::Version::Minecraft_1_11_0 },
             { 316, mc::protocol::Version::Minecraft_1_11_2 },
             { 335, mc::protocol::Version::Minecraft_1_12_0 },
             { 338, mc::protocol::Version::Minecraft_1_12_1 },
+            { 340, mc::protocol::Version::Minecraft_1_12_2 },
         };
 
         auto&& versionNode = node["version"];

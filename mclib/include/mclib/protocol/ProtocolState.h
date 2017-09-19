@@ -20,6 +20,7 @@ enum class Version {
     Minecraft_1_11_2 = 316,
     Minecraft_1_12_0 = 335,
     Minecraft_1_12_1 = 338,
+    Minecraft_1_12_2 = 340,
 };
 
 class UnfinishedProtocolException {
@@ -145,5 +146,23 @@ enum ProtocolPlay {
 
 } // ns protocol
 } // ns mc
+
+namespace std {
+
+template <>
+struct hash<mc::protocol::State> {
+    std::size_t operator()(const mc::protocol::State& state) const {
+        return std::hash<int>()(static_cast<int>(state));
+    }
+};
+
+template <>
+struct hash<mc::protocol::Version> {
+    std::size_t operator()(const mc::protocol::Version& version) const {
+        return std::hash<int>()(static_cast<int>(version));
+    }
+};
+
+} // ns std
 
 #endif

@@ -42,6 +42,8 @@ public:
 
     }
 
+    virtual ~Protocol() { }
+
     virtual Version GetVersion() const noexcept { return m_Version; }
 
     // Creates an inbound packet from state and packet id
