@@ -23,6 +23,8 @@ enum class Version {
     Minecraft_1_12_2 = 340,
 };
 
+MCLIB_API std::string to_string(Version version);
+
 class UnfinishedProtocolException {
 private:
     VarInt m_PacketId;

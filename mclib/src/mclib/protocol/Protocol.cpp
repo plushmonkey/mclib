@@ -584,5 +584,20 @@ Protocol& Protocol::GetProtocol(Version version) {
     return *iter->second;
 }
 
+std::string to_string(Version version) {
+    static const std::unordered_map<mc::protocol::Version, std::string> mapping = {
+        { mc::protocol::Version::Minecraft_1_10_2, "1.10.2" },
+        { mc::protocol::Version::Minecraft_1_11_0, "1.11.0" },
+        { mc::protocol::Version::Minecraft_1_11_2, "1.11.2" },
+        { mc::protocol::Version::Minecraft_1_12_0, "1.12.0" },
+        { mc::protocol::Version::Minecraft_1_12_1, "1.12.1" },
+        { mc::protocol::Version::Minecraft_1_12_2, "1.12.2" },
+    };
+
+    auto iter = mapping.find(version);
+    if (iter == mapping.end()) return "Unknown";
+    return iter->second;
+}
+
 } // ns protocol
 } // ns mclib

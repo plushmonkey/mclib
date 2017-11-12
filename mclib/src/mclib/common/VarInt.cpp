@@ -34,7 +34,7 @@ std::size_t VarInt::GetSerializedLength() const {
 }
 
 DataBuffer& operator<<(DataBuffer& out, const VarInt& var) {
-    u64 uval = u64(var.m_Value < 0 ? ~(var.m_Value << 1) : var.m_Value);
+    u64 uval = var.m_Value;
 
     int encoded = 0;
     char data[10];
@@ -71,10 +71,7 @@ DataBuffer& operator>>(DataBuffer& in, VarInt& var) {
 
     in.SetReadOffset(i);
 
-    if (value & (1 << 31))
-        var.m_Value = ~(value >> 1);
-    else
-        var.m_Value = value;
+    var.m_Value = value;
 
     return in;
 }

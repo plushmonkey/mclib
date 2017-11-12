@@ -80,7 +80,17 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="BlockPlacer.cpp" />
+    <ClCompile Include="Logger.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="SneakEnforcer.cpp" />
+    <ClCompile Include="TextureGrabber.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="BlockPlacer.h" />
+    <ClInclude Include="Logger.h" />
+    <ClInclude Include="SneakEnforcer.h" />
+    <ClInclude Include="TextureGrabber.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

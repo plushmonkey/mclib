@@ -85,6 +85,7 @@
     <ClInclude Include="include\mclib\util\ObserverSubject.h" />
     <ClInclude Include="include\mclib\util\Tokenizer.h" />
     <ClInclude Include="include\mclib\util\Utility.h" />
+    <ClInclude Include="include\mclib\util\VersionFetcher.h" />
     <ClInclude Include="include\mclib\util\Yggdrasil.h" />
     <ClInclude Include="include\mclib\world\Chunk.h" />
     <ClInclude Include="include\mclib\world\World.h" />
@@ -147,6 +148,7 @@
     <ClCompile Include="src\mclib\util\Hash.cpp" />
     <ClCompile Include="src\mclib\util\HTTPClient.cpp" />
     <ClCompile Include="src\mclib\util\Utility.cpp" />
+    <ClCompile Include="src\mclib\util\VersionFetcher.cpp" />
     <ClCompile Include="src\mclib\util\Yggdrasil.cpp" />
     <ClCompile Include="src\mclib\world\Chunk.cpp" />
     <ClCompile Include="src\mclib\world\World.cpp" />

@@ -4,6 +4,7 @@
 #include <mclib/protocol/ProtocolState.h>
 #include <mclib/protocol/packets/Packet.h>
 #include <unordered_map>
+#include <string>
 
 namespace mc {
 namespace protocol {
