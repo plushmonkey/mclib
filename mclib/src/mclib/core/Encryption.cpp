@@ -43,8 +43,8 @@ DataBuffer EncryptionStrategyNone::Decrypt(const DataBuffer& buffer) {
 class EncryptionStrategyAES::Impl {
 private:
     RandomGenerator m_RNG;
-    EVP_CIPHER_CTX m_EncryptCTX;
-    EVP_CIPHER_CTX m_DecryptCTX;
+    EVP_CIPHER_CTX* m_EncryptCTX;
+    EVP_CIPHER_CTX* m_DecryptCTX;
     unsigned int m_BlockSize;
 
     protocol::packets::out::EncryptionResponsePacket* m_ResponsePacket;
@@ -79,7 +79,6 @@ private:
         std::string encryptedToken;
 
         encryptedSS.resize(rsaSize);
-        //encryptedToken.resize(verifyToken.length());
         encryptedToken.resize(rsaSize);
 
         // Encrypt the shared secret with public key
@@ -89,10 +88,17 @@ private:
         RSA_free(rsa);
 
         // Initialize AES encryption and decryption
-        EVP_CIPHER_CTX_init(&m_EncryptCTX);
-        EVP_EncryptInit(&m_EncryptCTX, EVP_aes_128_cfb8(), m_SharedSecret.key, m_SharedSecret.key);
-        EVP_CIPHER_CTX_init(&m_DecryptCTX);
-        EVP_DecryptInit(&m_DecryptCTX, EVP_aes_128_cfb8(), m_SharedSecret.key, m_SharedSecret.key);
+        if (!(m_EncryptCTX = EVP_CIPHER_CTX_new()))
+            return false;
+
+        if (!(EVP_EncryptInit_ex(m_EncryptCTX, EVP_aes_128_cfb8(), nullptr, m_SharedSecret.key, m_SharedSecret.key)))
+            return false;
+
+        if (!(m_DecryptCTX = EVP_CIPHER_CTX_new()))
+            return false;
+
+        if (!(EVP_DecryptInit_ex(m_DecryptCTX, EVP_aes_128_cfb8(), nullptr, m_SharedSecret.key, m_SharedSecret.key)))
+            return false;
 
         m_BlockSize = EVP_CIPHER_block_size(EVP_aes_128_cfb8());
 
@@ -102,7 +108,7 @@ private:
 
 public:
     Impl(const std::string& publicKey, const std::string& verifyToken)
-        : m_ResponsePacket(nullptr)
+        : m_EncryptCTX(nullptr), m_DecryptCTX(nullptr), m_ResponsePacket(nullptr)
     {
         m_PublicKey.key = nullptr;
         Initialize(publicKey, verifyToken);
@@ -111,8 +117,12 @@ public:
     ~Impl() {
         if (m_ResponsePacket)
             delete m_ResponsePacket;
-        EVP_CIPHER_CTX_cleanup(&m_EncryptCTX);
-        EVP_CIPHER_CTX_cleanup(&m_DecryptCTX);
+
+        EVP_CIPHER_CTX_free(m_EncryptCTX);
+        EVP_CIPHER_CTX_free(m_DecryptCTX);
+
+        m_EncryptCTX = nullptr;
+        m_DecryptCTX = nullptr;
     }
 
     DataBuffer encrypt(const DataBuffer& buffer) {
@@ -120,7 +130,7 @@ public:
         int size = 0;
 
         result.Resize(buffer.GetSize() + m_BlockSize);
-        EVP_EncryptUpdate(&m_EncryptCTX, &result[0], &size, &buffer[0], buffer.GetSize());
+        EVP_EncryptUpdate(m_EncryptCTX, &result[0], &size, &buffer[0], buffer.GetSize());
         result.Resize(size);
 
         return result;
@@ -131,7 +141,7 @@ public:
         int size = 0;
 
         result.Resize(buffer.GetSize() + m_BlockSize);
-        EVP_DecryptUpdate(&m_DecryptCTX, &result[0], &size, &buffer[0], buffer.GetSize());
+        EVP_DecryptUpdate(m_DecryptCTX, &result[0], &size, &buffer[0], buffer.GetSize());
         result.Resize(size);
 
         return result;

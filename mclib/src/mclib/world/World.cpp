@@ -75,11 +75,9 @@ void World::HandlePacket(protocol::packets::in::ChunkDataPacket* packet) {
         m_Chunks[key] = col;
 
     for (s32 i = 0; i < ChunkColumn::ChunksPerColumn; ++i) {
-        if (meta.sectionmask & (1 << i)) {
-            ChunkPtr chunk = (*col)[i];
+        ChunkPtr chunk = (*col)[i];
 
-            NotifyListeners(&WorldListener::OnChunkLoad, chunk, meta, i);
-        }
+        NotifyListeners(&WorldListener::OnChunkLoad, chunk, meta, i);
     }
 }
 
