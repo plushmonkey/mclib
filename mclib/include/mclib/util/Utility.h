@@ -2,6 +2,7 @@
 #define MCLIB_UTIL_UTILITY_H
 
 #include <mclib/common/AABB.h>
+#include <mclib/common/JsonFwd.h>
 #include <mclib/common/Vector.h>
 #include <mclib/core/AuthToken.h>
 #include <mclib/core/Client.h>
@@ -9,7 +10,6 @@
 #include <mclib/core/PlayerManager.h>
 #include <mclib/world/World.h>
 
-#include <json/json.h>
 #include <fstream>
 #include <string>
 #include <queue>
@@ -27,7 +27,7 @@ inline std::string to_string(const std::wstring& str) {
 namespace util {
 
 MCLIB_API bool GetProfileToken(const std::string& username, core::AuthToken* token);
-MCLIB_API std::string ParseChatNode(Json::Value node);
+MCLIB_API std::string ParseChatNode(const json& node);
 MCLIB_API std::string StripChatMessage(const std::string& message);
 MCLIB_API s64 GetTime();
 

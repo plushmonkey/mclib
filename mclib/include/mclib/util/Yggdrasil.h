@@ -1,6 +1,7 @@
 #ifndef MCLIB_UTIL_YGGDRASIL_H_
 #define MCLIB_UTIL_YGGDRASIL_H_
 
+#include <mclib/common/JsonFwd.h>
 #include <mclib/common/Types.h>
 #include <mclib/common/UUID.h>
 #include <mclib/util/HTTPClient.h>
@@ -137,7 +138,7 @@ public:
     void MCLIB_API Invalidate(const std::string& accessToken, const std::string& clientToken = 0);
 
     UUID MCLIB_API GetPlayerUUID(const std::string& name);
-    Json::Value MCLIB_API GetPlayerProfile(UUID& uuid);
+    json MCLIB_API GetPlayerProfile(UUID& uuid);
 };
 
 } // ns util

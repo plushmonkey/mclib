@@ -1,5 +1,6 @@
 #include <mclib/util/HTTPClient.h>
 
+#include <mclib/common/Json.h>
 #include <mclib/util/Tokenizer.h>
 
 #include <curl/curl.h>
@@ -139,13 +140,12 @@ public:
         return DoRequest(url, postData, headers);
     }
 
-    HTTPResponse PostJSON(const std::string& url, const Json::Value& json, Headers headers) {
+    HTTPResponse PostJSON(const std::string& url, const json& json, Headers headers) {
         headers["Content-Type"] = "application/json";
 
-        Json::StyledStreamWriter writer("");
         std::stringstream ss;
 
-        writer.write(ss, json);
+        ss << json;
 
         return DoRequest(url, ss.str(), headers);
     }
@@ -182,7 +182,7 @@ HTTPResponse CurlHTTPClient::PostJSON(const std::string& url, const std::string&
     return m_Impl->PostJSON(url, data, headers);
 }
 
-HTTPResponse CurlHTTPClient::PostJSON(const std::string& url, const Json::Value& json, Headers headers) {
+HTTPResponse CurlHTTPClient::PostJSON(const std::string& url, const json& json, Headers headers) {
     return m_Impl->PostJSON(url, json, headers);
 }
 

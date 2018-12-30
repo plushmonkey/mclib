@@ -11,10 +11,8 @@
 
 #ifdef _DEBUG
 #pragma comment(lib, "../Debug/mclibd.lib")
-#pragma comment(lib, "../lib/jsoncpp/lib/jsoncppd-msvc-2017.lib")
 #else
 #pragma comment(lib, "../Release/mclib.lib")
-#pragma comment(lib, "../lib/jsoncpp/lib/jsoncpp-msvc-2017.lib")
 #endif
 
 namespace {
@@ -23,6 +21,7 @@ const std::string server("127.0.0.1");
 const u16 port = 25565;
 const std::string username("testplayer");
 const std::string password("");
+const bool useProfileToken = false;
 
 } // ns
 
@@ -55,7 +54,15 @@ int run(mc::protocol::Version version, mc::util::ForgeHandler& forge) {
 
     try {
         std::cout << "Logging in." << std::endl;
-        client.Login(server, port, username, password, mc::core::UpdateMethod::Block);
+
+        mc::core::AuthToken token;
+
+        if (useProfileToken && mc::util::GetProfileToken(username, &token)) {
+            std::cout << "Using profile token." << std::endl;
+            client.Login(server, port, username, token, mc::core::UpdateMethod::Block);
+        } else {
+            client.Login(server, port, username, password, mc::core::UpdateMethod::Block);
+        }
     } catch (std::exception& e) {
         std::wcout << e.what() << std::endl;
         return 1;

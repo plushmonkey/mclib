@@ -1,6 +1,7 @@
 #include <mclib/util/Forge.h>
 
 #include <mclib/common/DataBuffer.h>
+#include <mclib/common/Json.h>
 #include <mclib/protocol/packets/PacketDispatcher.h>
 #include <mclib/util/Utility.h>
 
@@ -161,34 +162,34 @@ bool ForgeHandler::HasModInfo() const {
 void ForgeHandler::HandlePacket(protocol::packets::in::status::ResponsePacket* packet) {
     std::string response = mc::to_string(packet->GetResponse());
 
-    Json::Value data;
-    Json::Reader reader;
+    json data;
 
-    if (!reader.parse(response, data)) {
+    try {
+        data = json::parse(response);
+    } catch (json::parse_error&) {
+        m_ModInfoReceived = true;
+    return;
+    }
+
+    if (data.value("modinfo", json()).is_null()) {
         m_ModInfoReceived = true;
         return;
     }
 
-    Json::Value modInfo = data["modinfo"];
-    if (modInfo.isNull()) {
-        m_ModInfoReceived = true;
-        return;
-    }
-
-    Json::Value modList = modInfo["modList"];
-    if (!modList.isArray()) {
+    json modList = data["modinfo"].value("modList", json());
+    if (!modList.is_array()) {
         m_ModInfoReceived = true;
         return;
     }
 
     for (auto iter = modList.begin(); iter != modList.end(); ++iter) {
-        Json::Value modObject = (*iter);
-        if (modObject.isNull()) continue;
+        json modObject = (*iter);
+        if (modObject.is_null()) continue;
 
-        if (!modObject["modid"].isString() || !modObject["version"].isString()) continue;
+        if (!modObject.value("modid", json()).is_string() || !modObject.value("version", json()).is_string()) continue;
 
-        std::string id = modObject["modid"].asString();
-        std::string ver = modObject["version"].asString();
+        std::string id = modObject["modid"].get<std::string>();
+        std::string ver = modObject["version"].get<std::string>();
 
         m_Mods.emplace_back(id, ver);
     }

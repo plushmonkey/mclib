@@ -1,9 +1,9 @@
 #include <mclib/util/Yggdrasil.h>
 
+#include <mclib/common/Json.h>
 #include <mclib/util/Hash.h>
 
 #include <iostream>
-#include <json/json.h>
 #include <openssl/sha.h>
 
 namespace {
@@ -62,7 +62,8 @@ bool Yggdrasil::JoinServer(const std::string& serverHash) {
     if (m_AccessToken.length() == 0)
         throw YggdrasilException("Error trying to join a server before authenticating.");
 
-    Json::Value data;
+    json data;
+
     data["accessToken"] = m_AccessToken;
     data["selectedProfile"] = m_ProfileId;
     data["serverId"] = serverHash;
@@ -74,7 +75,7 @@ bool Yggdrasil::JoinServer(const std::string& serverHash) {
 }
 
 bool Yggdrasil::Authenticate(const std::string& username, const std::string& password, const std::string& client) {
-    Json::Value authPayload;
+    json authPayload;
 
     authPayload["agent"]["name"] = "Minecraft";
     authPayload["agent"]["version"] = 1;
@@ -88,35 +89,44 @@ bool Yggdrasil::Authenticate(const std::string& username, const std::string& pas
 
     if (resp.status == 0) return false;
 
-    Json::Reader reader;
-    Json::Value result;
+    json result;
 
-    if (!reader.parse(resp.body, result)) return false;
+    try {
+        result = json::parse(resp.body);
+    } catch (json::parse_error&) {
+        return false;
+    }
 
-    if (!result["error"].isNull())
-        throw YggdrasilException(result["error"].asString(), result["errorMessage"].asString());
+    auto& errorNode = result.value("error", json());
+    if (!errorNode.is_null())
+        throw YggdrasilException(errorNode.get<std::string>(), result["errorMessage"].get<std::string>());
 
-    if (result["accessToken"].isNull())
+    auto& accessTokenNode = result.value("accessToken", json());
+    if (accessTokenNode.is_null())
         return false;
 
-    m_AccessToken = result["accessToken"].asString();
+    m_AccessToken = accessTokenNode.get<std::string>();
 
-    if (!result["clientToken"].isNull())
-        m_ClientToken = result["clientToken"].asString();
+    auto& clientTokenNode = result.value("clientToken", json());
+
+    if (!clientTokenNode.is_null())
+        m_ClientToken = clientTokenNode.get<std::string>();
     else
-        m_ClientToken = authPayload["clientToken"].asString();
+        m_ClientToken = authPayload["clientToken"].get<std::string>();
 
-    if (result["selectedProfile"].isNull())
+    auto& selectedProfileNode = result.value("selectedProfile", json());
+
+    if (selectedProfileNode.is_null())
         throw YggdrasilException("No minecraft license attached to Mojang account.");
 
-    m_ProfileId = result["selectedProfile"]["id"].asString();
-    m_PlayerName = result["selectedProfile"]["name"].asString();
+    m_ProfileId = selectedProfileNode["id"].get<std::string>();
+    m_PlayerName = selectedProfileNode["name"].get<std::string>();
 
     return true;
 }
 
 std::pair<std::string, std::string> Yggdrasil::Refresh(const std::string& accessToken, const std::string& clientToken) {
-    Json::Value payload;
+    json payload;
 
     payload["accessToken"] = accessToken;
     payload["clientToken"] = clientToken.length() > 0 ? clientToken : DefaultClientToken;
@@ -126,31 +136,39 @@ std::pair<std::string, std::string> Yggdrasil::Refresh(const std::string& access
     if (resp.status == 0)
         throw YggdrasilException("No response received while refreshing access token.");
 
-    Json::Reader reader;
-    Json::Value result;
+    json result;
 
-    if (!reader.parse(resp.body, result))
+    try {
+        result = json::parse(resp.body);
+    } catch (json::parse_error&) {
         throw YggdrasilException("Could not parse JSON response while refreshing access token.");
+    }
 
-    if (!result["error"].isNull())
-        throw YggdrasilException(result["error"].asString(), result["errorMessage"].asString());
+    auto& errorNode = result.value("error", json());
 
-    m_AccessToken = result["accessToken"].asString();
+    if (!errorNode.is_null())
+        throw YggdrasilException(errorNode.get<std::string>(), result["errorMessage"].get<std::string>());
+
+    m_AccessToken = result["accessToken"].get<std::string>();
     m_ClientToken = clientToken;
 
-    if (!result["selectedProfile"].isNull()) {
-        if (!result["selectedProfile"]["id"].isNull())
-            m_ProfileId = result["selectedProfile"]["id"].asString();
+    auto& selectedProfileNode = result.value("selectedProfile", json());
 
-        if (!result["selectedProfile"]["name"].isNull())
-            m_PlayerName = result["selectedProfile"]["name"].asString();
+    if (!selectedProfileNode.is_null()) {
+        if (selectedProfileNode.find("id") != selectedProfileNode.end()) {
+            m_ProfileId = selectedProfileNode["id"].get<std::string>();
+        }
+
+        if (selectedProfileNode.find("name") != selectedProfileNode.end()) {
+            m_PlayerName = selectedProfileNode["name"].get<std::string>();
+        }
     }
 
     return std::make_pair(m_AccessToken, m_PlayerName);
 }
 
 bool Yggdrasil::Validate(const std::string& accessToken, const std::string& clientToken) {
-    Json::Value payload;
+    json payload;
 
     payload["accessToken"] = accessToken;
     payload["clientToken"] = clientToken.length() > 0 ? clientToken : DefaultClientToken;
@@ -167,7 +185,7 @@ bool Yggdrasil::Validate(const std::string& accessToken, const std::string& clie
 }
 
 void Yggdrasil::Signout(const std::string& username, const std::string& password) {
-    Json::Value payload;
+    json payload;
 
     payload["username"] = username;
     payload["password"] = password;
@@ -176,7 +194,7 @@ void Yggdrasil::Signout(const std::string& username, const std::string& password
 }
 
 void Yggdrasil::Invalidate(const std::string& accessToken, const std::string& clientToken) {
-    Json::Value payload;
+    json payload;
 
     payload["accessToken"] = accessToken;
     payload["clientToken"] = clientToken.length() > 0 ? clientToken : DefaultClientToken;
@@ -192,21 +210,23 @@ UUID Yggdrasil::GetPlayerUUID(const std::string& name) {
     if (resp.status == 0)
         throw YggdrasilException("No response from server.");
 
-    Json::Reader reader;
-    Json::Value result;
+    json result;
 
-    if (!reader.parse(resp.body, result))
+    try {
+        result = json::parse(resp.body);
+    } catch (json::parse_error&) {
         throw YggdrasilException("Failed to parse data received from server.");
+    }
 
-    if (!result["error"].isNull())
-        throw YggdrasilException(result["error"].asString(), result["errorMessage"].asString());
+    if (result.find("error") != result.end())
+        throw YggdrasilException(result["error"].get<std::string>(), result["errorMessage"].get<std::string>());
 
-    std::string uuidStr = result["id"].asString();
+    std::string uuidStr = result["id"].get<std::string>();
 
     return UUID::FromString(uuidStr, false);
 }
 
-Json::Value Yggdrasil::GetPlayerProfile(UUID& uuid) {
+json Yggdrasil::GetPlayerProfile(UUID& uuid) {
     std::string url = "https://sessionserver.mojang.com/session/minecraft/profile/" + uuid.ToString(false);
 
     HTTPResponse resp = m_Http->Get(url, { { "Content-Type", "application/json" } });
@@ -214,14 +234,16 @@ Json::Value Yggdrasil::GetPlayerProfile(UUID& uuid) {
     if (resp.status == 0)
         throw YggdrasilException("No response from server.");
 
-    Json::Reader reader;
-    Json::Value result;
+    json result;
 
-    if (!reader.parse(resp.body, result))
+    try {
+        result = json::parse(resp.body);
+    } catch (json::parse_error&) {
         throw YggdrasilException("Failed to parse data received from server.");
+    }
 
-    if (!result["error"].isNull())
-        throw YggdrasilException(result["error"].asString(), result["errorMessage"].asString());
+    if (result.find("error") != result.end())
+        throw YggdrasilException(result["error"].get<std::string>(), result["errorMessage"].get<std::string>());
 
     return result;
 }

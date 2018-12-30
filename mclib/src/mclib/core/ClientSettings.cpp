@@ -1,5 +1,4 @@
 #include <mclib/core/ClientSettings.h>
-#include <mclib/protocol/packets/Packet.h>
 
 namespace mc {
 namespace core {

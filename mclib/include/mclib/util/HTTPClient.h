@@ -2,10 +2,10 @@
 #define MCLIB_UTIL_HTTP_CLIENT_H_
 
 #include <mclib/mclib.h>
+#include <mclib/common/JsonFwd.h>
 
 #include <map>
 #include <memory>
-#include <json/json.h>
 
 namespace mc {
 namespace util {
@@ -28,7 +28,7 @@ public:
     virtual HTTPResponse Get(const std::string& url, Headers headers = {}) = 0;
     virtual HTTPResponse Post(const std::string& url, const std::string& data, Headers headers = {}) = 0;
     virtual HTTPResponse PostJSON(const std::string& url, const std::string& data, Headers headers = {}) = 0;
-    virtual HTTPResponse PostJSON(const std::string& url, const Json::Value& json, Headers headers = {}) = 0;
+    virtual HTTPResponse PostJSON(const std::string& url, const json& json, Headers headers = {}) = 0;
 };
 
 class CurlHTTPClient : public HTTPClient {
@@ -47,7 +47,7 @@ public:
     HTTPResponse MCLIB_API Get(const std::string& url, Headers headers = {});
     HTTPResponse MCLIB_API Post(const std::string& url, const std::string& data, Headers headers = {});
     HTTPResponse MCLIB_API PostJSON(const std::string& url, const std::string& data, Headers headers = {});
-    HTTPResponse MCLIB_API PostJSON(const std::string& url, const Json::Value& json, Headers headers = {});
+    HTTPResponse MCLIB_API PostJSON(const std::string& url, const json& json, Headers headers = {});
 };
 
 } // ns util

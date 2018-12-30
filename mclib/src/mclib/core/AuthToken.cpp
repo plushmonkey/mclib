@@ -1,5 +1,6 @@
 #include <mclib/core/AuthToken.h>
 
+#include <mclib/common/Json.h>
 #include <mclib/util/Yggdrasil.h>
 
 namespace mc {
@@ -55,14 +56,16 @@ bool AuthToken::Validate(const std::string& username) {
         if (result.status != 200) 
             return false;
 
-        Json::Reader reader;
-        Json::Value root;
+        json root;
 
-        if (!reader.parse(result.body, root))
+        try {
+            root = json::parse(result.body);
+        } catch (json::parse_error&) {
             return false;
+        }
 
-        if (root["id"].isString())
-            m_ProfileId = root["id"].asString();
+        if (root.value("id", json()).is_string())
+            m_ProfileId = root["id"].get<std::string>();
     }
 
     if (m_ProfileId.empty())
@@ -82,7 +85,7 @@ bool AuthToken::Refresh() {
         auto pair = m_Yggdrasil->Refresh(m_AccessToken, m_ClientToken);
         m_AccessToken = pair.first;
         m_Valid = true;
-    } catch (util::YggdrasilException& e) {
+    } catch (util::YggdrasilException&) {
         return false;
     }
 

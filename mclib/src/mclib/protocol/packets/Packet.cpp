@@ -592,10 +592,12 @@ bool ChatPacket::Deserialize(DataBuffer& data, std::size_t packetLength) {
 
     m_Position = (ChatPosition)position;
 
-    Json::Reader reader;
+    try {
+        m_ChatData = json::parse(chatData.GetUTF8());
+    } catch (json::parse_error&) {
 
-    reader.parse(chatData.GetUTF8(), m_ChatData);
-
+    }
+    
     return true;
 }
 

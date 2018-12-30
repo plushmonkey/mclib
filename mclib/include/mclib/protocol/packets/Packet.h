@@ -3,6 +3,7 @@
 
 #include <mclib/block/BlockEntity.h>
 #include <mclib/common/DataBuffer.h>
+#include <mclib/common/Json.h>
 #include <mclib/common/MCString.h>
 #include <mclib/common/Position.h>
 #include <mclib/inventory/Slot.h>
@@ -13,7 +14,6 @@
 
 #include <map>
 #include <unordered_map>
-#include <json/json.h>
 
 /**
  * Thanks to #mcdevs on irc.freenode.net (http://wiki.vg/Protocol) for protocol information.
@@ -509,7 +509,7 @@ public:
     enum class ChatPosition { ChatBox, SystemMessage, Hotbar };
 
 private:
-    Json::Value m_ChatData;
+    json m_ChatData;
     ChatPosition m_Position;
 
 public:
@@ -518,7 +518,7 @@ public:
     void MCLIB_API Dispatch(PacketHandler* handler);
 
     ChatPosition GetChatPosition() const { return m_Position; }
-    const Json::Value& GetChatData() const { return m_ChatData; }
+    const nlohmann::json& GetChatData() const { return m_ChatData; }
 };
 
 class MultiBlockChangePacket : public InboundPacket { // 0x10

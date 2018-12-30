@@ -1,6 +1,7 @@
 #ifndef _MCLIB_UTIL_VERSIONFETCHER_H_
 #define _MCLIB_UTIL_VERSIONFETCHER_H_
 
+#include <mclib/common/JsonFwd.h>
 #include <mclib/core/Client.h>
 #include <mclib/util/Forge.h>
 
@@ -21,7 +22,7 @@ public:
     MCLIB_API VersionFetcher(const std::string& host, u16 port);
 
     MCLIB_API mc::protocol::Version GetVersion();
-    MCLIB_API void OnPingResponse(const Json::Value& node) override;
+    MCLIB_API void OnPingResponse(const json& node) override;
 
     mc::util::ForgeHandler& GetForge() { return m_Forge; }
 };

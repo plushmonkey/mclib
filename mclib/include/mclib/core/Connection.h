@@ -2,6 +2,7 @@
 #define MCLIB_CORE_CONNECTION_H_
 
 #include <mclib/common/DataBuffer.h>
+#include <mclib/common/JsonFwd.h>
 #include <mclib/common/Types.h>
 #include <mclib/core/AuthToken.h>
 #include <mclib/core/ClientSettings.h>
@@ -29,7 +30,7 @@ public:
     virtual void MCLIB_API OnSocketStateChange(network::Socket::Status newStatus) { }
     virtual void MCLIB_API OnLogin(bool success) { }
     virtual void MCLIB_API OnAuthentication(bool success, std::string error) { }
-    virtual void MCLIB_API OnPingResponse(const Json::Value& node) { }
+    virtual void MCLIB_API OnPingResponse(const nlohmann::json& node) { }
 };
 
 class Connection : public protocol::packets::PacketHandler, public util::ObserverSubject<ConnectionListener> {

@@ -10,10 +10,11 @@
 
 namespace example {
 
-bool TextureGrabber::ContainsTextureURL(const Json::Value& root) {
-    if (!root.isMember("textures")) return false;
-    if (!root["textures"].isMember("SKIN")) return false;
-    return root["textures"]["SKIN"].isMember("url");
+bool TextureGrabber::ContainsTextureURL(const mc::json& root) {
+    if (root.find("textures") == root.end()) return false;
+    if (root["textures"].find("SKIN") == root["textures"].end()) return false;
+
+    return root["textures"]["SKIN"].find("url") != root["textures"]["SKIN"].end();
 }
 
 TextureGrabber::TextureGrabber(mc::protocol::packets::PacketDispatcher* dispatcher)
@@ -45,14 +46,13 @@ void TextureGrabber::HandlePacket(mc::protocol::packets::in::PlayerListItemPacke
 
             std::wstring encoded = iter->second;
             std::string decoded = mc::util::Base64Decode(std::string(encoded.begin(), encoded.end()));
-
-            Json::Value root;
-            Json::Reader reader;
-
             std::wstring name = actionData->name;
 
-            if (!reader.parse(decoded, root)) {
-                std::wcerr << L"Failed to parse decoded data for " << name;
+            mc::json root;
+            try {
+                root = mc::json::parse(decoded);
+            } catch (mc::json::parse_error& e) {
+                std::wcerr << e.what() << std::endl;
                 continue;
             }
 
@@ -61,7 +61,7 @@ void TextureGrabber::HandlePacket(mc::protocol::packets::in::PlayerListItemPacke
                 continue;
             }
 
-            std::string url = root["textures"]["SKIN"]["url"].asString();
+            std::string url = root["textures"]["SKIN"]["url"].get<std::string>();
 
             std::wcout << L"Fetching skin for " << name << std::endl;
 

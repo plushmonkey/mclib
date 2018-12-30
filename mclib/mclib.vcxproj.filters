@@ -315,6 +315,12 @@
     <ClInclude Include="include\mclib\util\VersionFetcher.h">
       <Filter>Header Files\util</Filter>
     </ClInclude>
+    <ClInclude Include="include\mclib\common\Json.h">
+      <Filter>Header Files\common</Filter>
+    </ClInclude>
+    <ClInclude Include="include\mclib\common\JsonFwd.h">
+      <Filter>Header Files\common</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\mclib\block\Block.cpp">

@@ -330,10 +330,13 @@ bool Connection::Login(const std::string& username, AuthToken token) {
 void Connection::HandlePacket(protocol::packets::in::status::ResponsePacket* packet) {
     std::string response = mc::to_string(packet->GetResponse());
 
-    Json::Value data;
-    Json::Reader reader;
+    json data;
 
-    reader.parse(response, data);
+    try {
+        data = json::parse(response);
+    } catch (json::parse_error&) {
+
+    }
 
     NotifyListeners(&ConnectionListener::OnPingResponse, data);
 }

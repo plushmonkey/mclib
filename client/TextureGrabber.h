@@ -7,7 +7,7 @@ namespace example {
 
 class TextureGrabber : public mc::protocol::packets::PacketHandler {
 private:
-    bool ContainsTextureURL(const Json::Value& root);
+    bool ContainsTextureURL(const mc::json& root);
 
 public:
     TextureGrabber(mc::protocol::packets::PacketDispatcher* dispatcher);

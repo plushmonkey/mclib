@@ -8,6 +8,7 @@
 #if (defined _MSC_VER) && _MSC_VER >= 1900
 extern "C" { FILE __iob_func[3] = { *stdin,*stdout,*stderr }; }
 int (WINAPIV * __vsnprintf)(char *, size_t, const char*, va_list) = _vsnprintf;
+int (WINAPIV * _fprintf)(FILE* const, char const*, ...) = fprintf;
 #endif
 
 namespace mc {

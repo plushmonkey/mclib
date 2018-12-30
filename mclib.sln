@@ -11,6 +11,9 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "client", "client\client.vcx
 	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "tests", "tests\tests.vcxproj", "{2AF39248-9439-4195-BB08-B3345954C94F}"
+	ProjectSection(ProjectDependencies) = postProject
+		{2A6A98AE-F46F-4C53-8E64-003289FEB7E7} = {2A6A98AE-F46F-4C53-8E64-003289FEB7E7}
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -43,5 +46,8 @@ Global
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {8227D3A4-3A1D-4F06-A3DC-BEDBBA4C30B7}
 	EndGlobalSection
 EndGlobal

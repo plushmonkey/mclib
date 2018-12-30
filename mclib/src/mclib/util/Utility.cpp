@@ -2,6 +2,7 @@
 
 #include <mclib/block/Block.h>
 #include <mclib/common/DataBuffer.h>
+#include <mclib/common/Json.h>
 #include <mclib/core/Connection.h>
 #include <mclib/core/PlayerManager.h>
 #include <mclib/entity/EntityManager.h>
@@ -15,7 +16,6 @@
 #include <limits>
 #include <array>
 #include <vector>
-#include <json/json.h>
 #include <memory>
 #include <chrono>
 #include <thread>
@@ -104,13 +104,16 @@ bool GetProfileToken(const std::string& username, core::AuthToken* token) {
     if (!in.is_open())
         return false;
 
-    Json::Reader reader;
-    Json::Value root;
+    json root;
 
-    if (!reader.parse(in, root))
+    try {
+        root = json::parse(in);
+    } catch (json::parse_error& e) {
+        std::cerr << e.what() << std::endl;
         return false;
+    }
 
-    if (root["clientToken"].isNull() || root["authenticationDatabase"].isNull())
+    if (root.value("clientToken", json()).is_null() || root.value("authenticationDatabase", json()).is_null())
         return false;
 
     auto& authDB = root["authenticationDatabase"];
@@ -118,40 +121,41 @@ bool GetProfileToken(const std::string& username, core::AuthToken* token) {
     std::string accessToken;
     std::string clientToken;
 
-    clientToken = root["clientToken"].asString();
+    clientToken = root["clientToken"].get<std::string>();
 
-    auto dbMembers = authDB.getMemberNames();
-    for (auto& member : dbMembers) {
-        auto& account = authDB[member];
+    for (auto& member : authDB.items()) {
+        auto& account = member.value();
 
-        if (account["accessToken"].isNull())
+        auto& accessTokenNode = account.value("accessToken", json());
+        if (accessTokenNode.is_null())
             continue;
 
-        accessToken = account["accessToken"].asString();
+        accessToken = accessTokenNode.get<std::string>();
 
+        auto& profilesNode = account.value("profiles", json());
         // Check if it's using Linux format
-        if (account["profiles"].isNull()) {
-            if (account["displayName"].isNull())
+        if (profilesNode.is_null()) {
+            if (account.find("displayName") == account.end())
                 continue;
 
-            if (account["uuid"].isNull())
+            if (account.find("uuid") == account.end())
                 continue;
 
-            if (account["displayName"].asString() != username)
+            if (account["displayName"] != username)
                 continue;
 
-            *token = mc::core::AuthToken(accessToken, clientToken, member);
+            *token = mc::core::AuthToken(accessToken, clientToken, member.key());
             return true;
         } else {
-            auto& profiles = account["profiles"];
-            std::vector<std::string> profileMembers = profiles.getMemberNames();
-            for (const std::string& profileId : profileMembers) {
-                auto& profile = profiles[profileId];
+            for (auto& kv : profilesNode.items()) {
+                std::string profileId = kv.key();
+                auto& profile = kv.value();
 
-                if (profile["displayName"].isNull())
+                auto& nameNode = profile.value("displayName", json());
+                if (nameNode.is_null())
                     continue;
 
-                if (profile["displayName"].asString() != username)
+                if (nameNode.get<std::string>() != username)
                     continue;
 
                 *token = mc::core::AuthToken(accessToken, clientToken, profileId);
@@ -211,27 +215,27 @@ inventory::Slot CreateFirework(bool flicker, bool trail, u8 type, u8 duration, s
     return slot;
 }
 
-std::string ParseChatNode(Json::Value node) {
-    if (node.isObject()) {
-        auto&& translateNode = node["translate"];
+std::string ParseChatNode(const json& node) {
+    if (node.is_object()) {
+        auto& translateNode = node.value("translate", json());
 
-        if (translateNode.isString()) {
-            std::string translate = translateNode.asString();
+        if (translateNode.is_string()) {
+            std::string translate = translateNode.get<std::string>();
             std::string message;
 
             if (translate == "chat.type.text") {
-                auto&& withNode = node["with"];
+                auto& withNode = node.value("with", json());
 
-                if (withNode.isArray()) {
+                if (withNode.is_array()) {
                     for (auto iter = withNode.begin(); iter != withNode.end(); ++iter) {
                         auto&& node = *iter;
 
-                        if (node.isObject()) {
-                            auto&& textNode = node["text"];
-                            if (textNode.isString())
-                                message += "<" + textNode.asString() + "> ";
-                        } else if (node.isString()) {
-                            message += node.asString();
+                        if (node.is_object()) {
+                            auto&& textNode = node.value("text", json());
+                            if (textNode.is_string())
+                                message += "<" + textNode.get<std::string>() + "> ";
+                        } else if (node.is_string()) {
+                            message += node.get<std::string>();
                         }
                     }
                 }
@@ -241,18 +245,21 @@ std::string ParseChatNode(Json::Value node) {
         }
     }
 
-    if (node.isNull()) return "";
-    if (node.isString()) return node.asString();
-    if (node.isObject()) {
+    if (node.is_null()) return "";
+    if (node.is_string()) return node.get<std::string>();
+    if (node.is_object()) {
         std::string result;
 
-        if (!node["extra"].isNull())
-            result += ParseChatNode(node["extra"]);
-        if (node["text"].isString())
-            result += node["text"].asString();
+        auto& extraNode = node.value("extra", json());
+        auto& textNode = node.value("text", json());
+
+        if (!extraNode.is_null())
+            result += ParseChatNode(extraNode);
+        if (textNode.is_string())
+            result += textNode.get<std::string>();
         return result;
     }
-    if (node.isArray()) {
+    if (node.is_array()) {
         std::string result;
 
         for (auto arrayNode : node)
@@ -709,19 +716,19 @@ public:
         console << "Set experience. Level: " << packet->GetLevel() << "\n";
     }
 
-    std::string ParseChatNode(Json::Value node) {
-        if (node.isNull()) return "";
-        if (node.isString()) return node.asString();
-        if (node.isObject()) {
+    std::string ParseChatNode(const json& node) {
+        if (node.is_null()) return "";
+        if (node.is_string()) return node.get<std::string>();
+        if (node.is_object()) {
             std::string result;
 
-            if (!node["extra"].isNull())
+            if (!node["extra"].is_null())
                 result += ParseChatNode(node["extra"]);
-            if (node["text"].isString())
-                result += node["text"].asString();
+            if (node["text"].is_string())
+                result += node["text"].get<std::string>();
             return result;
         }
-        if (node.isArray()) {
+        if (node.is_array()) {
             std::string result;
 
             for (auto arrayNode : node)
@@ -732,7 +739,7 @@ public:
     }
 
     void HandlePacket(protocol::packets::in::ChatPacket* packet) {
-        const Json::Value& root = packet->GetChatData();
+        const json& root = packet->GetChatData();
 
         std::string message = ParseChatNode(root);
         std::size_t pos = message.find((char)0xA7);
