@@ -35,9 +35,10 @@ private:
     std::unordered_map<EntityId, EntityPtr> m_Entities;
     // Entity Id for the client player
     EntityId m_EntityId;
+    protocol::Version m_ProtocolVersion;
 
 public:
-    MCLIB_API EntityManager(protocol::packets::PacketDispatcher* dispatcher);
+    MCLIB_API EntityManager(protocol::packets::PacketDispatcher* dispatcher, protocol::Version protocolVersion);
     MCLIB_API ~EntityManager();
 
     EntityManager(const EntityManager& rhs) = delete;

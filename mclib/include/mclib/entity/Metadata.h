@@ -1,15 +1,19 @@
 #ifndef MCLIB_ENTITY_METADATA_H_
 #define MCLIB_ENTITY_METADATA_H_
 
-#include <mclib/common/DataBuffer.h>
+#include <mclib/common/UUID.h>
 #include <mclib/common/Position.h>
 #include <mclib/inventory/Slot.h>
 #include <mclib/common/Types.h>
+#include <mclib/protocol/ProtocolState.h>
 
 #include <array>
 #include <memory>
 
 namespace mc {
+
+class DataBuffer;
+
 namespace entity {
 
 class EntityMetadata {
@@ -52,6 +56,9 @@ public:
 
         SlotType() = default;
         SlotType(const inventory::Slot& value) : value(value) { }
+
+        DataBuffer Serialize(mc::protocol::Version protocolVersion);
+        void Deserialize(DataBuffer& in, mc::protocol::Version protocolVersion);
     };
 
     struct BooleanType : public Type {
@@ -96,10 +103,11 @@ private:
 
     enum { MetadataCount = 36 };
     std::array<std::pair<std::unique_ptr<Type>, DataType>, MetadataCount> m_Metadata;
+    protocol::Version m_ProtocolVersion;
 
     void CopyOther(const EntityMetadata& other);
 public:
-    MCLIB_API EntityMetadata();
+    MCLIB_API EntityMetadata(protocol::Version protocolVersion);
 
     MCLIB_API EntityMetadata(const EntityMetadata& rhs);
     MCLIB_API EntityMetadata& operator=(const EntityMetadata& rhs);
@@ -120,7 +128,6 @@ MCLIB_API DataBuffer& operator<<(DataBuffer& out, const EntityMetadata::ByteType
 MCLIB_API DataBuffer& operator<<(DataBuffer& out, const EntityMetadata::VarIntType& value);
 MCLIB_API DataBuffer& operator<<(DataBuffer& out, const EntityMetadata::FloatType& value);
 MCLIB_API DataBuffer& operator<<(DataBuffer& out, const EntityMetadata::StringType& value);
-MCLIB_API DataBuffer& operator<<(DataBuffer& out, const EntityMetadata::SlotType& value);
 MCLIB_API DataBuffer& operator<<(DataBuffer& out, const EntityMetadata::BooleanType& value);
 MCLIB_API DataBuffer& operator<<(DataBuffer& out, const EntityMetadata::RotationType& value);
 MCLIB_API DataBuffer& operator<<(DataBuffer& out, const EntityMetadata::PositionType& value);
@@ -132,7 +139,6 @@ MCLIB_API DataBuffer& operator>>(DataBuffer& in, EntityMetadata::ByteType& value
 MCLIB_API DataBuffer& operator>>(DataBuffer& in, EntityMetadata::VarIntType& value);
 MCLIB_API DataBuffer& operator>>(DataBuffer& in, EntityMetadata::FloatType& value);
 MCLIB_API DataBuffer& operator>>(DataBuffer& in, EntityMetadata::StringType& value);
-MCLIB_API DataBuffer& operator>>(DataBuffer& in, EntityMetadata::SlotType& value);
 MCLIB_API DataBuffer& operator>>(DataBuffer& in, EntityMetadata::BooleanType& value);
 MCLIB_API DataBuffer& operator>>(DataBuffer& in, EntityMetadata::RotationType& value);
 MCLIB_API DataBuffer& operator>>(DataBuffer& in, EntityMetadata::PositionType& value);

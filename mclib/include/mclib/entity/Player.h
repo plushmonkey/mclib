@@ -8,7 +8,7 @@ namespace entity {
 
 class PlayerEntity : public LivingEntity {
 public:
-    PlayerEntity(EntityId id) : LivingEntity(id) { }
+    PlayerEntity(EntityId id, protocol::Version protocolVersion) : LivingEntity(id, protocolVersion) { }
 };
 
 typedef std::weak_ptr<PlayerEntity> PlayerEntityPtr;

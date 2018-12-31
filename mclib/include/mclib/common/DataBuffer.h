@@ -2,6 +2,8 @@
 #define MCLIB_COMMON_DATA_BUFFER_H_
 
 #include <mclib/common/Common.h>
+#include <mclib/inventory/Slot.h>
+#include <mclib/entity/Metadata.h>
 #include <vector>
 #include <algorithm>
 #include <cstring>
@@ -48,6 +50,12 @@ public:
         Append(data);
         return *this;
     }
+
+    DataBuffer& operator<<(mc::inventory::Slot data) = delete;
+    DataBuffer& operator>>(mc::inventory::Slot& data) = delete;
+
+    DataBuffer& operator<<(entity::EntityMetadata::SlotType data) = delete;
+    DataBuffer& operator>>(entity::EntityMetadata::SlotType& data) = delete;
 
     DataBuffer& operator<<(std::string data) {
         m_Buffer.insert(m_Buffer.end(), data.begin(), data.end());

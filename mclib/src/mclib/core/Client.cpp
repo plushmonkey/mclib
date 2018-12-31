@@ -17,7 +17,7 @@ namespace core {
 Client::Client(protocol::packets::PacketDispatcher* dispatcher, protocol::Version version)
     : m_Dispatcher(dispatcher),
     m_Connection(m_Dispatcher, version),
-    m_EntityManager(m_Dispatcher),
+    m_EntityManager(m_Dispatcher, version),
     m_PlayerManager(m_Dispatcher, &m_EntityManager),
     m_World(m_Dispatcher),
     m_PlayerController(std::make_unique<util::PlayerController>(&m_Connection, m_World, m_PlayerManager)),
