@@ -104,6 +104,10 @@ DataBuffer& operator<<(DataBuffer& out, const EntityMetadata& md) {
 
         out << item;
 
+        if (md.m_ProtocolVersion <= protocol::Version::Minecraft_1_12_2 && type >= 5) {
+            type = static_cast<EntityMetadata::DataType>(static_cast<int>(type) + 1);
+        }
+
         switch (type) {
         case EntityMetadata::DataType::Byte:
             out << *((EntityMetadata::ByteType*)value);
@@ -119,6 +123,12 @@ DataBuffer& operator<<(DataBuffer& out, const EntityMetadata& md) {
         case EntityMetadata::DataType::String:
         case EntityMetadata::DataType::Chat:
             out << *((EntityMetadata::StringType*)value);
+            break;
+        case EntityMetadata::DataType::OptChat:
+            out << ((EntityMetadata::StringType*)value)->exists;
+            if (((EntityMetadata::StringType*)value)->exists) {
+                out << *((EntityMetadata::StringType*)value);
+            }
             break;
         case EntityMetadata::DataType::Slot:
         {
@@ -169,6 +179,11 @@ DataBuffer& operator>>(DataBuffer& in, EntityMetadata& md) {
         in >> typeVal;
 
         EntityMetadata::DataType type = (EntityMetadata::DataType)(typeVal);
+
+        if (md.m_ProtocolVersion <= protocol::Version::Minecraft_1_12_2 && type >= 5) {
+            type = static_cast<EntityMetadata::DataType>(static_cast<int>(type) + 1);
+        }
+
         md.m_Metadata[index].second = type;
 
         switch (type) {
@@ -200,6 +215,16 @@ DataBuffer& operator>>(DataBuffer& in, EntityMetadata& md) {
             {
                 std::unique_ptr<EntityMetadata::StringType> value = std::make_unique<EntityMetadata::StringType>();
                 in >> *value;
+                md.m_Metadata[index].first = std::move(value);
+            }
+            break;
+            case EntityMetadata::DataType::OptChat:
+            {
+                std::unique_ptr<EntityMetadata::StringType> value = std::make_unique<EntityMetadata::StringType>();
+                in >> value->exists;
+                if (value->exists) {
+                    in >> *value;
+                }
                 md.m_Metadata[index].first = std::move(value);
             }
             break;
@@ -287,7 +312,9 @@ void EntityMetadata::CopyOther(const EntityMetadata& other) {
                 break;
             case DataType::String:
             case DataType::Chat:
-                m_Metadata[i].first = std::make_unique<StringType>(dynamic_cast<StringType*>(other.m_Metadata[i].first.get())->value);
+            case DataType::OptChat:
+                m_Metadata[i].first = std::make_unique<StringType>(dynamic_cast<StringType*>(other.m_Metadata[i].first.get())->exists,
+                                                                   dynamic_cast<StringType*>(other.m_Metadata[i].first.get())->value);
                 break;
             case DataType::Slot:
                 m_Metadata[i].first = std::make_unique<SlotType>(dynamic_cast<SlotType*>(other.m_Metadata[i].first.get())->value);

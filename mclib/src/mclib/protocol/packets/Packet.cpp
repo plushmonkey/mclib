@@ -124,12 +124,14 @@ void SpawnGlobalEntityPacket::Dispatch(PacketHandler* handler) {
 }
 
 
-SpawnMobPacket::SpawnMobPacket() : m_Metadata(m_ProtocolVersion) {
+SpawnMobPacket::SpawnMobPacket() : InboundPacket(), m_Metadata(m_ProtocolVersion) {
     
 }
 
 bool SpawnMobPacket::Deserialize(DataBuffer& data, std::size_t packetLength) {
     VarInt entityId, type;
+
+    m_Metadata.SetProtocolVersion(m_ProtocolVersion);
 
     data >> entityId;
     m_EntityId = entityId.GetInt();
@@ -206,12 +208,14 @@ void SpawnPaintingPacket::Dispatch(PacketHandler* handler) {
     handler->HandlePacket(this);
 }
 
-SpawnPlayerPacket::SpawnPlayerPacket() : m_Metadata(m_ProtocolVersion) {
+SpawnPlayerPacket::SpawnPlayerPacket() : InboundPacket(), m_Metadata(m_ProtocolVersion) {
 
 }
 
 bool SpawnPlayerPacket::Deserialize(DataBuffer& data, std::size_t packetLength) {
     VarInt eid;
+
+    m_Metadata.SetProtocolVersion(m_ProtocolVersion);
 
     data >> eid;
     m_EntityId = eid.GetInt();
@@ -1723,12 +1727,14 @@ void DisplayScoreboardPacket::Dispatch(PacketHandler* handler) {
 }
 
 
-EntityMetadataPacket::EntityMetadataPacket() : m_Metadata(m_ProtocolVersion) {
+EntityMetadataPacket::EntityMetadataPacket() : InboundPacket(), m_Metadata(m_ProtocolVersion) {
     
 }
 
 bool EntityMetadataPacket::Deserialize(DataBuffer& data, std::size_t packetLength) {
     VarInt eid;
+
+    m_Metadata.SetProtocolVersion(m_ProtocolVersion);
 
     data >> eid;
     data >> m_Metadata;
@@ -1893,7 +1899,14 @@ bool TeamsPacket::Deserialize(DataBuffer& data, std::size_t packetLength) {
             MCString display, prefix, suffix, visbility, collision;
             VarInt count;
 
-            data >> display >> prefix >> suffix >> m_FriendlyFlags >> visbility >> collision >> m_Color >> count;
+            if (m_ProtocolVersion <= protocol::Version::Minecraft_1_12_2) {
+                data >> display >> prefix >> suffix >> m_FriendlyFlags >> visbility >> collision >> m_Color >> count;
+            } else {
+                VarInt formatting;
+                u8 friendlyFlags;
+                
+                data >> display >> friendlyFlags >> visbility >> collision >> formatting >> prefix >> suffix >> count;
+            }
 
             m_TeamDisplayName = display.GetUTF16();
             m_TeamPrefix = prefix.GetUTF16();
@@ -1918,8 +1931,14 @@ bool TeamsPacket::Deserialize(DataBuffer& data, std::size_t packetLength) {
         {
             MCString display, prefix, suffix, visbility, collision;
 
-            data >> display >> prefix >> suffix >> m_FriendlyFlags >> visbility >> collision >> m_Color;
-
+            if (m_ProtocolVersion <= protocol::Version::Minecraft_1_12_2) {
+                data >> display >> prefix >> suffix >> m_FriendlyFlags >> visbility >> collision >> m_Color;
+            } else {
+                u8 friendlyFlags;
+                VarInt formatting;
+                data >> display >> friendlyFlags >> visbility >> collision >> formatting >> prefix >> suffix;;
+            }
+            
             m_TeamDisplayName = display.GetUTF16();
             m_TeamPrefix = prefix.GetUTF16();
             m_TeamSuffix = suffix.GetUTF16();

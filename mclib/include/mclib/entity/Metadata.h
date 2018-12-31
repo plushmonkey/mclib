@@ -45,10 +45,11 @@ public:
     };
 
     struct StringType : public Type {
+        bool exists;
         std::wstring value;
 
-        StringType() = default;
-        StringType(const std::wstring& value) : value(value) { }
+        StringType() : exists(true) { }
+        StringType(bool exists, const std::wstring& value) : exists(exists), value(value) { }
     };
 
     struct SlotType : public Type {
@@ -99,9 +100,9 @@ public:
     };
 
 private:
-    enum DataType { Byte, VarInt, Float, String, Chat, Slot, Boolean, Rotation, Position, OptPosition, Direction, OptUUID, OptBlockID, NBT, None };
+    enum DataType { Byte, VarInt, Float, String, Chat, OptChat, Slot, Boolean, Rotation, Position, OptPosition, Direction, OptUUID, OptBlockID, NBT, Particle, None };
 
-    enum { MetadataCount = 36 };
+    enum { MetadataCount = 0xFE };
     std::array<std::pair<std::unique_ptr<Type>, DataType>, MetadataCount> m_Metadata;
     protocol::Version m_ProtocolVersion;
 
@@ -118,6 +119,8 @@ public:
     T* GetIndex(std::size_t index) const {
         return dynamic_cast<T*>(m_Metadata[index].first.get());
     }
+
+    void MCLIB_API SetProtocolVersion(protocol::Version version) { m_ProtocolVersion = version; }
 
     friend MCLIB_API DataBuffer& operator<<(DataBuffer& out, const EntityMetadata& metadata);
     friend MCLIB_API DataBuffer& operator>>(DataBuffer& in, EntityMetadata& metadata);
