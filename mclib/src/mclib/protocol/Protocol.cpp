@@ -771,6 +771,7 @@ std::string to_string(Version version) {
         { mc::protocol::Version::Minecraft_1_12_0, "1.12.0" },
         { mc::protocol::Version::Minecraft_1_12_1, "1.12.1" },
         { mc::protocol::Version::Minecraft_1_12_2, "1.12.2" },
+        { mc::protocol::Version::Minecraft_1_13_2, "1.13.2" },
     };
 
     auto iter = mapping.find(version);

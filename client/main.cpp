@@ -28,12 +28,13 @@ const bool useProfileToken = false;
 int run(mc::protocol::Version versions, mc::util::ForgeHandler& forge);
 
 int main(void) {
-    mc::block::BlockRegistry::GetInstance()->RegisterVanillaBlocks();
     mc::util::VersionFetcher versionFetcher(server, port);
 
     std::cout << "Fetching version" << std::endl;
 
     auto version = versionFetcher.GetVersion();
+
+    mc::block::BlockRegistry::GetInstance()->RegisterVanillaBlocks(version);
 
     std::cout << "Connecting with version " << mc::protocol::to_string(version) << std::endl;
     return run(version, versionFetcher.GetForge());

@@ -30,7 +30,7 @@ struct ChunkColumnMetadata {
  */
 class Chunk {
 private:
-    std::vector<u16> m_Palette;
+    std::vector<u32> m_Palette;
     std::vector<u64> m_Data;
     u8 m_BitsPerBlock;
 
@@ -42,12 +42,12 @@ public:
     /**
      * Position is relative to this chunk position
      */
-    block::BlockState MCLIB_API GetBlock(Vector3i chunkPosition) const;
+    block::BlockPtr MCLIB_API GetBlock(Vector3i chunkPosition) const;
 
     /**
     * Position is relative to this chunk position
     */
-    void MCLIB_API SetBlock(Vector3i chunkPosition, block::BlockState blockState);
+    void MCLIB_API SetBlock(Vector3i chunkPosition, block::BlockPtr block);
 
     /**
      * chunkIndex is the index (0-16) of this chunk in the ChunkColumn
@@ -118,7 +118,7 @@ public:
     /**
      * Position is relative to this ChunkColumn position.
      */
-    block::BlockState MCLIB_API GetBlock(Vector3i position);
+    block::BlockPtr MCLIB_API GetBlock(Vector3i position);
     const ChunkColumnMetadata& GetMetadata() const { return m_Metadata; }
 
     MCLIB_API block::BlockEntityPtr GetBlockEntity(Vector3i worldPos);

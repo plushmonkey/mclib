@@ -13,6 +13,7 @@
 #include <fstream>
 #include <string>
 #include <queue>
+#include <utility>
 
 namespace mc {
 
@@ -54,7 +55,7 @@ private:
     // todo: gravity
     const float FallSpeed = 8.3f * (50.0f / 1000.0f);
 
-    std::vector<block::BlockState> GetNearbyBlocks(const s32 radius);
+    std::vector<std::pair<block::BlockPtr, mc::Vector3i>> GetNearbyBlocks(const s32 radius);
 
 public:
     MCLIB_API PlayerController(core::Connection* connection, world::World& world, core::PlayerManager& playerManager);
