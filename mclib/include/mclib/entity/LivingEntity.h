@@ -11,7 +11,7 @@ private:
     float m_Health;
 
 public:
-    LivingEntity(EntityId id) : Entity(id) { }
+    LivingEntity(EntityId id, protocol::Version protocolVersion) : Entity(id, protocolVersion) { }
 
     float GetHealth() const { return m_Health; }
 };

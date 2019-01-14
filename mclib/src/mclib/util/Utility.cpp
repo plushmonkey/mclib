@@ -26,7 +26,6 @@
 #include <regex>
 #include <cmath>
 #include <future>
-#include <utf8.h>
 
 #undef max
 #undef min
@@ -126,13 +125,13 @@ bool GetProfileToken(const std::string& username, core::AuthToken* token) {
     for (auto& member : authDB.items()) {
         auto& account = member.value();
 
-        auto& accessTokenNode = account.value("accessToken", json());
+        auto accessTokenNode = account.value("accessToken", json());
         if (accessTokenNode.is_null())
             continue;
 
         accessToken = accessTokenNode.get<std::string>();
 
-        auto& profilesNode = account.value("profiles", json());
+        auto profilesNode = account.value("profiles", json());
         // Check if it's using Linux format
         if (profilesNode.is_null()) {
             if (account.find("displayName") == account.end())
@@ -151,7 +150,7 @@ bool GetProfileToken(const std::string& username, core::AuthToken* token) {
                 std::string profileId = kv.key();
                 auto& profile = kv.value();
 
-                auto& nameNode = profile.value("displayName", json());
+                auto nameNode = profile.value("displayName", json());
                 if (nameNode.is_null())
                     continue;
 
@@ -217,14 +216,14 @@ inventory::Slot CreateFirework(bool flicker, bool trail, u8 type, u8 duration, s
 
 std::string ParseChatNode(const json& node) {
     if (node.is_object()) {
-        auto& translateNode = node.value("translate", json());
+        auto translateNode = node.value("translate", json());
 
         if (translateNode.is_string()) {
             std::string translate = translateNode.get<std::string>();
             std::string message;
 
             if (translate == "chat.type.text") {
-                auto& withNode = node.value("with", json());
+                auto withNode = node.value("with", json());
 
                 if (withNode.is_array()) {
                     for (auto iter = withNode.begin(); iter != withNode.end(); ++iter) {
@@ -250,8 +249,8 @@ std::string ParseChatNode(const json& node) {
     if (node.is_object()) {
         std::string result;
 
-        auto& extraNode = node.value("extra", json());
-        auto& textNode = node.value("text", json());
+        auto extraNode = node.value("extra", json());
+        auto textNode = node.value("text", json());
 
         if (!extraNode.is_null())
             result += ParseChatNode(extraNode);
@@ -334,14 +333,14 @@ bool PlayerController::ClearPath(Vector3d target) {
     auto check = [&](Vector3d start, Vector3d delta) {
         Vector3d checkAbove = start + delta + Vector3d(0, 1, 0);
         Vector3d checkBelow = start + delta + Vector3d(0, 0, 0);
-        block::BlockPtr aboveBlock = m_World.GetBlock(checkAbove).GetBlock();
-        block::BlockPtr belowBlock = m_World.GetBlock(checkBelow).GetBlock();
+        block::BlockPtr aboveBlock = m_World.GetBlock(checkAbove);
+        block::BlockPtr belowBlock = m_World.GetBlock(checkBelow);
 
         if (aboveBlock && aboveBlock->IsSolid())
             return false;
 
         if (belowBlock && belowBlock->IsSolid()) {
-            block::BlockPtr twoAboveBlock = m_World.GetBlock(checkAbove + Vector3d(0, 1, 0)).GetBlock();
+            block::BlockPtr twoAboveBlock = m_World.GetBlock(checkAbove + Vector3d(0, 1, 0));
             // Bad path if there isn't a two high gap in it
             if (twoAboveBlock && twoAboveBlock->IsSolid())
                 return false;
@@ -360,9 +359,9 @@ bool PlayerController::ClearPath(Vector3d target) {
         if (!check(position - side * CheckWidth, delta)) return false;
 
         Vector3d checkFloor = position + delta + Vector3d(0, -1, 0);
-        block::BlockPtr floorBlock = m_World.GetBlock(checkFloor).GetBlock();
+        block::BlockPtr floorBlock = m_World.GetBlock(checkFloor);
         if (floorBlock && !floorBlock->IsSolid()) {
-            block::BlockPtr belowFloorBlock = m_World.GetBlock(checkFloor - Vector3d(0, 1, 0)).GetBlock();
+            block::BlockPtr belowFloorBlock = m_World.GetBlock(checkFloor - Vector3d(0, 1, 0));
 
             // Fail if there is a two block drop
             if (belowFloorBlock && !belowFloorBlock->IsSolid())
@@ -421,8 +420,10 @@ void PlayerController::UpdateDigging() {
 
 }
 
-std::vector<block::BlockState> PlayerController::GetNearbyBlocks(const s32 radius) {
-    std::vector<block::BlockState> nearbyBlocks;
+std::vector<std::pair<block::BlockPtr, Vector3i>> PlayerController::GetNearbyBlocks(const s32 radius) {
+    using BlockPos = std::pair<block::BlockPtr, Vector3i>;
+
+    std::vector<BlockPos> nearbyBlocks;
 
     for (s32 x = -radius; x < radius; ++x) {
         for (s32 y = -radius; y < radius; ++y) {
@@ -431,15 +432,14 @@ std::vector<block::BlockState> PlayerController::GetNearbyBlocks(const s32 radiu
 
                 auto state = m_World.GetBlock(checkPos);
 
-                if (state.GetBlock() && state.GetBlock()->IsSolid())
-                    nearbyBlocks.push_back(state);
+                if (state && state->IsSolid())
+                    nearbyBlocks.push_back(std::make_pair<>(state, mc::ToVector3i(checkPos)));
             }
         }
     }
 
-    std::sort(nearbyBlocks.begin(), nearbyBlocks.end(), [](const block::BlockState& a, const block::BlockState& b) {
-        if (a.GetBlock() == b.GetBlock()) return a.GetData() < b.GetData();
-        return a.GetBlock() < b.GetBlock();
+    std::sort(nearbyBlocks.begin(), nearbyBlocks.end(), [](const BlockPos& a, const BlockPos& b) {
+        return a.second < b.second;
     });
 
     nearbyBlocks.erase(std::unique(nearbyBlocks.begin(), nearbyBlocks.end()), nearbyBlocks.end());
@@ -451,9 +451,10 @@ bool PlayerController::HandleJump() {
     AABB playerBounds = m_BoundingBox + m_Position;
 
     for (const auto& state : GetNearbyBlocks(2)) {
-        block::BlockPtr checkBlock = state.GetBlock();
+        auto checkBlock = state.first;
+        auto pos = state.second;
 
-        auto result = checkBlock->CollidesWith(state, state.GetPosition(), playerBounds);
+        auto result = checkBlock->CollidesWith(pos, playerBounds);
         if (result.first) {
             m_Position.y = result.second.max.y;
             return true;
@@ -473,11 +474,11 @@ bool PlayerController::HandleFall() {
     AABB playerBounds = m_BoundingBox + (m_Position - Vector3d(0, FallSpeed, 0));
 
     for (const auto& state : GetNearbyBlocks(2)) {
-        auto checkBlock = state.GetBlock();        
+        auto checkBlock = state.first;
 
-        auto boundingBoxes = checkBlock->GetBoundingBoxes(state);
+        auto boundingBoxes = checkBlock->GetBoundingBoxes();
         for (auto blockBounds : boundingBoxes) {
-            AABB checkBounds = blockBounds + state.GetPosition();
+            AABB checkBounds = blockBounds + state.second;
 
             if (checkBounds.Intersects(playerBounds)) {
                 double penetration = checkBounds.max.y - playerBounds.min.y;
@@ -557,7 +558,7 @@ void PlayerController::Update() {
             for (float angle = 0.0f; angle < FullCircle; angle += FullCircle / 8) {
                 Vector3d checkPos = m_Position + Vector3RotateAboutY(Vector3d(0, 0, CheckWidth), angle) - Vector3d(0, 1, 0);
 
-                block::BlockPtr checkBlock = m_World.GetBlock(checkPos).GetBlock();
+                block::BlockPtr checkBlock = m_World.GetBlock(checkPos);
                 if (checkBlock && checkBlock->IsSolid()) {
                     onGround = true;
                     break;
@@ -1195,9 +1196,7 @@ public:
 };
 
 std::string StripChatMessage(const std::string& message) {
-    std::wstring utf16;
-
-    utf8::utf8to16(message.begin(), message.end(), std::back_inserter(utf16));
+    std::wstring utf16 = utf8to16(message);
 
     std::size_t pos = utf16.find((wchar_t)0xA7);
 
@@ -1206,324 +1205,8 @@ std::string StripChatMessage(const std::string& message) {
         pos = utf16.find((wchar_t)0xA7);
     }
 
-    std::string utf8;
-    utf8::utf16to8(utf16.begin(), utf16.end(), std::back_inserter(utf8));
-
-    return utf8;
+    return utf16to8(utf16);
 }
-
-/*#include "ChatWindow.h"
-#include <utf8.h>
-class ChatWindowController : public Minecraft::Packets::PacketHandler, public Minecraft::PlayerListener {
-private:
-    Minecraft::Connection* m_Connection;
-    Minecraft::PlayerManager* m_PlayerManager;
-    ChatWindow m_ChatWindow;
-    std::thread m_MessageThread;
-
-public:
-    ChatWindowController(Minecraft::Packets::PacketDispatcher* dispatcher, Minecraft::Connection* connection, Minecraft::PlayerManager* playerManager)
-        : Minecraft::Packets::PacketHandler(dispatcher),
-          m_Connection(connection),
-          m_PlayerManager(playerManager)
-    {
-        m_ChatWindow.Initialize();
-
-        m_ChatWindow.SetInputCallback(std::bind(&ChatWindowController::OnWindowChatInput, this, std::placeholders::_1));
-
-        using namespace Minecraft::Protocol;
-
-        dispatcher->RegisterHandler(State::Play, Play::Chat, this);
-        m_PlayerManager->RegisterListener(this);
-    }
-
-    ~ChatWindowController() {
-        GetDispatcher()->UnregisterHandler(this);
-        m_PlayerManager->UnregisterListener(this);
-    }
-
-    void HandlePacket(Minecraft::Packets::Inbound::ChatPacket* packet) {
-        Json::Value root = packet->GetChatData();
-        std::string str = ParseChatNode(root);
-
-        std::wstring utf16;
-        utf8::utf8to16(str.begin(), str.end(), std::back_inserter(utf16));
-
-        std::size_t pos = utf16.find((wchar_t)0xA7);
-
-        while (pos != std::string::npos) {
-            utf16.erase(pos, 2);
-            pos = utf16.find((wchar_t)0xA7);
-        }
-
-        if (utf16.length() == 0) return;
-
-        static const std::wregex ChatRegex(LR"::(^.*?(\[.+\]|).*?<(.+)> (.+)$)::");
-        //static const std::wregex ChatRegex(LR"::(^.*?(\[.+\]|).*?(.+): (.+)$)::");
-
-        std::wsregex_iterator begin(utf16.begin(), utf16.end(), ChatRegex);
-        std::wsregex_iterator end;
-
-        if (begin == end) {
-            m_ChatWindow.AppendChat(L"\r\n" + utf16, ChatColor::Blue);
-            return;
-        }
-
-        std::wsmatch match = *begin;
-        std::wstring channel = match[1];
-        std::wstring name = match[2];
-        std::wstring message = match[3];
-
-        const int NameLength = 13;
-
-        if (name.length() < NameLength) {
-            std::wstring pad = L"";
-            for (std::size_t i = 0; i < NameLength - name.length(); ++i)
-                pad += L" ";
-            name = pad + name;
-        } else if (name.length() > NameLength) {
-            name = name.substr(0, NameLength);
-        }
-
-        std::wstring out = L"\r\n" + channel + name + L"> " + message;
-
-        ChatColor color = ChatColor::Yellow;
-
-        if (channel.find(L"STAFF") != std::string::npos)
-            color = ChatColor::Orange;
-
-        m_ChatWindow.AppendChat(out, color);
-    }
-
-    void OnPlayerJoin(Minecraft::PlayerPtr player) {
-        m_ChatWindow.AddPlayer(player->GetName().c_str());
-    }
-
-    void OnPlayerLeave(Minecraft::PlayerPtr player) {
-        m_ChatWindow.RemovePlayer(player->GetName().c_str());
-    }
-
-    void OnWindowChatInput(const std::wstring& input) {
-        Minecraft::Packets::Outbound::ChatPacket packet(input);
-
-        m_Connection->SendPacket(&packet);
-    }
-};*/
-
-class TrackFollower : public world::WorldListener, public core::PlayerListener {
-private:
-    struct Track {
-        Vector3i position;
-        bool visited;
-
-        Track(Vector3i pos) : position(pos), visited(false) { }
-    };
-    core::PlayerManager& m_PlayerManager;
-    world::World& m_World;
-    PlayerController& m_PlayerController;
-    std::vector<Track> m_Tracks;
-    Track* m_TargetTrack;
-    u64 m_LastUpdate;
-
-    // Path to follow after initial build up
-    std::vector<Track*> m_TrackPath;
-    bool m_BuildingTrack;
-    std::size_t m_PathIndex;
-
-    bool AtTargetTrack() {
-        if (!m_TargetTrack || m_TargetTrack->visited) return true;
-
-        Vector3d position = m_PlayerController.GetPosition();
-        return position.Distance(ToVector3d(m_TargetTrack->position)) < 1.0;
-    }
-
-    Track* FindConnectedTrack() {
-        if (!m_TargetTrack) return nullptr;
-
-        for (std::size_t i = 0; i < m_Tracks.size(); ++i) {
-            Track* track = &m_Tracks[i];
-            if (track->visited) continue;
-
-            if (m_TargetTrack->position.Distance(track->position) <= 1)
-                return track;
-        }
-        return nullptr;
-    }
-
-    Track* FindNextTrack() {
-        if (!m_BuildingTrack) {
-            if (m_PathIndex >= m_TrackPath.size()) return nullptr;
-
-            return m_TrackPath[m_PathIndex];
-        }
-
-        Track* connected = FindConnectedTrack();
-
-        if (connected)
-            return connected;
-
-        Vector3i position = ToVector3i(m_PlayerController.GetPosition());
-        Track* closest = nullptr;
-        double closest_dist = std::numeric_limits<double>::max();
-
-        for (Track& track : m_Tracks) {
-            if (track.visited) continue;
-            double dist = position.Distance(track.position);
-            if (dist < closest_dist) {
-                closest_dist = dist;
-                closest = &track;
-            }
-        }
-
-        return closest;
-    }
-
-public:
-    TrackFollower(protocol::packets::PacketDispatcher* dispatcher, core::PlayerManager& playerManager, world::World& world, PlayerController& playerController)
-        : m_PlayerManager(playerManager),
-          m_World(world),
-          m_PlayerController(playerController),
-          m_TargetTrack(nullptr),
-          m_LastUpdate(GetTime()),
-          m_PathIndex(0),
-          m_BuildingTrack(true)
-    {
-        m_PlayerManager.RegisterListener(this);
-        m_World.RegisterListener(this);
-    }
-
-    ~TrackFollower() {
-        m_PlayerManager.UnregisterListener(this);
-        m_World.UnregisterListener(this);
-    }
-
-    void Update() {
-        if (m_Tracks.empty()) return;
-
-        if (AtTargetTrack()) {
-            if (m_TargetTrack)
-                m_TargetTrack->visited = true;
-
-            Track* next = FindNextTrack();
-
-            if (!next) {
-                for (Track& track : m_Tracks)
-                    track.visited = false;
-
-                m_BuildingTrack = false;
-                m_PathIndex = 0;
-                return;
-            }
-
-            if (m_BuildingTrack)
-                m_TrackPath.push_back(next);
-            else if (next)
-                ++m_PathIndex;
-
-            m_TargetTrack = next;
-        }
-
-        if (m_TargetTrack)
-            m_PlayerController.SetTargetPosition(ToVector3d(m_TargetTrack->position) + Vector3d(0.5, 0, 0.5));
-    }
-
-    void OnChunkLoad(world::ChunkPtr chunk, const world::ChunkColumnMetadata& meta, u16 yIndex) {
-        static const std::vector<block::BlockPtr> trackBlocks = {
-            block::BlockRegistry::GetInstance()->GetBlock(27, 0),
-            block::BlockRegistry::GetInstance()->GetBlock(28, 0),
-            block::BlockRegistry::GetInstance()->GetBlock(66, 0)
-        };
-
-        s64 chunkX = meta.x * 16;
-        s64 chunkZ = meta.z * 16;
-
-        std::vector<Vector3i> tracksFound;
-
-        for (u16 y = 0; y < 16; ++y) {
-            for (u16 z = 0; z < 16; ++z) {
-                for (u16 x = 0; x < 16; ++x) {
-                    block::BlockPtr block = chunk->GetBlock(Vector3i(x, y, z)).GetBlock();
-
-                    for (block::BlockPtr findBlock : trackBlocks) {
-                        u16 blockId = findBlock->GetType();
-                        u16 blockMeta = findBlock->GetMeta();
-
-                        if (block && blockId == block->GetType() && blockMeta == block->GetMeta()) {
-                            s64 blockX = chunkX + x;
-                            s64 blockY = yIndex * 16 + y;
-                            s64 blockZ = chunkZ + z;
-
-                            Vector3i pos(blockX, blockY, blockZ);
-
-                            tracksFound.push_back(pos);
-                        }
-                    }
-                }
-            }
-        }
-
-
-        for (const Vector3i& pos : tracksFound) {
-            auto iter = std::find_if(m_Tracks.begin(), m_Tracks.end(), [pos](Track track) {
-                return track.position.Distance(pos) < 1.0;
-            });
-
-            if (iter == m_Tracks.end()) {
-                if (m_PlayerController.ClearPath(ToVector3d(pos))) {
-                    console << "Adding track at position " << pos << "\n";
-                    m_BuildingTrack = true;
-                    m_TrackPath.clear();
-                    m_PathIndex = 0;
-                    m_Tracks.push_back(Track(pos));
-                }
-            }
-        }
-    }
-
-};
-
-class BlockFinder : public world::WorldListener {
-private:
-    world::World* m_World;
-
-    u16 m_BlockId;
-    u16 m_BlockMeta;
-
-public:
-    BlockFinder(world::World* world, u16 blockId, u16 blockMeta)
-        : m_World(world),
-          m_BlockId(blockId),
-          m_BlockMeta(blockMeta)
-    {
-        world->RegisterListener(this);
-    }
-
-    ~BlockFinder() {
-        m_World->UnregisterListener(this);
-    }
-
-    void OnChunkLoad(world::ChunkPtr chunk, const world::ChunkColumnMetadata& meta, u16 yIndex) {
-        s64 chunkX = meta.x * 16;
-        s64 chunkZ = meta.z * 16;
-
-        for (u16 y = 0; y < 16; ++y) {
-            for (u16 z = 0; z < 16; ++z) {
-                for (u16 x = 0; x < 16; ++x) {
-                    block::BlockPtr block = chunk->GetBlock(Vector3i(x, y, z)).GetBlock();
-
-                    if (block && m_BlockId == block->GetType() && m_BlockMeta == block->GetMeta()) {
-                        s64 blockX = chunkX + x;
-                        s64 blockY = yIndex * 16 + y;
-                        s64 blockZ = chunkZ + z;
-
-                        Vector3i pos(blockX, blockY, blockZ);
-                        console << "Block " << m_BlockId << ":" << m_BlockMeta << " found at " << pos << "\n";
-                    }
-                }
-            }
-        }
-    }
-};
 
 } // ns util
 } // ns mc

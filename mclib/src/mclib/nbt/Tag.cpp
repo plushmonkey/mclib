@@ -1,9 +1,8 @@
 #include <mclib/nbt/Tag.h>
 
 #include <mclib/common/DataBuffer.h>
-
+#include <mclib/common/MCString.h>
 #include <array>
-#include <utf8.h>
 
 namespace mc {
 namespace nbt {
@@ -96,8 +95,7 @@ TagType TagString::GetType() const noexcept {
 }
 
 void TagString::Write(DataBuffer& buffer) const {
-    std::string utf8;
-    utf8::utf16to8(m_Value.begin(), m_Value.end(), std::back_inserter(utf8));
+    std::string utf8 = utf16to8(m_Value);
 
     u16 length = (u16)utf8.length();
     buffer << length;
@@ -116,7 +114,8 @@ void TagString::Read(DataBuffer& buffer) {
         buffer.ReadSome(utf8, length);
 
         m_Value.clear();
-        utf8::utf8to16(utf8.begin(), utf8.end(), std::back_inserter(m_Value));
+
+        m_Value = utf8to16(utf8);
     }
 }
 

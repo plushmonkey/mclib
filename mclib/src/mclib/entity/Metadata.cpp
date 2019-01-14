@@ -1,5 +1,7 @@
 #include <mclib/entity/Metadata.h>
 
+#include <mclib/common/DataBuffer.h>
+
 namespace mc {
 namespace entity {
 
@@ -21,8 +23,8 @@ DataBuffer& operator<<(DataBuffer& out, const EntityMetadata::StringType& value)
     return out << str;
 }
 
-DataBuffer& operator<<(DataBuffer& out, const EntityMetadata::SlotType& value) {
-    return out << value.value;
+DataBuffer EntityMetadata::SlotType::Serialize(mc::protocol::Version protocolVersion) {
+    return value.Serialize(protocolVersion);
 }
 
 DataBuffer& operator<<(DataBuffer& out, const EntityMetadata::BooleanType& value) {
@@ -67,8 +69,8 @@ DataBuffer& operator>>(DataBuffer& in, EntityMetadata::StringType& value) {
     return in;
 }
 
-DataBuffer& operator>>(DataBuffer& in, EntityMetadata::SlotType& value) {
-    return in >> value.value;
+void EntityMetadata::SlotType::Deserialize(DataBuffer& in, mc::protocol::Version protocolVersion) {
+    value.Deserialize(in, protocolVersion);
 }
 
 DataBuffer& operator>>(DataBuffer& in, EntityMetadata::BooleanType& value) {
@@ -102,6 +104,10 @@ DataBuffer& operator<<(DataBuffer& out, const EntityMetadata& md) {
 
         out << item;
 
+        if (md.m_ProtocolVersion <= protocol::Version::Minecraft_1_12_2 && type >= 5) {
+            type = static_cast<EntityMetadata::DataType>(static_cast<int>(type) + 1);
+        }
+
         switch (type) {
         case EntityMetadata::DataType::Byte:
             out << *((EntityMetadata::ByteType*)value);
@@ -118,8 +124,17 @@ DataBuffer& operator<<(DataBuffer& out, const EntityMetadata& md) {
         case EntityMetadata::DataType::Chat:
             out << *((EntityMetadata::StringType*)value);
             break;
+        case EntityMetadata::DataType::OptChat:
+            out << ((EntityMetadata::StringType*)value)->exists;
+            if (((EntityMetadata::StringType*)value)->exists) {
+                out << *((EntityMetadata::StringType*)value);
+            }
+            break;
         case EntityMetadata::DataType::Slot:
-            out << *((EntityMetadata::SlotType*)value);
+        {
+            DataBuffer serializedSlot = ((EntityMetadata::SlotType*)value)->Serialize(md.m_ProtocolVersion);
+            out << serializedSlot;
+        }
             break;
         case EntityMetadata::DataType::Boolean:
             out << *((EntityMetadata::BooleanType*)value);
@@ -164,6 +179,11 @@ DataBuffer& operator>>(DataBuffer& in, EntityMetadata& md) {
         in >> typeVal;
 
         EntityMetadata::DataType type = (EntityMetadata::DataType)(typeVal);
+
+        if (md.m_ProtocolVersion <= protocol::Version::Minecraft_1_12_2 && type >= 5) {
+            type = static_cast<EntityMetadata::DataType>(static_cast<int>(type) + 1);
+        }
+
         md.m_Metadata[index].second = type;
 
         switch (type) {
@@ -198,10 +218,20 @@ DataBuffer& operator>>(DataBuffer& in, EntityMetadata& md) {
                 md.m_Metadata[index].first = std::move(value);
             }
             break;
+            case EntityMetadata::DataType::OptChat:
+            {
+                std::unique_ptr<EntityMetadata::StringType> value = std::make_unique<EntityMetadata::StringType>();
+                in >> value->exists;
+                if (value->exists) {
+                    in >> *value;
+                }
+                md.m_Metadata[index].first = std::move(value);
+            }
+            break;
             case EntityMetadata::DataType::Slot:
             {
                 std::unique_ptr<EntityMetadata::SlotType> value = std::make_unique<EntityMetadata::SlotType>();
-                in >> *value;
+                value->Deserialize(in, md.m_ProtocolVersion);
                 md.m_Metadata[index].first = std::move(value);
             }
             break;
@@ -263,6 +293,8 @@ DataBuffer& operator>>(DataBuffer& in, EntityMetadata& md) {
 }
 
 void EntityMetadata::CopyOther(const EntityMetadata& other) {
+    m_ProtocolVersion = other.m_ProtocolVersion;
+
     for (std::size_t i = 0; i < MetadataCount; ++i) {
         auto type = m_Metadata[i].second = other.m_Metadata[i].second;
 
@@ -280,7 +312,9 @@ void EntityMetadata::CopyOther(const EntityMetadata& other) {
                 break;
             case DataType::String:
             case DataType::Chat:
-                m_Metadata[i].first = std::make_unique<StringType>(dynamic_cast<StringType*>(other.m_Metadata[i].first.get())->value);
+            case DataType::OptChat:
+                m_Metadata[i].first = std::make_unique<StringType>(dynamic_cast<StringType*>(other.m_Metadata[i].first.get())->exists,
+                                                                   dynamic_cast<StringType*>(other.m_Metadata[i].first.get())->value);
                 break;
             case DataType::Slot:
                 m_Metadata[i].first = std::make_unique<SlotType>(dynamic_cast<SlotType*>(other.m_Metadata[i].first.get())->value);
@@ -309,7 +343,9 @@ void EntityMetadata::CopyOther(const EntityMetadata& other) {
     }
 }
 
-EntityMetadata::EntityMetadata() {
+EntityMetadata::EntityMetadata(protocol::Version protocolVersion) 
+    : m_ProtocolVersion(protocolVersion)
+{
     for (std::size_t i = 0; i < MetadataCount; ++i) {
         m_Metadata[i].first = nullptr;
         m_Metadata[i].second = DataType::None;

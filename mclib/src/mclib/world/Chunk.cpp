@@ -59,11 +59,10 @@ void Chunk::Load(DataBuffer& in, ChunkColumnMetadata* meta, s32 chunkIndex) {
     }
 }
 
-block::BlockState Chunk::GetBlock(Vector3i chunkPosition) const {
-    const Vector3i pos(chunkPosition.x, chunkPosition.y, chunkPosition.z);
-
-    if (chunkPosition.y < 0 || chunkPosition.y > 15) 
-        return block::BlockState(block::BlockRegistry::GetInstance()->GetBlock(0, 0), 0, pos);
+block::BlockPtr Chunk::GetBlock(Vector3i chunkPosition) const {
+    if (chunkPosition.x < 0 || chunkPosition.x > 15 || chunkPosition.y < 0 || chunkPosition.y > 15 || chunkPosition.z < 0 || chunkPosition.z > 15) {
+        return block::BlockRegistry::GetInstance()->GetBlock(0);
+    }
 
     const std::size_t index = (std::size_t)(chunkPosition.y * 16 * 16 + chunkPosition.z * 16 + chunkPosition.x);
     const s32 bitIndex = index * m_BitsPerBlock;
@@ -84,10 +83,10 @@ block::BlockState Chunk::GetBlock(Vector3i chunkPosition) const {
 
     const u16 blockType = m_BitsPerBlock < 9 ? m_Palette[value] : value;
 
-    return block::BlockState(block::BlockRegistry::GetInstance()->GetBlock(blockType), blockType, pos);
+    return block::BlockRegistry::GetInstance()->GetBlock(blockType);
 }
 
-void Chunk::SetBlock(Vector3i chunkPosition, block::BlockState blockState) {
+void Chunk::SetBlock(Vector3i chunkPosition, block::BlockPtr block) {
     std::size_t index = (std::size_t)(chunkPosition.y * 16 * 16 + chunkPosition.z * 16 + chunkPosition.x);
     s32 bitIndex = index * m_BitsPerBlock;
     s32 startIndex = bitIndex / 64;
@@ -95,7 +94,7 @@ void Chunk::SetBlock(Vector3i chunkPosition, block::BlockState blockState) {
     s32 startSubIndex = bitIndex % 64;
 
     s64 maxValue = (1 << m_BitsPerBlock) - 1;
-    u16 blockType = blockState.GetData();
+    u32 blockType = block->GetType();
 
     if (m_BitsPerBlock == 0) {
         m_BitsPerBlock = 4;
@@ -109,7 +108,7 @@ void Chunk::SetBlock(Vector3i chunkPosition, block::BlockState blockState) {
         memset(&m_Data[0], 0, size * sizeof(m_Data[0]));
     }
 
-    auto iter = std::find_if(m_Palette.begin(), m_Palette.end(), [blockType](u16 ptype) {
+    auto iter = std::find_if(m_Palette.begin(), m_Palette.end(), [blockType](u32 ptype) {
         return ptype == blockType;
     });
 
@@ -136,11 +135,11 @@ ChunkColumn::ChunkColumn(ChunkColumnMetadata metadata)
         m_Chunks[i] = nullptr;
 }
 
-block::BlockState ChunkColumn::GetBlock(Vector3i position) {
+block::BlockPtr ChunkColumn::GetBlock(Vector3i position) {
     s32 chunkIndex = (s32)(position.y / 16);
     Vector3i relativePosition(position.x, position.y % 16, position.z);
 
-    if (chunkIndex < 0 || chunkIndex > 15 || !m_Chunks[chunkIndex]) return block::BlockState(block::BlockRegistry::GetInstance()->GetBlock(0, 0), 0, position);
+    if (chunkIndex < 0 || chunkIndex > 15 || !m_Chunks[chunkIndex]) return block::BlockRegistry::GetInstance()->GetBlock(0);
 
     return m_Chunks[chunkIndex]->GetBlock(relativePosition);
 }

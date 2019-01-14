@@ -124,12 +124,14 @@ void SpawnGlobalEntityPacket::Dispatch(PacketHandler* handler) {
 }
 
 
-SpawnMobPacket::SpawnMobPacket() {
+SpawnMobPacket::SpawnMobPacket() : InboundPacket(), m_Metadata(m_ProtocolVersion) {
     
 }
 
 bool SpawnMobPacket::Deserialize(DataBuffer& data, std::size_t packetLength) {
     VarInt entityId, type;
+
+    m_Metadata.SetProtocolVersion(m_ProtocolVersion);
 
     data >> entityId;
     m_EntityId = entityId.GetInt();
@@ -168,7 +170,29 @@ bool SpawnPaintingPacket::Deserialize(DataBuffer& data, std::size_t packetLength
     Position position;
     u8 direction;
 
-    data >> eid >> m_UUID >> title >> position >> direction;
+    data >> eid >> m_UUID;
+    
+    if (m_ProtocolVersion >= protocol::Version::Minecraft_1_13_2) {
+        VarInt titleId;
+
+        data >> titleId;
+
+        static const std::string paintingNames[] = {
+             "minecraft:kebab", "minecraft:aztec", "minecraft:alban", "minecraft:aztec2",
+             "minecraft:bomb", "minecraft:plant", "minecraft:wasteland", "minecraft:pool",
+             "minecraft:courbet", "minecraft:sea", "minecraft:sunset", "minecraft:creebet",
+             "minecraft:wanderer", "minecraft:graham", "minecraft:match", "minecraft:bust",
+             "minecraft:stage", "minecraft:void", "minecraft:skull_and_roses", "minecraft:wither",
+             "minecraft:fighters", "minecraft:pointer", "minecraft:pigscene", "minecraft:burning_skull",
+             "minecraft:skeleton", "minecraft:donkey_kong"
+        };
+
+        title = paintingNames[titleId.GetInt()];
+    } else {
+        data >> title;
+    }
+
+    data >> position >> direction;
 
     m_EntityId = eid.GetInt();
     m_Title = title.GetUTF16();
@@ -184,12 +208,14 @@ void SpawnPaintingPacket::Dispatch(PacketHandler* handler) {
     handler->HandlePacket(this);
 }
 
-SpawnPlayerPacket::SpawnPlayerPacket() {
+SpawnPlayerPacket::SpawnPlayerPacket() : InboundPacket(), m_Metadata(m_ProtocolVersion) {
 
 }
 
 bool SpawnPlayerPacket::Deserialize(DataBuffer& data, std::size_t packetLength) {
     VarInt eid;
+
+    m_Metadata.SetProtocolVersion(m_ProtocolVersion);
 
     data >> eid;
     m_EntityId = eid.GetInt();
@@ -242,14 +268,44 @@ bool StatisticsPacket::Deserialize(DataBuffer& data, std::size_t packetLength) {
     VarInt count;
     data >> count;
 
-    for (s32 i = 0; i < count.GetInt(); ++i) {
-        MCString name;
-        VarInt value;
+    if (m_ProtocolVersion >= Version::Minecraft_1_13_2) {
+        for (s32 i = 0; i < count.GetInt(); ++i) {
+            VarInt categoryId;
+            VarInt statisticId;
+            VarInt value;
 
-        data >> name;
-        data >> value;
+            data >> categoryId >> statisticId >> value;
 
-        m_Statistics[name.GetUTF16()] = value.GetInt();
+            // Custom statistic
+            if (statisticId.GetInt() == 8) {
+                static const std::wstring statMap[] = {
+                    L"minecraft.leave_game", L"minecraft.play_one_minute", L"minecraft.time_since_death", L"minecraft.sneak_Time",
+                    L"minecraft.walk_one_cm", L"minecraft.crouch_one_cm", L"minecraft.sprint_one_cm", L"minecraft.swim_one_cm",
+                    L"minecraft.fall_one_cm", L"minecraft.climb_one_cm", L"minecraft.fly_one_cm", L"minecraft.dive_one_cm",
+                    L"minecraft.minecart_one_cm", L"minecraft.boat_one_cm", L"minecraft.pig_one_cm", L"minecraft.horse_one_cm",
+                    L"minecraft.aviate_one_cm", L"minecraft.jump", L"minecraft.drop", L"minecraft.damage_dealt", L"minecraft.damage_taken",
+                    L"minecraft.deaths", L"minecraft.mob_kills", L"minecraft.animals_bred", L"minecraft.player_kills", L"minecraft.fish_caught",
+                    L"minecraft.talked_to_villager", L"minecraft.traded_with_villager", L"minecraft.eat_cake_slice", L"minecraft.fill_cauldron",
+                    L"minecraft.use_cauldron", L"minecraft.clean_armor", L"minecraft.clean_banner", L"minecraft.interact_with_brewingstand",
+                    L"minecraft.interact_with_beacon", L"minecraft.inspect_dropper", L"minecraft.inspect_hopper", L"minecraft.inspect_dispenser",
+                    L"minecraft.play_noteblock", L"minecraft.tune_noteblock", L"minecraft.pot_flower", L"minecraft.trigger_trapped_chest",
+                    L"minecraft.open_enderchest", L"minecraft.enchant_item", L"minecraft.play_record", L"minecraft.interact_with_furnace",
+                    L"minecraft.interact_with_crafting_table", L"minecraft.open_chest", L"minecraft.sleep_in_bed", L"minecraft.open_shulker_box"
+                };
+
+                m_Statistics[statMap[statisticId.GetInt()]] = value.GetInt();
+            }
+        }
+    } else {
+        for (s32 i = 0; i < count.GetInt(); ++i) {
+            MCString name;
+            VarInt value;
+
+            data >> name;
+            data >> value;
+
+            m_Statistics[name.GetUTF16()] = value.GetInt();
+        }
     }
 
     return true;
@@ -294,7 +350,7 @@ bool AdvancementsPacket::Deserialize(DataBuffer& data, std::size_t packetLength)
             advancement.display.title = title.GetUTF16();
             advancement.display.description = description.GetUTF16();
 
-            data >> advancement.display.icon;
+            advancement.display.icon.Deserialize(data, m_ProtocolVersion);
 
             VarInt frameType;
             data >> frameType;
@@ -560,16 +616,36 @@ TabCompletePacket::TabCompletePacket() {
 }
 
 bool TabCompletePacket::Deserialize(DataBuffer& data, std::size_t packetLength) {
-    VarInt count;
+    if (m_ProtocolVersion > protocol::Version::Minecraft_1_12_2) {
+        VarInt id, start, length, count;
 
-    data >> count;
+        data >> id >> start >> length >> count;
 
-    for (s32 i = 0; i < count.GetInt(); ++i) {
-        MCString match;
+        for (s32 i = 0; i < count.GetInt(); ++i) {
+            MCString match, tooltip;
+            bool hasTooltip;
 
-        data >> match;
+            data >> match >> hasTooltip;
 
-        m_Matches.push_back(match.GetUTF16());
+            if (hasTooltip) {
+                data >> tooltip;
+            }
+
+            m_Matches.push_back(match.GetUTF16());
+        }
+
+    } else {
+        VarInt count;
+
+        data >> count;
+
+        for (s32 i = 0; i < count.GetInt(); ++i) {
+            MCString match;
+
+            data >> match;
+
+            m_Matches.push_back(match.GetUTF16());
+        }
     }
 
     return true;
@@ -696,7 +772,8 @@ bool WindowItemsPacket::Deserialize(DataBuffer& data, std::size_t packetLength) 
 
     for (s16 i = 0; i < count; ++i) {
         inventory::Slot slot;
-        data >> slot;
+
+        slot.Deserialize(data, m_ProtocolVersion);
 
         m_Slots.push_back(slot);
     }
@@ -728,7 +805,7 @@ SetSlotPacket::SetSlotPacket() {
 bool SetSlotPacket::Deserialize(DataBuffer& data, std::size_t packetLength) {
     data >> m_WindowId;
     data >> m_SlotIndex;
-    data >> m_Slot;
+    m_Slot.Deserialize(data, m_ProtocolVersion);
     return true;
 }
 
@@ -1043,10 +1120,10 @@ MapPacket::MapPacket() {
 }
 
 bool MapPacket::Deserialize(DataBuffer& data, std::size_t packetLength) {
-    VarInt damage, count;
+    VarInt mapId, count;
 
-    data >> damage >> m_Scale >> m_TrackPosition >> count;
-    m_MapId = damage.GetInt();
+    data >> mapId >> m_Scale >> m_TrackPosition >> count;
+    m_MapId = mapId.GetInt();
 
     for (s32 i = 0; i < count.GetInt(); ++i) {
         Icon icon;
@@ -1650,12 +1727,14 @@ void DisplayScoreboardPacket::Dispatch(PacketHandler* handler) {
 }
 
 
-EntityMetadataPacket::EntityMetadataPacket() {
+EntityMetadataPacket::EntityMetadataPacket() : InboundPacket(), m_Metadata(m_ProtocolVersion) {
     
 }
 
 bool EntityMetadataPacket::Deserialize(DataBuffer& data, std::size_t packetLength) {
     VarInt eid;
+
+    m_Metadata.SetProtocolVersion(m_ProtocolVersion);
 
     data >> eid;
     data >> m_Metadata;
@@ -1712,7 +1791,7 @@ bool EntityEquipmentPacket::Deserialize(DataBuffer& data, std::size_t packetLeng
 
     data >> eid;
     data >> equipmentSlot;
-    data >> m_Item;
+    m_Item.Deserialize(data, m_ProtocolVersion);
 
     m_EntityId = eid.GetInt();
     m_EquipmentSlot = (EquipmentSlot)equipmentSlot.GetInt();
@@ -1820,7 +1899,14 @@ bool TeamsPacket::Deserialize(DataBuffer& data, std::size_t packetLength) {
             MCString display, prefix, suffix, visbility, collision;
             VarInt count;
 
-            data >> display >> prefix >> suffix >> m_FriendlyFlags >> visbility >> collision >> m_Color >> count;
+            if (m_ProtocolVersion <= protocol::Version::Minecraft_1_12_2) {
+                data >> display >> prefix >> suffix >> m_FriendlyFlags >> visbility >> collision >> m_Color >> count;
+            } else {
+                VarInt formatting;
+                u8 friendlyFlags;
+                
+                data >> display >> friendlyFlags >> visbility >> collision >> formatting >> prefix >> suffix >> count;
+            }
 
             m_TeamDisplayName = display.GetUTF16();
             m_TeamPrefix = prefix.GetUTF16();
@@ -1845,8 +1931,14 @@ bool TeamsPacket::Deserialize(DataBuffer& data, std::size_t packetLength) {
         {
             MCString display, prefix, suffix, visbility, collision;
 
-            data >> display >> prefix >> suffix >> m_FriendlyFlags >> visbility >> collision >> m_Color;
-
+            if (m_ProtocolVersion <= protocol::Version::Minecraft_1_12_2) {
+                data >> display >> prefix >> suffix >> m_FriendlyFlags >> visbility >> collision >> m_Color;
+            } else {
+                u8 friendlyFlags;
+                VarInt formatting;
+                data >> display >> friendlyFlags >> visbility >> collision >> formatting >> prefix >> suffix;;
+            }
+            
             m_TeamDisplayName = display.GetUTF16();
             m_TeamPrefix = prefix.GetUTF16();
             m_TeamSuffix = suffix.GetUTF16();
@@ -2360,7 +2452,7 @@ DataBuffer PrepareCraftingGridPacket::Serialize() const {
 
     buffer << returnSize;
     for (auto&& entry : m_ReturnEntries) {
-        buffer << entry.item;
+        buffer << entry.item.Serialize(m_ProtocolVersion);
         buffer << entry.craftingSlot;
         buffer << entry.playerSlot;
     }
@@ -2369,7 +2461,7 @@ DataBuffer PrepareCraftingGridPacket::Serialize() const {
 
     buffer << prepareSize;
     for (auto&& entry : m_PrepareEntries) {
-        buffer << entry.item;
+        buffer << entry.item.Serialize(m_ProtocolVersion);
         buffer << entry.craftingSlot;
         buffer << entry.playerSlot;
     }
@@ -2413,10 +2505,14 @@ DataBuffer TabCompletePacket::Serialize() const {
     DataBuffer buffer;
     MCString text(m_Text);
 
-    buffer << m_Id << text << m_AssumeCommand << m_HasPosition;
+    buffer << m_Id << text;
+    
+    if (m_ProtocolVersion <= protocol::Version::Minecraft_1_12_2) {
+        buffer << m_AssumeCommand << m_HasPosition;
 
-    if (m_HasPosition)
-        buffer << m_LookingAt;
+        if (m_HasPosition)
+            buffer << m_LookingAt;
+    }
 
     return buffer;
 }
@@ -2519,7 +2615,7 @@ DataBuffer ClickWindowPacket::Serialize() const {
     buffer << m_Id;
     buffer << m_WindowId << m_SlotIndex << m_Button << m_Action;
     VarInt mode(m_Mode);
-    buffer << mode << m_ClickedItem;
+    buffer << mode << m_ClickedItem.Serialize(m_ProtocolVersion);
     
     return buffer;
 }
@@ -2807,7 +2903,7 @@ DataBuffer CreativeInventoryActionPacket::Serialize() const {
 
     buffer << m_Id;
     buffer << m_Slot;
-    buffer << m_Item;
+    buffer << m_Item.Serialize(m_ProtocolVersion);
 
     return buffer;
 }

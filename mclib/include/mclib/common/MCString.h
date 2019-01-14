@@ -29,6 +29,9 @@ public:
     friend MCLIB_API DataBuffer& operator>>(DataBuffer& in, MCString& str);
 };
 
+MCLIB_API std::string utf16to8(std::wstring str);
+MCLIB_API std::wstring utf8to16(std::string str);
+
 MCLIB_API DataBuffer& operator<<(DataBuffer& out, const MCString& pos);
 MCLIB_API DataBuffer& operator>>(DataBuffer& in, MCString& pos);
 

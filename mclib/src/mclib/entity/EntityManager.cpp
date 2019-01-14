@@ -50,8 +50,8 @@ EntityType GetEntityTypeFromObjectId(s32 oid) {
     return mapping.at(oid);
 }
 
-EntityManager::EntityManager(protocol::packets::PacketDispatcher* dispatcher)
-    : protocol::packets::PacketHandler(dispatcher)
+EntityManager::EntityManager(protocol::packets::PacketDispatcher* dispatcher, protocol::Version protocolVersion)
+    : protocol::packets::PacketHandler(dispatcher), m_ProtocolVersion(protocolVersion)
 {
     GetDispatcher()->RegisterHandler(protocol::State::Play, protocol::play::JoinGame, this);
     GetDispatcher()->RegisterHandler(protocol::State::Play, protocol::play::PlayerPositionAndLook, this);
@@ -95,7 +95,7 @@ void EntityManager::HandlePacket(protocol::packets::in::JoinGamePacket* packet) 
 
     m_EntityId = id;
 
-    std::shared_ptr<PlayerEntity> entity = std::make_shared<PlayerEntity>(id);
+    std::shared_ptr<PlayerEntity> entity = std::make_shared<PlayerEntity>(id, m_ProtocolVersion);
 
     m_Entities[id] = entity;
 }
@@ -105,7 +105,7 @@ void EntityManager::HandlePacket(protocol::packets::in::PlayerPositionAndLookPac
     EntityPtr entity;
 
     if (iter == m_Entities.end()) {
-        entity = std::make_shared<PlayerEntity>(m_EntityId);
+        entity = std::make_shared<PlayerEntity>(m_EntityId, m_ProtocolVersion);
     } else {
         entity = iter->second;
     }
@@ -120,7 +120,7 @@ void EntityManager::HandlePacket(protocol::packets::in::PlayerPositionAndLookPac
 void EntityManager::HandlePacket(protocol::packets::in::SpawnPlayerPacket* packet) {
     EntityId id = packet->GetEntityId();
 
-    std::shared_ptr<PlayerEntity> entity = std::make_shared<PlayerEntity>(id);
+    std::shared_ptr<PlayerEntity> entity = std::make_shared<PlayerEntity>(id, m_ProtocolVersion);
 
     m_Entities[id] = entity;
 
@@ -138,7 +138,7 @@ void EntityManager::HandlePacket(protocol::packets::in::SpawnPlayerPacket* packe
 
 void EntityManager::HandlePacket(protocol::packets::in::SpawnObjectPacket* packet) {
     EntityId eid = packet->GetEntityId();
-    EntityPtr entity = std::make_shared<Entity>(eid);
+    EntityPtr entity = std::make_shared<Entity>(eid, m_ProtocolVersion);
 
     m_Entities[eid] = entity;
     entity->SetPosition(ToVector3d(packet->GetPosition()));
@@ -156,7 +156,7 @@ void EntityManager::HandlePacket(protocol::packets::in::SpawnObjectPacket* packe
 
 void EntityManager::HandlePacket(protocol::packets::in::SpawnPaintingPacket* packet) {
     EntityId eid = packet->GetEntityId();
-    auto entity = std::make_shared<PaintingEntity>(eid);
+    auto entity = std::make_shared<PaintingEntity>(eid, m_ProtocolVersion);
 
     m_Entities[eid] = entity;
 
@@ -168,7 +168,7 @@ void EntityManager::HandlePacket(protocol::packets::in::SpawnPaintingPacket* pac
 
 void EntityManager::HandlePacket(protocol::packets::in::SpawnExperienceOrbPacket* packet) {
     EntityId eid = packet->GetEntityId();
-    EntityPtr entity = std::make_shared<XPOrb>(eid, packet->GetCount());
+    EntityPtr entity = std::make_shared<XPOrb>(eid, packet->GetCount(), m_ProtocolVersion);
 
     m_Entities[eid] = entity;
 
@@ -178,7 +178,7 @@ void EntityManager::HandlePacket(protocol::packets::in::SpawnExperienceOrbPacket
 
 void EntityManager::HandlePacket(protocol::packets::in::SpawnGlobalEntityPacket* packet) {
     EntityId eid = packet->GetEntityId();
-    EntityPtr entity = std::make_shared<Entity>(eid);
+    EntityPtr entity = std::make_shared<Entity>(eid, m_ProtocolVersion);
 
     m_Entities[eid] = entity;
 
@@ -188,7 +188,7 @@ void EntityManager::HandlePacket(protocol::packets::in::SpawnGlobalEntityPacket*
 
 void EntityManager::HandlePacket(protocol::packets::in::SpawnMobPacket* packet) {
     EntityId eid = packet->GetEntityId();
-    EntityPtr entity = std::make_shared<Entity>(eid);
+    EntityPtr entity = std::make_shared<Entity>(eid, m_ProtocolVersion);
 
     m_Entities[eid] = entity;
 
@@ -226,7 +226,7 @@ void EntityManager::HandlePacket(protocol::packets::in::EntityPacket* packet) {
     auto iter = m_Entities.find(eid);
 
     if (iter == m_Entities.end()) {
-        EntityPtr entity = std::make_shared<Entity>(eid);
+        EntityPtr entity = std::make_shared<Entity>(eid, m_ProtocolVersion);
 
         m_Entities[eid] = entity;
     }

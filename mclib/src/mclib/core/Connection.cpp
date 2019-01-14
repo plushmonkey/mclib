@@ -8,7 +8,6 @@
 #include <mclib/protocol/packets/PacketDispatcher.h>
 #include <mclib/protocol/packets/PacketFactory.h>
 #include <mclib/util/Utility.h>
-#include <utf8.h>
 
 #include <future>
 #include <thread>

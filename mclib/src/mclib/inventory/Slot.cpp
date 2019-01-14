@@ -29,42 +29,82 @@ Slot Slot::FromNBT(nbt::TagCompound& compound) {
     return Slot(id, count, damage, nbt);
 }
 
-DataBuffer& operator<<(DataBuffer& out, const Slot& slot) {
-    out << slot.m_ItemId;
-    if (slot.m_ItemId == -1) return out;
+DataBuffer Slot::Serialize(protocol::Version version) const {
+    DataBuffer out;
 
-    out << slot.m_ItemCount;
-    out << slot.m_ItemDamage;
+    if (version > protocol::Version::Minecraft_1_12_2) {
+        if (m_ItemId >= 0) {
+            VarInt id(m_ItemId);
 
-    u8 hasNBT = slot.m_NBT.HasData();
+            out << true << id << m_ItemCount;
 
-    if (hasNBT)
-        out << slot.m_NBT;
-    else
-        out << (u8)0;
+            if (m_NBT.HasData()) {
+                out << m_NBT;
+            } else {
+                out << (u8)0;
+            }
+        } else {
+            out << false;
+        }
+    } else {
+        out << m_ItemId;
+        if (m_ItemId == -1) return out;
+
+        out << m_ItemCount << m_ItemDamage;
+
+        if (m_NBT.HasData()) {
+            out << m_NBT;
+        } else {
+            out << (u8)0;
+        }
+    }
+
     return out;
 }
 
-DataBuffer& operator>>(DataBuffer& in, Slot& slot) {
-    in >> slot.m_ItemId;
+void Slot::Deserialize(DataBuffer& in, protocol::Version version) {
+    m_ItemId = -1;
+    m_ItemCount = 0;
+    m_ItemDamage = 0;
 
-    if (slot.m_ItemId == -1) {
-        slot.m_ItemCount = 0;
-        slot.m_ItemDamage = 0;
-        return in;
+    if (version > protocol::Version::Minecraft_1_12_2) {
+        bool present;
+
+        in >> present;
+
+        if (!present) return;
+
+        VarInt itemId;
+
+        in >> itemId >> m_ItemCount >> m_NBT;
+
+        m_ItemId = itemId.GetInt();
+    } else {
+        s16 id;
+
+        in >> id;
+
+        m_ItemId = id;
+
+        if (m_ItemId == -1) {
+            m_ItemCount = 0;
+            m_ItemDamage = 0;
+            return;
+        }
+
+        in >> m_ItemCount;
+        in >> m_ItemDamage;
+
+        u8 hasNBT;
+        in >> hasNBT;
+
+        if (hasNBT) {
+            in.SetReadOffset(in.GetReadOffset() - 1);
+            in >> m_NBT;
+        }
     }
 
-    in >> slot.m_ItemCount;
-    in >> slot.m_ItemDamage;
-
-    u8 hasNBT;
-    in >> hasNBT;
-
-    if (hasNBT) {
-        in.SetReadOffset(in.GetReadOffset() - 1);
-        in >> slot.m_NBT;
-    }
-    return in;
+    
 }
 
 } // ns inventory

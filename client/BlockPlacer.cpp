@@ -51,7 +51,7 @@ void BlockPlacer::OnTick() {
     m_PlayerController->LookAt(ToVector3d(m_Target));
 
     if (m_HeldItem.GetItemId() != -1) {
-        mc::block::BlockPtr block = m_World->GetBlock(m_Target + mc::Vector3i(0, 1, 0)).GetBlock();
+        mc::block::BlockPtr block = m_World->GetBlock(m_Target + mc::Vector3i(0, 1, 0));
 
         if (!block || block->GetType() == 0) {
             mc::protocol::packets::out::PlayerBlockPlacementPacket blockPlacePacket(m_Target, mc::Face::Top, mc::Hand::Main, mc::Vector3f(0.5, 0, 0.5));

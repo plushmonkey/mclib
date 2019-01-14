@@ -127,7 +127,7 @@ protected:
     EntityType m_Type;
 
 public:
-    Entity(EntityId id) noexcept : m_EntityId(id), m_VehicleId(-1), m_Type(EntityType::Unknown) { }
+    Entity(EntityId id, protocol::Version protocolVersion) noexcept : m_EntityId(id), m_VehicleId(-1), m_Type(EntityType::Unknown), m_Metadata(protocolVersion) { }
     virtual ~Entity() { }
 
     Entity(const Entity& rhs) = default;

@@ -97,24 +97,24 @@ bool Yggdrasil::Authenticate(const std::string& username, const std::string& pas
         return false;
     }
 
-    auto& errorNode = result.value("error", json());
+    auto errorNode = result.value("error", json());
     if (!errorNode.is_null())
         throw YggdrasilException(errorNode.get<std::string>(), result["errorMessage"].get<std::string>());
 
-    auto& accessTokenNode = result.value("accessToken", json());
+    auto accessTokenNode = result.value("accessToken", json());
     if (accessTokenNode.is_null())
         return false;
 
     m_AccessToken = accessTokenNode.get<std::string>();
 
-    auto& clientTokenNode = result.value("clientToken", json());
+    auto clientTokenNode = result.value("clientToken", json());
 
     if (!clientTokenNode.is_null())
         m_ClientToken = clientTokenNode.get<std::string>();
     else
         m_ClientToken = authPayload["clientToken"].get<std::string>();
 
-    auto& selectedProfileNode = result.value("selectedProfile", json());
+    auto selectedProfileNode = result.value("selectedProfile", json());
 
     if (selectedProfileNode.is_null())
         throw YggdrasilException("No minecraft license attached to Mojang account.");
@@ -144,7 +144,7 @@ std::pair<std::string, std::string> Yggdrasil::Refresh(const std::string& access
         throw YggdrasilException("Could not parse JSON response while refreshing access token.");
     }
 
-    auto& errorNode = result.value("error", json());
+    auto errorNode = result.value("error", json());
 
     if (!errorNode.is_null())
         throw YggdrasilException(errorNode.get<std::string>(), result["errorMessage"].get<std::string>());
@@ -152,7 +152,7 @@ std::pair<std::string, std::string> Yggdrasil::Refresh(const std::string& access
     m_AccessToken = result["accessToken"].get<std::string>();
     m_ClientToken = clientToken;
 
-    auto& selectedProfileNode = result.value("selectedProfile", json());
+    auto selectedProfileNode = result.value("selectedProfile", json());
 
     if (!selectedProfileNode.is_null()) {
         if (selectedProfileNode.find("id") != selectedProfileNode.end()) {

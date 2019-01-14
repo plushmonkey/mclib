@@ -16,7 +16,7 @@ private:
     Direction m_Direction;
 
 public:
-    PaintingEntity(EntityId eid) : Entity(eid), m_Title(L""), m_Direction(Direction::South) { SetType(EntityType::Painting); }
+    PaintingEntity(EntityId eid, protocol::Version protocolVersion) : Entity(eid, protocolVersion), m_Title(L""), m_Direction(Direction::South) { SetType(EntityType::Painting); }
 
     const std::wstring& GetTitle() const noexcept { return m_Title; }
     Direction GetDirection() const noexcept { return m_Direction; }
