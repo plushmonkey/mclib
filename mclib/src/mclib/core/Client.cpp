@@ -54,8 +54,6 @@ void Client::Update() {
         playerEntity->SetPosition(m_PlayerController->GetPosition());
     }
 
-    std::this_thread::sleep_for(std::chrono::milliseconds(1));
-
     s64 time = util::GetTime();
     if (time >= m_LastUpdate + (1000 / 20)) {
         m_PlayerController->Update();
@@ -67,6 +65,7 @@ void Client::Update() {
 void Client::UpdateThread() {
     while (m_Connected) {
         Update();
+        std::this_thread::sleep_for(std::chrono::milliseconds(1));
     }
 }
 

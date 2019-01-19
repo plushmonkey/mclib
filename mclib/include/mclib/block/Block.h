@@ -48,6 +48,10 @@ public:
         return m_Solid;
     }
 
+    bool IsOpaque() const noexcept {
+        return m_BoundingBox.min != mc::Vector3d(0, 0, 0) || m_BoundingBox.max != mc::Vector3d(0, 0, 0);
+    }
+
     void SetBoundingBox(const AABB& bound) noexcept {
         m_BoundingBox = bound;
     }
