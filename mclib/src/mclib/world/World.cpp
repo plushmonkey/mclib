@@ -191,7 +191,7 @@ block::BlockPtr World::GetBlock(Vector3d pos) const {
 block::BlockPtr World::GetBlock(Vector3i pos) const {
     ChunkColumnPtr col = GetChunk(pos);
 
-    if (!col) return nullptr;
+    if (!col) return block::BlockRegistry::GetInstance()->GetBlock(0);
 
     s64 x = pos.x % 16;
     s64 z = pos.z % 16;

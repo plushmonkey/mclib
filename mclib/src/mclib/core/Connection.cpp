@@ -230,46 +230,48 @@ protocol::packets::Packet* Connection::CreatePacket(DataBuffer& buffer) {
 }
 
 void Connection::CreatePacket() {
-    DataBuffer buffer;
+    while (true) {
+        DataBuffer buffer;
 
-    m_Socket->Receive(buffer, 4096);
+        m_Socket->Receive(buffer, 4096);
 
-    if (buffer.IsEmpty()) {
+        if (buffer.IsEmpty()) {
+            if (m_Socket->GetStatus() != network::Socket::Connected) {
+                NotifyListeners(&ConnectionListener::OnSocketStateChange, m_Socket->GetStatus());
+            }
+            return;
+        }
+
+        m_HandleBuffer << m_Encrypter->Decrypt(buffer);
+
+        do {
+            try {
+                protocol::packets::Packet* packet = CreatePacket(m_HandleBuffer);
+
+                if (packet) {
+                    // Only send the settings after the server has accepted the new protocol state.
+                    if (!m_SentSettings && packet->GetProtocolState() == protocol::State::Play) {
+                        SendSettingsPacket();
+                    }
+
+                    this->GetDispatcher()->Dispatch(packet);
+                    protocol::packets::PacketFactory::FreePacket(packet);
+                } else {
+                    break;
+                }
+            } catch (const protocol::UnfinishedProtocolException&) {
+                // Ignore for now
+            }
+        } while (!m_HandleBuffer.IsFinished() && m_HandleBuffer.GetSize() > 0);
+
+        if (m_HandleBuffer.IsFinished())
+            m_HandleBuffer = DataBuffer();
+        else if (m_HandleBuffer.GetReadOffset() != 0)
+            m_HandleBuffer = DataBuffer(m_HandleBuffer, m_HandleBuffer.GetReadOffset());
+
         if (m_Socket->GetStatus() != network::Socket::Connected) {
             NotifyListeners(&ConnectionListener::OnSocketStateChange, m_Socket->GetStatus());
         }
-        return;
-    }
-
-    m_HandleBuffer << m_Encrypter->Decrypt(buffer);
-
-    do {
-        try {
-            protocol::packets::Packet* packet = CreatePacket(m_HandleBuffer);
-
-            if (packet) {
-                // Only send the settings after the server has accepted the new protocol state.
-                if (!m_SentSettings && packet->GetProtocolState() == protocol::State::Play) {
-                    SendSettingsPacket();
-                }
-
-                this->GetDispatcher()->Dispatch(packet);
-                protocol::packets::PacketFactory::FreePacket(packet);
-            } else {
-                break;
-            }
-        } catch (const protocol::UnfinishedProtocolException&) {
-            // Ignore for now
-        }
-    } while (!m_HandleBuffer.IsFinished() && m_HandleBuffer.GetSize() > 0);
-
-    if (m_HandleBuffer.IsFinished())
-        m_HandleBuffer = DataBuffer();
-    else if (m_HandleBuffer.GetReadOffset() != 0)
-        m_HandleBuffer = DataBuffer(m_HandleBuffer, m_HandleBuffer.GetReadOffset());
-
-    if (m_Socket->GetStatus() != network::Socket::Connected) {
-        NotifyListeners(&ConnectionListener::OnSocketStateChange, m_Socket->GetStatus());
     }
 }
 
