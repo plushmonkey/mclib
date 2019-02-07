@@ -24,10 +24,9 @@ Dependencies:
 - C++14 compiler (g++/clang/msvc 2017)
 - openssl
 - libcurl
-- jsoncpp
 
 Ubuntu:  
-`sudo apt-get install clang libssl-dev libcurl4-openssl-dev libjsoncpp-dev`  
+`sudo apt-get install clang libssl-dev libcurl4-openssl-dev`  
 `make`
 
 Windows:  
@@ -35,7 +34,8 @@ Windows:
 Open `mclib.sln` with Visual Studio 2017 and build
 
 ## Examples
-- [client](https://github.com/plushmonkey/mclib/blob/master/client/main.cpp) : Basic example client
+- [terracotta](https://github.com/plushmonkey/Terracotta) : OpenGL client
+- [client](https://github.com/plushmonkey/mclib/blob/master/client/main.cpp) : Basic example client for connecting to a server
 - [mcbot](https://github.com/plushmonkey/mcbot) : Bot with pathfinding and melee attacking
 - [avalanche](https://github.com/plushmonkey/avalanche) : Server stress test tool
 - [mcqt](https://github.com/plushmonkey/mcqt) : Chat client made with qt
