@@ -9,3 +9,4 @@ lib
 *.o
 .vs
 
+mcclient

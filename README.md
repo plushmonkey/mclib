@@ -26,7 +26,7 @@ Dependencies:
 - libcurl
 
 Ubuntu:  
-`sudo apt-get install clang libssl-dev libcurl4-openssl-dev`  
+`sudo apt-get install clang libssl-dev libcurl4-openssl-dev libjsoncpp-dev`  
 `make`
 
 Windows:  
