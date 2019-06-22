@@ -1,3 +1,4 @@
+.vscode
 Debug
 Release
 build
@@ -8,4 +9,3 @@ lib
 *.so
 *.o
 .vs
-

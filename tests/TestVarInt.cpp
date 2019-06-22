@@ -1,11 +1,11 @@
-#include "catch.hpp"
+#include <gtest/gtest.h>
 
-#include <mclib/common/VarInt.h>
 #include <mclib/common/DataBuffer.h>
+#include <mclib/common/VarInt.h>
 
 #include <limits>
 
-TEST_CASE("VarInt stores and returns integers", "[VarInt]") {
+TEST(VarInt, VarIntStoresAndReturnsIntegers) {
     const auto PositiveValue = 34;
     const auto NegativeValue = -42;
 
@@ -13,20 +13,20 @@ TEST_CASE("VarInt stores and returns integers", "[VarInt]") {
     mc::VarInt negative = NegativeValue;
     mc::VarInt zero = 0;
 
-    REQUIRE(positive.GetInt() == PositiveValue);
-    REQUIRE(negative.GetInt() == NegativeValue);
-    REQUIRE(zero.GetInt() == 0);
+    EXPECT_EQ(positive.GetInt(), PositiveValue);
+    EXPECT_EQ(negative.GetInt(), NegativeValue);
+    EXPECT_EQ(zero.GetInt(), 0);
 }
 
-TEST_CASE("VarLong stores and returns longs", "[VarInt]") {
+TEST(VarInt, VarLongStoresAndReturnsLongs) {
     mc::VarLong positive = std::numeric_limits<s64>::max();
     mc::VarLong negative = std::numeric_limits<s64>::min();
 
-    REQUIRE(positive.GetLong() == std::numeric_limits<s64>::max());
-    REQUIRE(negative.GetLong() == std::numeric_limits<s64>::min());
+    EXPECT_EQ(positive.GetLong(), std::numeric_limits<s64>::max());
+    EXPECT_EQ(negative.GetLong(), std::numeric_limits<s64>::min());
 }
 
-TEST_CASE("VarInt serializes and deserializes correctly", "[VarInt]") {
+TEST(VarInt, VarIntSerializesAndDeserializesCorrectly) {
     const auto PositiveValue = 34;
     const auto NegativeValue = -42;
 
@@ -35,30 +35,33 @@ TEST_CASE("VarInt serializes and deserializes correctly", "[VarInt]") {
     mc::VarInt zero = 0;
     mc::DataBuffer buffer;
 
-    SECTION("positive integers serialize and deserialize") {
+    {
         buffer << positive;
 
         mc::VarInt result;
         buffer >> result;
 
-        REQUIRE(result.GetInt() == PositiveValue);
+        EXPECT_EQ(result.GetInt(), PositiveValue)
+            << "positive integers serialize and deserialize failed";
     }
 
-    SECTION("negative integers serialize and deserialize") {
+    {
         buffer << negative;
 
         mc::VarInt result;
         buffer >> result;
 
-        REQUIRE(result.GetInt() == NegativeValue);
+        EXPECT_EQ(result.GetInt(), NegativeValue)
+            << "negative integers serialize and deserialize failed";
     }
 
-    SECTION("zero serializes and deserializes") {
+    {
         buffer << zero;
 
         mc::VarInt result;
         buffer >> result;
 
-        REQUIRE(result.GetInt() == 0);
+        EXPECT_EQ(result.GetInt(), 0)
+            << "zero serializes and deserializes failed";
     }
 }

@@ -1,0 +1,10 @@
+[requires]
+OpenSSL/1.1.1a@conan/stable
+libcurl/7.64.1@bincrafters/stable
+zlib/1.2.9@conan/stable
+gtest/1.8.1@bincrafters/stable 
+
+[generators]
+cmake
+
+[options]
