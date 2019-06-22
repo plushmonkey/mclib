@@ -16,6 +16,6 @@ public:
     void HandlePacket(mc::protocol::packets::in::PlayerListItemPacket* packet);
 };
 
-} // ns example
+}  // namespace example
 
 #endif

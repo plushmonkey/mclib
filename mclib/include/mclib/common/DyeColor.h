@@ -1,8 +1,8 @@
 #ifndef MCLIB_COMMON_DYECOLOR_H_
 #define MCLIB_COMMON_DYECOLOR_H_
 
-#include <mclib/mclib.h>
 #include <mclib/common/Vector.h>
+#include <mclib/mclib.h>
 
 namespace mc {
 
@@ -29,6 +29,6 @@ MCLIB_API Vector3d GetColor(DyeColor dyeColor);
 MCLIB_API std::string to_string(DyeColor dyeColor);
 MCLIB_API std::wstring to_wstring(DyeColor dyeColor);
 
-} // ns mc
+}  // namespace mc
 
 #endif

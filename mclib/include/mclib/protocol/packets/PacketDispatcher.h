@@ -29,13 +29,15 @@ public:
 
     void MCLIB_API Dispatch(Packet* packet);
 
-    void MCLIB_API RegisterHandler(State protocolState, PacketId id, PacketHandler* handler);
-    void MCLIB_API UnregisterHandler(State protocolState, PacketId id, PacketHandler* handler);
+    void MCLIB_API RegisterHandler(State protocolState, PacketId id,
+                                   PacketHandler* handler);
+    void MCLIB_API UnregisterHandler(State protocolState, PacketId id,
+                                     PacketHandler* handler);
     void MCLIB_API UnregisterHandler(PacketHandler* handler);
 };
 
-} // ns packets
-} // ns protocol
-} // ns mc
+}  // namespace packets
+}  // namespace protocol
+}  // namespace mc
 
 #endif

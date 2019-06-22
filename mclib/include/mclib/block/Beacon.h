@@ -16,7 +16,11 @@ private:
     s32 m_Secondary;
 
 public:
-    MCLIB_API Beacon(BlockEntityType type, Vector3i position) : BlockEntity(type, position), m_Levels(0), m_Primary(0), m_Secondary(0) { }
+    MCLIB_API Beacon(BlockEntityType type, Vector3i position)
+        : BlockEntity(type, position),
+          m_Levels(0),
+          m_Primary(0),
+          m_Secondary(0) {}
     MCLIB_API bool ImportNBT(nbt::NBT* nbt);
 
     s32 GetLevels() const noexcept { return m_Levels; }
@@ -24,8 +28,7 @@ public:
     s32 GetSecondary() const noexcept { return m_Secondary; }
 };
 
-
-} // ns block
-} // ns mc
+}  // namespace block
+}  // namespace mc
 
 #endif

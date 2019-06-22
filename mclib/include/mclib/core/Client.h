@@ -1,13 +1,13 @@
 #ifndef MCLIB_CORE_CLIENT_H
 #define MCLIB_CORE_CLIENT_H
 
-#include <mclib/mclib.h>
 #include <mclib/core/AuthToken.h>
 #include <mclib/core/Connection.h>
 #include <mclib/core/PlayerManager.h>
 #include <mclib/entity/EntityManager.h>
-#include <mclib/inventory/Inventory.h>
 #include <mclib/inventory/Hotbar.h>
+#include <mclib/inventory/Inventory.h>
+#include <mclib/mclib.h>
 #include <mclib/network/Network.h>
 #include <mclib/protocol/packets/PacketDispatcher.h>
 #include <mclib/util/ObserverSubject.h>
@@ -20,7 +20,7 @@ namespace util {
 
 class PlayerController;
 
-} // ns util
+}  // namespace util
 
 namespace core {
 
@@ -29,13 +29,10 @@ public:
     virtual void OnTick() = 0;
 };
 
-enum class UpdateMethod {
-    Block,
-    Threaded,
-    Manual
-};
+enum class UpdateMethod { Block, Threaded, Manual };
 
-class Client : public util::ObserverSubject<ClientListener>, public core::ConnectionListener {
+class Client : public util::ObserverSubject<ClientListener>,
+               public core::ConnectionListener {
 private:
     protocol::packets::PacketDispatcher* m_Dispatcher;
     core::Connection m_Connection;
@@ -50,7 +47,9 @@ private:
     std::thread m_UpdateThread;
 
 public:
-    MCLIB_API Client(protocol::packets::PacketDispatcher* dispatcher, protocol::Version version = protocol::Version::Minecraft_1_11_2);
+    MCLIB_API Client(
+        protocol::packets::PacketDispatcher* dispatcher,
+        protocol::Version version = protocol::Version::Minecraft_1_11_2);
     MCLIB_API ~Client();
 
     Client(const Client& rhs) = delete;
@@ -61,23 +60,32 @@ public:
     void MCLIB_API OnSocketStateChange(network::Socket::Status newState);
     void MCLIB_API UpdateThread();
     void MCLIB_API Update();
-    bool MCLIB_API Login(const std::string& host, unsigned short port, const std::string& user, const std::string& password, UpdateMethod method = UpdateMethod::Block);
-    bool MCLIB_API Login(const std::string& host, unsigned short port, const std::string& user, AuthToken token, UpdateMethod method = UpdateMethod::Block);
-    void MCLIB_API Ping(const std::string& host, unsigned short port, UpdateMethod method = UpdateMethod::Block);
+    bool MCLIB_API Login(const std::string& host, unsigned short port,
+                         const std::string& user, const std::string& password,
+                         UpdateMethod method = UpdateMethod::Block);
+    bool MCLIB_API Login(const std::string& host, unsigned short port,
+                         const std::string& user, AuthToken token,
+                         UpdateMethod method = UpdateMethod::Block);
+    void MCLIB_API Ping(const std::string& host, unsigned short port,
+                        UpdateMethod method = UpdateMethod::Block);
 
-    protocol::packets::PacketDispatcher* GetDispatcher() { return m_Dispatcher; }
+    protocol::packets::PacketDispatcher* GetDispatcher() {
+        return m_Dispatcher;
+    }
     core::Connection* GetConnection() { return &m_Connection; }
     core::PlayerManager* GetPlayerManager() { return &m_PlayerManager; }
     entity::EntityManager* GetEntityManager() { return &m_EntityManager; }
-    inventory::InventoryManager* GetInventoryManager() { return m_InventoryManager.get(); }
+    inventory::InventoryManager* GetInventoryManager() {
+        return m_InventoryManager.get();
+    }
     inventory::Hotbar& GetHotbar() { return m_Hotbar; }
-    util::PlayerController* GetPlayerController() { return m_PlayerController.get(); }
+    util::PlayerController* GetPlayerController() {
+        return m_PlayerController.get();
+    }
     world::World* GetWorld() { return &m_World; }
-
 };
 
-} // ns core
-} // ns mc
+}  // namespace core
+}  // namespace mc
 
-#endif // CLIENT_H
-
+#endif  // CLIENT_H

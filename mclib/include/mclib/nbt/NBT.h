@@ -1,14 +1,14 @@
 #ifndef MCLIB_NBT_NBT_H_
 #define MCLIB_NBT_NBT_H_
 
-#include <mclib/mclib.h>
 #include <mclib/common/Types.h>
+#include <mclib/mclib.h>
 #include <mclib/nbt/Tag.h>
 
+#include <map>
+#include <memory>
 #include <string>
 #include <vector>
-#include <memory>
-#include <map>
 
 namespace mc {
 
@@ -21,7 +21,7 @@ private:
     TagCompound m_Root;
 
 public:
-    MCLIB_API NBT() { }
+    MCLIB_API NBT() {}
 
     NBT(const NBT& rhs) = default;
     NBT& operator=(const NBT& rhs) = default;
@@ -45,7 +45,7 @@ public:
 MCLIB_API DataBuffer& operator<<(DataBuffer& out, const NBT& nbt);
 MCLIB_API DataBuffer& operator>>(DataBuffer& in, NBT& nbt);
 
-} // ns nbt
-} // ns mc
+}  // namespace nbt
+}  // namespace mc
 
 #endif

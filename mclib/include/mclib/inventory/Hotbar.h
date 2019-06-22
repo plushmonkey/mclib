@@ -17,7 +17,9 @@ private:
     s32 m_SelectedSlot;
 
 public:
-    MCLIB_API Hotbar(protocol::packets::PacketDispatcher* dispatcher, core::Connection* connection, InventoryManager* inventoryManager);
+    MCLIB_API Hotbar(protocol::packets::PacketDispatcher* dispatcher,
+                     core::Connection* connection,
+                     InventoryManager* inventoryManager);
     MCLIB_API ~Hotbar();
 
     Hotbar(const Hotbar& rhs) = delete;
@@ -25,7 +27,8 @@ public:
     Hotbar(Hotbar&& rhs) = delete;
     Hotbar& operator=(Hotbar&& rhs) = delete;
 
-    MCLIB_API void HandlePacket(protocol::packets::in::HeldItemChangePacket* packet);
+    MCLIB_API void HandlePacket(
+        protocol::packets::in::HeldItemChangePacket* packet);
 
     // Sends a packet telling the server that the client is changing slots.
     // Slot should be between 0 and 8.
@@ -37,7 +40,7 @@ public:
     MCLIB_API Slot GetItem(s32 hotbarIndex);
 };
 
-} // ns inventory
-} // ns mc
+}  // namespace inventory
+}  // namespace mc
 
 #endif

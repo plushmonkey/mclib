@@ -24,7 +24,7 @@ public:
     std::size_t MCLIB_API Receive(DataBuffer& buffer, std::size_t amount);
 };
 
-} // ns network
-} // ns mc
+}  // namespace network
+}  // namespace mc
 
 #endif

@@ -13,7 +13,7 @@ class DataBuffer;
 namespace core {
 
 struct EncryptionStrategy {
-    virtual ~EncryptionStrategy() { }
+    virtual ~EncryptionStrategy() {}
     virtual DataBuffer Encrypt(const DataBuffer& buffer) = 0;
     virtual DataBuffer Decrypt(const DataBuffer& buffer) = 0;
 };
@@ -30,11 +30,13 @@ private:
     Impl* m_Impl;
 
 public:
-    MCLIB_API EncryptionStrategyAES(const std::string& publicKey, const std::string& verifyToken);
+    MCLIB_API EncryptionStrategyAES(const std::string& publicKey,
+                                    const std::string& verifyToken);
     MCLIB_API ~EncryptionStrategyAES();
 
     EncryptionStrategyAES(const EncryptionStrategyAES& other) = delete;
-    EncryptionStrategyAES& operator=(const EncryptionStrategyAES& other) = delete;
+    EncryptionStrategyAES& operator=(const EncryptionStrategyAES& other) =
+        delete;
     EncryptionStrategyAES(EncryptionStrategyAES&& other) = delete;
     EncryptionStrategyAES& operator=(EncryptionStrategyAES&& other) = delete;
 
@@ -42,10 +44,11 @@ public:
     DataBuffer MCLIB_API Decrypt(const DataBuffer& buffer);
 
     std::string MCLIB_API GetSharedSecret() const;
-    MCLIB_API protocol::packets::out::EncryptionResponsePacket* GenerateResponsePacket() const;
+    MCLIB_API protocol::packets::out::EncryptionResponsePacket*
+    GenerateResponsePacket() const;
 };
 
-} // ns core
-} // ns mc
+}  // namespace core
+}  // namespace mc
 
 #endif

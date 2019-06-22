@@ -1,14 +1,14 @@
 #ifndef MCLIB_BLOCK_BLOCK_ENTITY_H_
 #define MCLIB_BLOCK_BLOCK_ENTITY_H_
 
-#include <mclib/mclib.h>
 #include <mclib/common/Vector.h>
-#include <mclib/nbt/NBT.h>
 #include <mclib/inventory/Slot.h>
+#include <mclib/mclib.h>
+#include <mclib/nbt/NBT.h>
 
-#include <string>
-#include <memory>
 #include <array>
+#include <memory>
+#include <string>
 #include <vector>
 
 namespace mc {
@@ -66,7 +66,7 @@ public:
 };
 using BlockEntityPtr = std::shared_ptr<BlockEntity>;
 
-} // ns block
-} // ns mc
+}  // namespace block
+}  // namespace mc
 
 #endif

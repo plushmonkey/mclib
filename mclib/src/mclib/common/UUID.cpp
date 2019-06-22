@@ -2,9 +2,9 @@
 
 #include <mclib/common/DataBuffer.h>
 
+#include <cassert>
 #include <iomanip>
 #include <sstream>
-#include <cassert>
 
 namespace mc {
 
@@ -16,21 +16,22 @@ std::string UUID::ToString(bool dashes) const {
     std::size_t pos = 0;
 
     for (u32 i = 0; i < 4; ++i)
-        out << std::hex << std::setfill('0') << std::setw(2) << ((int)buffer[pos + i] & 0xFF);
-    if (dashes)
-        out << '-';
+        out << std::hex << std::setfill('0') << std::setw(2)
+            << ((int)buffer[pos + i] & 0xFF);
+    if (dashes) out << '-';
     pos += 4;
 
     for (u32 j = 0; j < 3; ++j) {
         for (u32 i = 0; i < 2; ++i)
-            out << std::hex << std::setfill('0') << std::setw(2) << ((int)buffer[pos + i] & 0xFF);
-        if (dashes)
-            out << '-';
+            out << std::hex << std::setfill('0') << std::setw(2)
+                << ((int)buffer[pos + i] & 0xFF);
+        if (dashes) out << '-';
         pos += 2;
     }
 
     for (u32 i = 0; i < 6; ++i)
-        out << std::hex << std::setfill('0') << std::setw(2) << ((int)buffer[pos + i] & 0xFF);
+        out << std::hex << std::setfill('0') << std::setw(2)
+            << ((int)buffer[pos + i] & 0xFF);
 
     return out.str();
 }
@@ -46,7 +47,7 @@ UUID UUID::FromString(const std::wstring& str, bool dashes) {
     else
         assert(str.length() == 32);
 
-    //0ba955da-bce3-3796-b74a-9faae6cc08a2
+    // 0ba955da-bce3-3796-b74a-9faae6cc08a2
 
     std::wstring upperStr, lowerStr;
 
@@ -57,23 +58,16 @@ UUID UUID::FromString(const std::wstring& str, bool dashes) {
     lowerStr = L"0x";
 
     if (dashes) {
-        for (u32 i = 0; i < 8; ++i)
-            upperStr += str[i];
-        for (u32 i = 0; i < 4; ++i)
-            upperStr += str[i + 9];
-        for (u32 i = 0; i < 4; ++i)
-            upperStr += str[i + 14];
+        for (u32 i = 0; i < 8; ++i) upperStr += str[i];
+        for (u32 i = 0; i < 4; ++i) upperStr += str[i + 9];
+        for (u32 i = 0; i < 4; ++i) upperStr += str[i + 14];
 
-        for (u32 i = 0; i < 4; ++i)
-            lowerStr += str[i + 19];
-        for (u32 i = 0; i < 12; ++i)
-            lowerStr += str[i + 24];
+        for (u32 i = 0; i < 4; ++i) lowerStr += str[i + 19];
+        for (u32 i = 0; i < 12; ++i) lowerStr += str[i + 24];
     } else {
-        for (u32 i = 0; i < 16; ++i)
-            upperStr += str[i];
+        for (u32 i = 0; i < 16; ++i) upperStr += str[i];
 
-        for (u32 i = 0; i < 16; ++i)
-            lowerStr += str[i + 16];
+        for (u32 i = 0; i < 16; ++i) lowerStr += str[i + 16];
     }
 
     UUID uuid;
@@ -107,5 +101,4 @@ std::wostream& operator<<(std::wostream& out, const UUID& uuid) {
     return out;
 }
 
-} // ns mc
-
+}  // namespace mc

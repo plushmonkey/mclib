@@ -103,9 +103,7 @@ void Slot::Deserialize(DataBuffer& in, protocol::Version version) {
             in >> m_NBT;
         }
     }
-
-    
 }
 
-} // ns inventory
-} // ns mc
+}  // namespace inventory
+}  // namespace mc

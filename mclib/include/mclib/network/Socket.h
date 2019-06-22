@@ -3,20 +3,20 @@
 
 #include <mclib/common/DataBuffer.h>
 #include <mclib/common/Types.h>
+#include <memory>
 #include <string>
 #include <vector>
-#include <memory>
 
 #ifdef _WIN32
 #include <WS2tcpip.h>
 #include <WinSock2.h>
 #else
-#include <sys/socket.h>
-#include <netinet/in.h>
 #include <arpa/inet.h>
+#include <netdb.h>
+#include <netinet/in.h>
+#include <sys/socket.h>
 #include <sys/types.h>
 #include <unistd.h>
-#include <netdb.h>
 
 #define closesocket close
 #endif
@@ -79,8 +79,7 @@ public:
 
 typedef std::shared_ptr<Socket> SocketPtr;
 
-} // ns network
-} // ns mc
+}  // namespace network
+}  // namespace mc
 
 #endif
-

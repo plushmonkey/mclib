@@ -4,8 +4,8 @@
 #include <mclib/core/Connection.h>
 #include <mclib/protocol/packets/PacketHandler.h>
 
-#include <unordered_map>
 #include <functional>
+#include <unordered_map>
 
 namespace mc {
 namespace util {
@@ -16,11 +16,14 @@ public:
         std::string name;
         std::string version;
 
-        ModInfo(const std::string& name, const std::string& version) : name(name), version(version) { }
+        ModInfo(const std::string& name, const std::string& version)
+            : name(name), version(version) {}
     };
 
 private:
-    typedef std::unordered_map<std::wstring, std::function<void(const std::string&)>> HandlerMap;
+    typedef std::unordered_map<std::wstring,
+                               std::function<void(const std::string&)>>
+        HandlerMap;
 
     HandlerMap m_Handlers;
     // Filled out during ping response
@@ -40,18 +43,23 @@ private:
     }
 
 public:
-    MCLIB_API ForgeHandler(protocol::packets::PacketDispatcher* dispatcher, core::Connection* connection);
+    MCLIB_API ForgeHandler(protocol::packets::PacketDispatcher* dispatcher,
+                           core::Connection* connection);
     MCLIB_API ~ForgeHandler();
 
-    MCLIB_API void SetConnection(core::Connection* conn) { m_Connection = conn; }
+    MCLIB_API void SetConnection(core::Connection* conn) {
+        m_Connection = conn;
+    }
 
-    MCLIB_API void HandlePacket(protocol::packets::in::PluginMessagePacket* packet);
-    MCLIB_API void HandlePacket(protocol::packets::in::status::ResponsePacket* packet);
+    MCLIB_API void HandlePacket(
+        protocol::packets::in::PluginMessagePacket* packet);
+    MCLIB_API void HandlePacket(
+        protocol::packets::in::status::ResponsePacket* packet);
 
     MCLIB_API bool HasModInfo() const;
 };
 
-} // ns util
-} // ns mc
+}  // namespace util
+}  // namespace mc
 
 #endif

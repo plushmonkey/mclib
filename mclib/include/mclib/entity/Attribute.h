@@ -4,8 +4,8 @@
 #include <mclib/common/Types.h>
 #include <mclib/common/UUID.h>
 
-#include <vector>
 #include <string>
+#include <vector>
 
 namespace mc {
 namespace entity {
@@ -26,17 +26,14 @@ private:
     ModifierOperation m_Operation;
 
 public:
-    Modifier(UUID uuid, double amount, ModifierOperation operation) 
-        : m_UUID(uuid),
-          m_Amount(amount),
-          m_Operation(operation)
-    {
-        
-    }
+    Modifier(UUID uuid, double amount, ModifierOperation operation)
+        : m_UUID(uuid), m_Amount(amount), m_Operation(operation) {}
 
     inline const UUID& GetUUID() const noexcept { return m_UUID; }
     inline double GetAmount() const noexcept { return m_Amount; }
-    inline ModifierOperation GetOperation() const noexcept { return m_Operation; }
+    inline ModifierOperation GetOperation() const noexcept {
+        return m_Operation;
+    }
 };
 
 class Attribute {
@@ -50,15 +47,13 @@ private:
 
 public:
     Attribute(const std::wstring& key, double amount)
-        : m_Key(key),
-          m_Amount(amount)
-    {
-
-    }
+        : m_Key(key), m_Amount(amount) {}
 
     inline const std::wstring& GetKey() const noexcept { return m_Key; }
     inline double GetBaseAmount() const noexcept { return m_Amount; }
-    inline const Modifiers& GetModifiers() const noexcept { return m_Modifiers; }
+    inline const Modifiers& GetModifiers() const noexcept {
+        return m_Modifiers;
+    }
 
     // Returns the amount after being modified.
     double GetAmount() const {
@@ -91,7 +86,7 @@ public:
     }
 };
 
-} // ns entity
-} // ns mc
+}  // namespace entity
+}  // namespace mc
 
 #endif

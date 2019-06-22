@@ -6,8 +6,8 @@
 #include <mclib/entity/Attribute.h>
 #include <mclib/entity/Metadata.h>
 
-#include <string>
 #include <memory>
+#include <string>
 #include <unordered_map>
 
 namespace mc {
@@ -104,7 +104,7 @@ enum class EntityType {
     EnderCrystal = 200,
 
     // Not part of protocol
-    Lightning= 251,
+    Lightning = 251,
     FallingObject = 252,
     FishingHook = 253,
     Player = 254,
@@ -127,8 +127,12 @@ protected:
     EntityType m_Type;
 
 public:
-    Entity(EntityId id, protocol::Version protocolVersion) noexcept : m_EntityId(id), m_VehicleId(-1), m_Type(EntityType::Unknown), m_Metadata(protocolVersion) { }
-    virtual ~Entity() { }
+    Entity(EntityId id, protocol::Version protocolVersion) noexcept
+        : m_EntityId(id),
+          m_VehicleId(-1),
+          m_Type(EntityType::Unknown),
+          m_Metadata(protocolVersion) {}
+    virtual ~Entity() {}
 
     Entity(const Entity& rhs) = default;
     Entity& operator=(const Entity& rhs) = default;
@@ -161,7 +165,7 @@ public:
     void SetType(EntityType type) { m_Type = type; }
     void SetMetadata(const EntityMetadata& metadata) { m_Metadata = metadata; }
 
-    void SetAttribute(const std::wstring& key, const Attribute& attrib) { 
+    void SetAttribute(const std::wstring& key, const Attribute& attrib) {
         m_Attributes.erase(key);
         m_Attributes.insert(std::make_pair(key, attrib));
     }
@@ -171,7 +175,7 @@ public:
 
 typedef std::shared_ptr<Entity> EntityPtr;
 
-} // ns entity
-} // ns mc
+}  // namespace entity
+}  // namespace mc
 
 #endif

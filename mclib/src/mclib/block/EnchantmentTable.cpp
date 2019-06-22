@@ -9,9 +9,9 @@ bool EnchantmentTable::ImportNBT(nbt::NBT* nbt) {
     if (nameTag) {
         this->SetCustomName(nameTag->GetValue());
     }
-    
+
     return true;
 }
 
-} // ns block
-} // ns mc
+}  // namespace block
+}  // namespace mc

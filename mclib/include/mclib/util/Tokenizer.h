@@ -1,8 +1,8 @@
 #ifndef MCLIB_UTIL_TOKENIZER_H_
 #define MCLIB_UTIL_TOKENIZER_H_
 
-#include <string>
 #include <sstream>
+#include <string>
 #include <vector>
 
 namespace mc {
@@ -21,7 +21,7 @@ private:
     TokenList m_Tokens;
 
 public:
-    Tokenizer(const std::string &str) : m_String(str) { }
+    Tokenizer(const std::string &str) : m_String(str) {}
 
     TokenList::size_type tokenize(char delim, TokenList::size_type max = 0) {
         std::stringstream ss(m_String);
@@ -30,8 +30,7 @@ public:
 
         m_Tokens.clear();
 
-        if (m_String.length() == 0)
-            return 0;
+        if (m_String.length() == 0) return 0;
 
         while (true) {
             cur++;
@@ -62,11 +61,13 @@ public:
     const_iterator begin() const { return m_Tokens.begin(); }
     const_iterator end() const { return m_Tokens.end(); }
     reference operator[](TokenList::size_type i) { return m_Tokens[i]; }
-    const_reference operator[](TokenList::size_type i) const { return m_Tokens[i]; }
+    const_reference operator[](TokenList::size_type i) const {
+        return m_Tokens[i];
+    }
     TokenList::size_type size() const { return m_Tokens.size(); }
 };
 
-} // ns util
-} // ns mc
+}  // namespace util
+}  // namespace mc
 
 #endif

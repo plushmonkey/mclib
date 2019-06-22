@@ -6,18 +6,17 @@
 namespace mc {
 namespace inventory {
 
-Hotbar::Hotbar(protocol::packets::PacketDispatcher* dispatcher, core::Connection* connection, InventoryManager* inventoryManager) 
-    : protocol::packets::PacketHandler(dispatcher), 
-      m_Connection(connection), 
-      m_InventoryManager(inventoryManager), 
-      m_SelectedSlot(0)
-{
-    dispatcher->RegisterHandler(protocol::State::Play, protocol::play::HeldItemChange, this);
+Hotbar::Hotbar(protocol::packets::PacketDispatcher* dispatcher,
+               core::Connection* connection, InventoryManager* inventoryManager)
+    : protocol::packets::PacketHandler(dispatcher),
+      m_Connection(connection),
+      m_InventoryManager(inventoryManager),
+      m_SelectedSlot(0) {
+    dispatcher->RegisterHandler(protocol::State::Play,
+                                protocol::play::HeldItemChange, this);
 }
 
-Hotbar::~Hotbar() {
-    GetDispatcher()->UnregisterHandler(this);
-}
+Hotbar::~Hotbar() { GetDispatcher()->UnregisterHandler(this); }
 
 void Hotbar::SelectSlot(s32 hotbarIndex) {
     m_SelectedSlot = hotbarIndex;
@@ -30,9 +29,7 @@ void Hotbar::HandlePacket(protocol::packets::in::HeldItemChangePacket* packet) {
     m_SelectedSlot = packet->GetSlot();
 }
 
-Slot Hotbar::GetCurrentItem() {
-    return GetItem(m_SelectedSlot);
-}
+Slot Hotbar::GetCurrentItem() { return GetItem(m_SelectedSlot); }
 
 Slot Hotbar::GetItem(s32 hotbarIndex) {
     Inventory* inventory = m_InventoryManager->GetPlayerInventory();
@@ -41,5 +38,5 @@ Slot Hotbar::GetItem(s32 hotbarIndex) {
     return inventory->GetItem(Inventory::HOTBAR_SLOT_START + hotbarIndex);
 }
 
-} // ns inventory
-} // ns mc
+}  // namespace inventory
+}  // namespace mc

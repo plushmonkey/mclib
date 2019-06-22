@@ -5,8 +5,8 @@
 #include <mclib/common/Types.h>
 #include <mclib/protocol/ProtocolState.h>
 
-#include <unordered_map>
 #include <string>
+#include <unordered_map>
 #include <vector>
 
 namespace mc {
@@ -20,14 +20,12 @@ protected:
     AABB m_BoundingBox;
 
 public:
-    Block(const std::string& name, u32 data, bool solid = true) : m_Name(name), m_Data(data), m_Solid(solid) { }
+    Block(const std::string& name, u32 data, bool solid = true)
+        : m_Name(name), m_Data(data), m_Solid(solid) {}
 
     Block(const std::string& name, u32 type, bool solid, const AABB& bounds)
-        : m_Name(name), m_Data(type), m_Solid(solid), m_BoundingBox(bounds)
-    {
-
-    }
-    virtual ~Block() { }
+        : m_Name(name), m_Data(type), m_Solid(solid), m_BoundingBox(bounds) {}
+    virtual ~Block() {}
 
     Block(const Block& other) = delete;
     Block& operator=(const Block& rhs) = delete;
@@ -40,27 +38,21 @@ public:
 
     virtual std::string GetName() const { return m_Name; }
 
-    u32 GetType() const noexcept {
-        return m_Data;
-    }
+    u32 GetType() const noexcept { return m_Data; }
 
-    bool IsSolid() const noexcept {
-        return m_Solid;
-    }
+    bool IsSolid() const noexcept { return m_Solid; }
 
     bool IsOpaque() const noexcept {
-        return m_BoundingBox.min != mc::Vector3d(0, 0, 0) || m_BoundingBox.max != mc::Vector3d(0, 0, 0);
+        return m_BoundingBox.min != mc::Vector3d(0, 0, 0) ||
+               m_BoundingBox.max != mc::Vector3d(0, 0, 0);
     }
 
-    void SetBoundingBox(const AABB& bound) noexcept {
-        m_BoundingBox = bound;
-    }
+    void SetBoundingBox(const AABB& bound) noexcept { m_BoundingBox = bound; }
 
-    virtual AABB GetBoundingBox() const noexcept {
-        return m_BoundingBox;
-    }
+    virtual AABB GetBoundingBox() const noexcept { return m_BoundingBox; }
 
-    // at is the world position of this block. Used to get the world bounding box
+    // at is the world position of this block. Used to get the world bounding
+    // box
     virtual AABB GetBoundingBox(Vector3i at) const {
         Vector3d atd = ToVector3d(at);
         AABB bounds = m_BoundingBox;
@@ -82,7 +74,7 @@ public:
     virtual std::vector<AABB> GetBoundingBoxes() {
         return std::vector<AABB>(1, m_BoundingBox);
     }
-    
+
     friend class BlockRegistry;
 };
 typedef Block* BlockPtr;
@@ -92,7 +84,8 @@ private:
     std::unordered_map<u32, BlockPtr> m_Blocks;
     std::unordered_map<std::string, BlockPtr> m_BlockNames;
 
-    BlockRegistry() { }
+    BlockRegistry() {}
+
 public:
     static MCLIB_API BlockRegistry* GetInstance();
 
@@ -102,10 +95,10 @@ public:
         auto iter = m_Blocks.find(data);
 
         if (iter == m_Blocks.end()) {
-            data &= ~15; // Return basic version if the meta type can't be found
+            data &=
+                ~15;  // Return basic version if the meta type can't be found
             iter = m_Blocks.find(data);
-            if (iter == m_Blocks.end())
-                return nullptr;
+            if (iter == m_Blocks.end()) return nullptr;
         }
         return iter->second;
     }
@@ -126,7 +119,7 @@ public:
     void MCLIB_API ClearRegistry();
 };
 
-} // ns block
-} // ns mc
+}  // namespace block
+}  // namespace mc
 
 #endif

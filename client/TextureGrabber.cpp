@@ -1,11 +1,11 @@
 #include "TextureGrabber.h"
 
 #include <mclib/protocol/packets/PacketDispatcher.h>
-#include <mclib/util/Hash.h>
 #include <mclib/util/HTTPClient.h>
+#include <mclib/util/Hash.h>
 
-#include <iostream>
 #include <fstream>
+#include <iostream>
 #include <string>
 
 namespace example {
@@ -14,22 +14,22 @@ bool TextureGrabber::ContainsTextureURL(const mc::json& root) {
     if (root.find("textures") == root.end()) return false;
     if (root["textures"].find("SKIN") == root["textures"].end()) return false;
 
-    return root["textures"]["SKIN"].find("url") != root["textures"]["SKIN"].end();
+    return root["textures"]["SKIN"].find("url") !=
+           root["textures"]["SKIN"].end();
 }
 
-TextureGrabber::TextureGrabber(mc::protocol::packets::PacketDispatcher* dispatcher)
-    : mc::protocol::packets::PacketHandler(dispatcher)
-{
+TextureGrabber::TextureGrabber(
+    mc::protocol::packets::PacketDispatcher* dispatcher)
+    : mc::protocol::packets::PacketHandler(dispatcher) {
     using namespace mc::protocol;
 
     dispatcher->RegisterHandler(State::Play, play::PlayerListItem, this);
 }
 
-TextureGrabber::~TextureGrabber() {
-    GetDispatcher()->UnregisterHandler(this);
-}
+TextureGrabber::~TextureGrabber() { GetDispatcher()->UnregisterHandler(this); }
 
-void TextureGrabber::HandlePacket(mc::protocol::packets::in::PlayerListItemPacket* packet) {
+void TextureGrabber::HandlePacket(
+    mc::protocol::packets::in::PlayerListItemPacket* packet) {
     using namespace mc::protocol::packets::in;
 
     PlayerListItemPacket::Action action = packet->GetAction();
@@ -45,7 +45,8 @@ void TextureGrabber::HandlePacket(mc::protocol::packets::in::PlayerListItemPacke
             if (iter == properties.end()) continue;
 
             std::wstring encoded = iter->second;
-            std::string decoded = mc::util::Base64Decode(std::string(encoded.begin(), encoded.end()));
+            std::string decoded = mc::util::Base64Decode(
+                std::string(encoded.begin(), encoded.end()));
             std::wstring name = actionData->name;
 
             mc::json root;
@@ -61,7 +62,8 @@ void TextureGrabber::HandlePacket(mc::protocol::packets::in::PlayerListItemPacke
                 continue;
             }
 
-            std::string url = root["textures"]["SKIN"]["url"].get<std::string>();
+            std::string url =
+                root["textures"]["SKIN"]["url"].get<std::string>();
 
             std::wcout << L"Fetching skin for " << name << std::endl;
 
@@ -74,7 +76,8 @@ void TextureGrabber::HandlePacket(mc::protocol::packets::in::PlayerListItemPacke
 
                 std::string body = resp.body;
 
-                std::string filename = std::string(name.begin(), name.end()) + ".png";
+                std::string filename =
+                    std::string(name.begin(), name.end()) + ".png";
                 std::ofstream out(filename, std::ios::out | std::ios::binary);
 
                 out.write(body.c_str(), body.size());
@@ -83,4 +86,4 @@ void TextureGrabber::HandlePacket(mc::protocol::packets::in::PlayerListItemPacke
     }
 }
 
-} // ns example
+}  // namespace example

@@ -14,6 +14,7 @@ public:
         std::wstring type;
         s32 weight;
     };
+
 private:
     std::vector<SpawnPotential> m_SpawnPotentials;
     std::wstring m_EntityId;
@@ -26,22 +27,31 @@ private:
     s16 m_RequiredPlayerRange;
 
 public:
-    MCLIB_API MonsterSpawner(BlockEntityType type, Vector3i position) : BlockEntity(type, position) { }
+    MCLIB_API MonsterSpawner(BlockEntityType type, Vector3i position)
+        : BlockEntity(type, position) {}
     MCLIB_API bool ImportNBT(nbt::NBT* nbt);
 
-    inline const std::vector<SpawnPotential>& GetSpawnPotentials() const noexcept { return m_SpawnPotentials; }
-    inline const std::wstring& GetEntityId() const noexcept { return m_EntityId; }
+    inline const std::vector<SpawnPotential>& GetSpawnPotentials() const
+        noexcept {
+        return m_SpawnPotentials;
+    }
+    inline const std::wstring& GetEntityId() const noexcept {
+        return m_EntityId;
+    }
     inline s16 GetSpawnCount() const noexcept { return m_SpawnCount; }
     inline s16 GetSpawnRange() const noexcept { return m_SpawnRange; }
     inline s16 GetDelay() const noexcept { return m_Delay; }
     inline s16 GetMinSpawnDelay() const noexcept { return m_MinSpawnDelay; }
     inline s16 GetMaxSpawnDelay() const noexcept { return m_MaxSpawnDelay; }
-    inline s16 GetMaxNearbyEntities() const noexcept { return m_MaxNearbyEntities; }
-    inline s16 GetRequiredPlayerRange() const noexcept { return m_RequiredPlayerRange; }
+    inline s16 GetMaxNearbyEntities() const noexcept {
+        return m_MaxNearbyEntities;
+    }
+    inline s16 GetRequiredPlayerRange() const noexcept {
+        return m_RequiredPlayerRange;
+    }
 };
 
-
-} // ns block
-} // ns mc
+}  // namespace block
+}  // namespace mc
 
 #endif

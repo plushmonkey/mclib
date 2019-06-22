@@ -8,11 +8,9 @@ bool EndGateway::ImportNBT(nbt::NBT* nbt) {
     auto exactTag = nbt->GetTag<nbt::TagByte>(L"ExactTeleport");
     auto exitTag = nbt->GetTag<nbt::TagCompound>(L"ExitPortal");
 
-    if (ageTag)
-        m_Age = ageTag->GetValue();
+    if (ageTag) m_Age = ageTag->GetValue();
 
-    if (exactTag)
-        m_ExactTeleport = exactTag->GetValue() != 0;
+    if (exactTag) m_ExactTeleport = exactTag->GetValue() != 0;
 
     if (exitTag) {
         auto xTag = exitTag->GetTag<nbt::TagInt>(L"X");
@@ -27,5 +25,5 @@ bool EndGateway::ImportNBT(nbt::NBT* nbt) {
     return true;
 }
 
-} // ns block
-} // ns mc
+}  // namespace block
+}  // namespace mc

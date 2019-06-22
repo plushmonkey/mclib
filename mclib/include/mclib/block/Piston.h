@@ -1,8 +1,8 @@
 #ifndef MCLIB_BLOCK_PISTON_H_
 #define MCLIB_BLOCK_PISTON_H_
 
-#include <mclib/common/Types.h>
 #include <mclib/block/BlockEntity.h>
+#include <mclib/common/Types.h>
 
 #include <unordered_map>
 
@@ -26,7 +26,8 @@ private:
     bool m_Source;
 
 public:
-    MCLIB_API Piston(BlockEntityType type, Vector3i position) : BlockEntity(type, position) { }
+    MCLIB_API Piston(BlockEntityType type, Vector3i position)
+        : BlockEntity(type, position) {}
     MCLIB_API bool ImportNBT(nbt::NBT* nbt);
 
     inline s32 GetBlockId() const noexcept { return m_BlockId; }
@@ -37,7 +38,7 @@ public:
     inline bool IsSource() const noexcept { return m_Source; }
 };
 
-} // ns block
-} // ns mc
+}  // namespace block
+}  // namespace mc
 
 #endif

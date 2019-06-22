@@ -13,15 +13,12 @@
 namespace mc {
 namespace network {
 
-UDPSocket::UDPSocket()
-    : Socket(Socket::UDP), m_Port(0)
-{
+UDPSocket::UDPSocket() : Socket(Socket::UDP), m_Port(0) {
     m_Handle = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
 }
 
 bool UDPSocket::Connect(const IPAddress& address, unsigned short port) {
-    if (this->GetStatus() == Connected)
-        return true;
+    if (this->GetStatus() == Connected) return true;
 
     m_RemoteAddr.sin_port = htons(port);
     m_RemoteAddr.sin_family = AF_INET;
@@ -36,12 +33,12 @@ bool UDPSocket::Connect(const IPAddress& address, unsigned short port) {
 size_t UDPSocket::Send(const unsigned char* data, size_t size) {
     size_t sent = 0;
 
-    if (this->GetStatus() != Connected)
-        return 0;
+    if (this->GetStatus() != Connected) return 0;
 
     while (sent < size) {
-        int cur = sendto(m_Handle, reinterpret_cast<const char*>(data + sent), size - sent, 0,
-            reinterpret_cast<sockaddr*>(&m_RemoteAddr), sizeof(sockaddr_in));
+        int cur = sendto(
+            m_Handle, reinterpret_cast<const char*>(data + sent), size - sent,
+            0, reinterpret_cast<sockaddr*>(&m_RemoteAddr), sizeof(sockaddr_in));
         if (cur <= 0) {
             Disconnect();
             return 0;
@@ -57,7 +54,7 @@ DataBuffer UDPSocket::Receive(std::size_t amount) {
     socklen_t slen = sizeof(sockaddr_in);
 
     int received = recvfrom(m_Handle, buf.get(), amount, 0,
-        reinterpret_cast<sockaddr*>(&m_RemoteAddr), &slen);
+                            reinterpret_cast<sockaddr*>(&m_RemoteAddr), &slen);
 
     if (received <= 0) {
 #if defined(_WIN32) || defined(WIN32)
@@ -75,5 +72,5 @@ DataBuffer UDPSocket::Receive(std::size_t amount) {
     return DataBuffer(std::string(buf.get(), received));
 }
 
-} // ns network
-} // ns mc
+}  // namespace network
+}  // namespace mc

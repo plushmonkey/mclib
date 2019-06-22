@@ -24,7 +24,6 @@ struct ChunkColumnMetadata {
     bool skylight;
 };
 
-
 /**
  * A 16x16x16 area. A ChunkColumn is made up of 16 of these
  */
@@ -45,14 +44,15 @@ public:
     block::BlockPtr MCLIB_API GetBlock(Vector3i chunkPosition) const;
 
     /**
-    * Position is relative to this chunk position
-    */
+     * Position is relative to this chunk position
+     */
     void MCLIB_API SetBlock(Vector3i chunkPosition, block::BlockPtr block);
 
     /**
      * chunkIndex is the index (0-16) of this chunk in the ChunkColumn
      */
-    void MCLIB_API Load(DataBuffer& in, ChunkColumnMetadata* meta, s32 chunkIndex);
+    void MCLIB_API Load(DataBuffer& in, ChunkColumnMetadata* meta,
+                        s32 chunkIndex);
 };
 
 typedef std::shared_ptr<Chunk> ChunkPtr;
@@ -67,8 +67,10 @@ public:
 
     typedef std::array<ChunkPtr, ChunksPerColumn>::iterator iterator;
     typedef std::array<ChunkPtr, ChunksPerColumn>::reference reference;
-    typedef std::array<ChunkPtr, ChunksPerColumn>::const_iterator const_iterator;
-    typedef std::array<ChunkPtr, ChunksPerColumn>::const_reference const_reference;
+    typedef std::array<ChunkPtr, ChunksPerColumn>::const_iterator
+        const_iterator;
+    typedef std::array<ChunkPtr, ChunksPerColumn>::const_reference
+        const_reference;
 
 private:
     std::array<ChunkPtr, ChunksPerColumn> m_Chunks;
@@ -83,37 +85,28 @@ public:
     ChunkColumn(ChunkColumn&& rhs) = default;
     ChunkColumn& operator=(ChunkColumn&& rhs) = default;
 
-    iterator MCLIB_API begin() {
-        return m_Chunks.begin();
-    }
+    iterator MCLIB_API begin() { return m_Chunks.begin(); }
 
-    iterator MCLIB_API end() {
-        return m_Chunks.end();
-    }
+    iterator MCLIB_API end() { return m_Chunks.end(); }
 
     reference MCLIB_API operator[](std::size_t index) {
         return m_Chunks[index];
     }
 
-    const_iterator MCLIB_API begin() const {
-        return m_Chunks.begin();
-    }
+    const_iterator MCLIB_API begin() const { return m_Chunks.begin(); }
 
-    const_iterator MCLIB_API end() const {
-        return m_Chunks.end();
-    }
+    const_iterator MCLIB_API end() const { return m_Chunks.end(); }
 
     const_reference MCLIB_API operator[](std::size_t index) const {
         return m_Chunks[index];
     }
 
     void MCLIB_API AddBlockEntity(block::BlockEntityPtr blockEntity) {
-        m_BlockEntities.insert(std::make_pair(blockEntity->GetPosition(), blockEntity));
+        m_BlockEntities.insert(
+            std::make_pair(blockEntity->GetPosition(), blockEntity));
     }
 
-    void RemoveBlockEntity(Vector3i pos) {
-        m_BlockEntities.erase(pos);
-    }
+    void RemoveBlockEntity(Vector3i pos) { m_BlockEntities.erase(pos); }
 
     /**
      * Position is relative to this ChunkColumn position.
@@ -124,14 +117,15 @@ public:
     MCLIB_API block::BlockEntityPtr GetBlockEntity(Vector3i worldPos);
     std::vector<block::BlockEntityPtr> MCLIB_API GetBlockEntities();
 
-    friend MCLIB_API DataBuffer& operator>>(DataBuffer& in, ChunkColumn& column);
+    friend MCLIB_API DataBuffer& operator>>(DataBuffer& in,
+                                            ChunkColumn& column);
 };
 
 typedef std::shared_ptr<ChunkColumn> ChunkColumnPtr;
 
 MCLIB_API DataBuffer& operator>>(DataBuffer& in, ChunkColumn& column);
 
-} // ns world
-} // ns mc
+}  // namespace world
+}  // namespace mc
 
 #endif

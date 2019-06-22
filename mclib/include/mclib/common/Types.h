@@ -1,8 +1,8 @@
 #ifndef MCLIB_COMMON_TYPES_H_
 #define MCLIB_COMMON_TYPES_H_
 
-#include <cstdint>
 #include <cstddef>
+#include <cstdint>
 
 typedef int8_t s8;
 typedef int16_t s16;
@@ -30,24 +30,20 @@ enum class MainHand { Left, Right };
 enum class ChatMode { Enabled, Commands, Hidden };
 
 enum class SkinPart {
-    Cape = 0x1, Jacket = 0x2,
-    LeftSleeve = 0x4, RightSleeve = 0x8,
-    LeftPants = 0x10, RightPants = 0x20,
+    Cape = 0x1,
+    Jacket = 0x2,
+    LeftSleeve = 0x4,
+    RightSleeve = 0x8,
+    LeftPants = 0x10,
+    RightPants = 0x20,
     Hat = 0x40
 };
 
-enum class Face {
-    Bottom = 0,
-    Top,
-    North,
-    South,
-    West,
-    East
-};
+enum class Face { Bottom = 0, Top, North, South, West, East };
 
-} // ns mc
+}  // namespace mc
 
-#include <mclib/mclib.h>
 #include <mclib/common/Vector.h>
+#include <mclib/mclib.h>
 
 #endif

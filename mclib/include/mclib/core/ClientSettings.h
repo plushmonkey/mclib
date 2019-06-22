@@ -1,8 +1,8 @@
 #ifndef MCLIB_CORE_CLIENTSETTINGS_H
 #define MCLIB_CORE_CLIENTSETTINGS_H
 
-#include <mclib/mclib.h>
 #include <mclib/common/Types.h>
+#include <mclib/mclib.h>
 #include <string>
 
 namespace mc {
@@ -35,15 +35,25 @@ public:
 
     MCLIB_API ClientSettings& SetSkinPart(SkinPart part, bool display) noexcept;
 
-    MCLIB_API inline const std::wstring& GetLocale() const noexcept { return m_Locale; }
-    MCLIB_API inline ChatMode GetChatMode() const noexcept { return m_ChatMode; }
-    MCLIB_API inline MainHand GetMainHand() const noexcept { return m_MainHand; }
-    MCLIB_API inline u8 GetViewDistance() const noexcept { return m_ViewDistance; }
+    MCLIB_API inline const std::wstring& GetLocale() const noexcept {
+        return m_Locale;
+    }
+    MCLIB_API inline ChatMode GetChatMode() const noexcept {
+        return m_ChatMode;
+    }
+    MCLIB_API inline MainHand GetMainHand() const noexcept {
+        return m_MainHand;
+    }
+    MCLIB_API inline u8 GetViewDistance() const noexcept {
+        return m_ViewDistance;
+    }
     MCLIB_API inline u8 GetSkinParts() const noexcept { return m_SkinParts; }
-    MCLIB_API inline bool GetChatColors() const noexcept { return m_ChatColors; }
+    MCLIB_API inline bool GetChatColors() const noexcept {
+        return m_ChatColors;
+    }
 };
 
-} // ns core
-} // ns mc
+}  // namespace core
+}  // namespace mc
 
 #endif

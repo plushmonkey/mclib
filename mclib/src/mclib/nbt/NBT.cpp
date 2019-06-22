@@ -25,5 +25,5 @@ DataBuffer& operator>>(DataBuffer& in, NBT& nbt) {
     return in;
 }
 
-} // ns nbt
-} // ns mc
+}  // namespace nbt
+}  // namespace mc

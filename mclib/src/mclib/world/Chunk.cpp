@@ -7,10 +7,7 @@
 namespace mc {
 namespace world {
 
-Chunk::Chunk()
-{
-    m_BitsPerBlock = 4;
-}
+Chunk::Chunk() { m_BitsPerBlock = 4; }
 
 Chunk::Chunk(const Chunk& other) {
     m_Data = other.m_Data;
@@ -60,11 +57,13 @@ void Chunk::Load(DataBuffer& in, ChunkColumnMetadata* meta, s32 chunkIndex) {
 }
 
 block::BlockPtr Chunk::GetBlock(Vector3i chunkPosition) const {
-    if (chunkPosition.x < 0 || chunkPosition.x > 15 || chunkPosition.y < 0 || chunkPosition.y > 15 || chunkPosition.z < 0 || chunkPosition.z > 15) {
+    if (chunkPosition.x < 0 || chunkPosition.x > 15 || chunkPosition.y < 0 ||
+        chunkPosition.y > 15 || chunkPosition.z < 0 || chunkPosition.z > 15) {
         return block::BlockRegistry::GetInstance()->GetBlock(0);
     }
 
-    const std::size_t index = (std::size_t)(chunkPosition.y * 16 * 16 + chunkPosition.z * 16 + chunkPosition.x);
+    const std::size_t index = (std::size_t)(
+        chunkPosition.y * 16 * 16 + chunkPosition.z * 16 + chunkPosition.x);
     const s32 bitIndex = index * m_BitsPerBlock;
     const s32 startIndex = bitIndex / 64;
     const s32 endIndex = (((index + 1) * m_BitsPerBlock) - 1) / 64;
@@ -78,7 +77,9 @@ block::BlockPtr Chunk::GetBlock(Vector3i chunkPosition) const {
     } else {
         const s32 endSubIndex = 64 - startSubIndex;
 
-        value = (u32)(((m_Data[startIndex] >> startSubIndex) | (m_Data[endIndex] << endSubIndex)) & maxValue);
+        value = (u32)(((m_Data[startIndex] >> startSubIndex) |
+                       (m_Data[endIndex] << endSubIndex)) &
+                      maxValue);
     }
 
     const u16 blockType = m_BitsPerBlock < 9 ? m_Palette[value] : value;
@@ -87,7 +88,8 @@ block::BlockPtr Chunk::GetBlock(Vector3i chunkPosition) const {
 }
 
 void Chunk::SetBlock(Vector3i chunkPosition, block::BlockPtr block) {
-    std::size_t index = (std::size_t)(chunkPosition.y * 16 * 16 + chunkPosition.z * 16 + chunkPosition.x);
+    std::size_t index = (std::size_t)(chunkPosition.y * 16 * 16 +
+                                      chunkPosition.z * 16 + chunkPosition.x);
     s32 bitIndex = index * m_BitsPerBlock;
     s32 startIndex = bitIndex / 64;
     s32 endIndex = (((index + 1) * m_BitsPerBlock) - 1) / 64;
@@ -108,9 +110,9 @@ void Chunk::SetBlock(Vector3i chunkPosition, block::BlockPtr block) {
         memset(&m_Data[0], 0, size * sizeof(m_Data[0]));
     }
 
-    auto iter = std::find_if(m_Palette.begin(), m_Palette.end(), [blockType](u32 ptype) {
-        return ptype == blockType;
-    });
+    auto iter =
+        std::find_if(m_Palette.begin(), m_Palette.end(),
+                     [blockType](u32 ptype) { return ptype == blockType; });
 
     if (iter == m_Palette.end())
         iter = m_Palette.insert(m_Palette.end(), blockType);
@@ -118,28 +120,28 @@ void Chunk::SetBlock(Vector3i chunkPosition, block::BlockPtr block) {
     s32 value = std::distance(m_Palette.begin(), iter);
 
     // Erase old value in data entry and OR with new data
-    m_Data[startIndex] = (m_Data[startIndex] & ~(maxValue << startSubIndex)) | (((s64)value & maxValue) << startSubIndex);
+    m_Data[startIndex] = (m_Data[startIndex] & ~(maxValue << startSubIndex)) |
+                         (((s64)value & maxValue) << startSubIndex);
 
     if (startIndex != endIndex) {
         s32 endSubIndex = 64 - startSubIndex;
 
         // Erase beginning of data and then OR with new data
-        m_Data[endIndex] = (m_Data[endIndex] >> endSubIndex << endSubIndex) | ((s64)value & maxValue) >> endSubIndex;
+        m_Data[endIndex] = (m_Data[endIndex] >> endSubIndex << endSubIndex) |
+                           ((s64)value & maxValue) >> endSubIndex;
     }
 }
 
-ChunkColumn::ChunkColumn(ChunkColumnMetadata metadata)
-    : m_Metadata(metadata)
-{
-    for (std::size_t i = 0; i < m_Chunks.size(); ++i)
-        m_Chunks[i] = nullptr;
+ChunkColumn::ChunkColumn(ChunkColumnMetadata metadata) : m_Metadata(metadata) {
+    for (std::size_t i = 0; i < m_Chunks.size(); ++i) m_Chunks[i] = nullptr;
 }
 
 block::BlockPtr ChunkColumn::GetBlock(Vector3i position) {
     s32 chunkIndex = (s32)(position.y / 16);
     Vector3i relativePosition(position.x, position.y % 16, position.z);
 
-    if (chunkIndex < 0 || chunkIndex > 15 || !m_Chunks[chunkIndex]) return block::BlockRegistry::GetInstance()->GetBlock(0);
+    if (chunkIndex < 0 || chunkIndex > 15 || !m_Chunks[chunkIndex])
+        return block::BlockRegistry::GetInstance()->GetBlock(0);
 
     return m_Chunks[chunkIndex]->GetBlock(relativePosition);
 }
@@ -153,7 +155,8 @@ block::BlockEntityPtr ChunkColumn::GetBlockEntity(Vector3i worldPos) {
 std::vector<block::BlockEntityPtr> ChunkColumn::GetBlockEntities() {
     std::vector<block::BlockEntityPtr> blockEntities;
 
-    for (auto iter = m_BlockEntities.begin(); iter != m_BlockEntities.end(); ++iter)
+    for (auto iter = m_BlockEntities.begin(); iter != m_BlockEntities.end();
+         ++iter)
         blockEntities.push_back(iter->second);
 
     return blockEntities;
@@ -177,5 +180,5 @@ DataBuffer& operator>>(DataBuffer& in, ChunkColumn& column) {
     return in;
 }
 
-} // ns world
-} // ns mc
+}  // namespace world
+}  // namespace mc

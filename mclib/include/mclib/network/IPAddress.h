@@ -2,8 +2,8 @@
 #define NETWORK_IPADDRESS_H_
 
 #include <mclib/common/Types.h>
-#include <string>
 #include <iosfwd>
+#include <string>
 #include <vector>
 
 namespace mc {
@@ -34,7 +34,8 @@ public:
     /* Set the specific octet. 1-4 */
     void MCLIB_API SetOctet(u8 num, u8 value);
 
-    /* Make sure the IP is valid. It will be invalid if the host wasn't found. */
+    /* Make sure the IP is valid. It will be invalid if the host wasn't found.
+     */
     bool IsValid() const noexcept { return m_Valid; }
 
     std::string MCLIB_API ToString() const;
@@ -51,7 +52,7 @@ typedef std::vector<IPAddress> IPAddresses;
 MCLIB_API std::ostream& operator<<(std::ostream& os, const IPAddress& addr);
 MCLIB_API std::wostream& operator<<(std::wostream& os, const IPAddress& addr);
 
-} // ns network
-} // ns mc
+}  // namespace network
+}  // namespace mc
 
 #endif

@@ -15,7 +15,8 @@ private:
     Vector3i m_Exit;
 
 public:
-    MCLIB_API EndGateway(BlockEntityType type, Vector3i position) : BlockEntity(type, position) { }
+    MCLIB_API EndGateway(BlockEntityType type, Vector3i position)
+        : BlockEntity(type, position) {}
     MCLIB_API bool ImportNBT(nbt::NBT* nbt);
 
     inline s64 GetAge() const noexcept { return m_Age; }
@@ -23,7 +24,7 @@ public:
     inline Vector3i GetExit() const noexcept { return m_Exit; }
 };
 
-} // ns block
-} // ns mc
+}  // namespace block
+}  // namespace mc
 
 #endif

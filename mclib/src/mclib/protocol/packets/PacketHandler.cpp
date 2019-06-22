@@ -1,20 +1,17 @@
-#include <mclib/protocol/packets/PacketHandler.h>
 #include <mclib/protocol/packets/PacketDispatcher.h>
+#include <mclib/protocol/packets/PacketHandler.h>
 
 namespace mc {
 namespace protocol {
 namespace packets {
 
-PacketHandler::PacketHandler(PacketDispatcher* dispatcher) : m_Dispatcher(dispatcher) { }
+PacketHandler::PacketHandler(PacketDispatcher* dispatcher)
+    : m_Dispatcher(dispatcher) {}
 
-PacketDispatcher* PacketHandler::GetDispatcher() {
-    return m_Dispatcher;
-}
+PacketDispatcher* PacketHandler::GetDispatcher() { return m_Dispatcher; }
 
-PacketHandler::~PacketHandler() {
+PacketHandler::~PacketHandler() {}
 
-}
-
-} // ns packets
-} // ns protocol
-} // ns mc
+}  // namespace packets
+}  // namespace protocol
+}  // namespace mc

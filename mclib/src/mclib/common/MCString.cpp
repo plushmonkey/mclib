@@ -7,22 +7,14 @@
 
 namespace mc {
 
-MCString::MCString() {
+MCString::MCString() {}
 
-}
+MCString::MCString(const std::string& str) : m_UTF16(str.begin(), str.end()) {}
 
-MCString::MCString(const std::string& str) : m_UTF16(str.begin(), str.end())
-{
-}
-
-MCString::MCString(const std::wstring& str) : m_UTF16(str)
-{
-}
+MCString::MCString(const std::wstring& str) : m_UTF16(str) {}
 
 std::wstring MCString::GetUTF16() const { return m_UTF16; }
-std::string MCString::GetUTF8() const {
-    return utf16to8(m_UTF16);
-}
+std::string MCString::GetUTF8() const { return utf16to8(m_UTF16); }
 
 MCString MCString::FromUTF8(const std::string& utf8) {
     return MCString(utf8to16(utf8));
@@ -59,4 +51,4 @@ std::wstring utf8to16(std::string str) {
     return myconv.from_bytes(str);
 }
 
-} // ns mc
+}  // namespace mc

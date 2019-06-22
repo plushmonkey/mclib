@@ -5,19 +5,16 @@ namespace block {
 
 bool Beacon::ImportNBT(nbt::NBT* nbt) {
     auto levelsTag = nbt->GetTag<nbt::TagInt>(L"Levels");
-    if (levelsTag)
-        m_Levels = levelsTag->GetValue();
+    if (levelsTag) m_Levels = levelsTag->GetValue();
 
     auto primaryTag = nbt->GetTag<nbt::TagInt>(L"Primary");
-    if (primaryTag)
-        m_Primary = primaryTag->GetValue();
+    if (primaryTag) m_Primary = primaryTag->GetValue();
 
     auto secondaryTag = nbt->GetTag<nbt::TagInt>(L"Secondary");
-    if (secondaryTag)
-        m_Secondary = secondaryTag->GetValue();
+    if (secondaryTag) m_Secondary = secondaryTag->GetValue();
 
     return true;
 }
 
-} // ns block
-} // ns mc
+}  // namespace block
+}  // namespace mc

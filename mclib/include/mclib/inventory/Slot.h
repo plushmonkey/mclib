@@ -1,8 +1,8 @@
 #ifndef MCLIB_INVENTORY_SLOT_H_
 #define MCLIB_INVENTORY_SLOT_H_
 
-#include <mclib/mclib.h>
 #include <mclib/common/Types.h>
+#include <mclib/mclib.h>
 #include <mclib/nbt/NBT.h>
 #include <mclib/protocol/ProtocolState.h>
 
@@ -20,14 +20,18 @@ private:
     u8 m_ItemCount;
 
 public:
-    Slot() noexcept : m_ItemId(-1), m_ItemCount(0), m_ItemDamage(0) { }
+    Slot() noexcept : m_ItemId(-1), m_ItemCount(0), m_ItemDamage(0) {}
     Slot(s32 itemId, u8 itemCount, s16 itemDamage) noexcept
-        : m_ItemId(itemId), m_ItemCount(itemCount), m_ItemDamage(itemDamage), m_NBT()
-    { }
+        : m_ItemId(itemId),
+          m_ItemCount(itemCount),
+          m_ItemDamage(itemDamage),
+          m_NBT() {}
 
     Slot(s32 itemId, u8 itemCount, s16 itemDamage, nbt::NBT nbt) noexcept
-        : m_ItemId(itemId), m_ItemCount(itemCount), m_ItemDamage(itemDamage), m_NBT(nbt)
-    { }
+        : m_ItemId(itemId),
+          m_ItemCount(itemCount),
+          m_ItemDamage(itemDamage),
+          m_NBT(nbt) {}
 
     Slot(const Slot& rhs) = default;
     Slot& operator=(const Slot& rhs) = default;
@@ -45,8 +49,7 @@ public:
     void Deserialize(DataBuffer& in, protocol::Version version);
 };
 
-
-} // ns inventory
-} // ns mc
+}  // namespace inventory
+}  // namespace mc
 
 #endif

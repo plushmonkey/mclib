@@ -7,6 +7,6 @@ namespace mc {
 
 using json = nlohmann::json;
 
-} // ns mc
+}  // namespace mc
 
 #endif

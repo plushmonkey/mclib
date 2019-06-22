@@ -7,16 +7,12 @@
 
 namespace mc {
 
-Position::Position(s32 x, s32 y, s32 z) noexcept
-    : m_X(x), m_Y(y), m_Z(z)
-{
-    
-}
+Position::Position(s32 x, s32 y, s32 z) noexcept : m_X(x), m_Y(y), m_Z(z) {}
 
 s64 Position::Encode64() const noexcept {
-    return ((m_X & 0x3FFFFFF) << 38) | ((m_Y & 0xFFF) << 26) | (m_Z & 0x3FFFFFF);
+    return ((m_X & 0x3FFFFFF) << 38) | ((m_Y & 0xFFF) << 26) |
+           (m_Z & 0x3FFFFFF);
 }
-
 
 DataBuffer& operator<<(DataBuffer& out, const Position& pos) {
     return out << pos.Encode64();
@@ -44,7 +40,7 @@ std::string to_string(const Position& pos) {
     return ss.str();
 }
 
-} // ns mc
+}  // namespace mc
 
 std::ostream& operator<<(std::ostream& out, const mc::Position& pos) {
     return out << mc::to_string(pos);

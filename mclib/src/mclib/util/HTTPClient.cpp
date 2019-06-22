@@ -8,7 +8,8 @@
 #include <sstream>
 #include <string>
 
-std::size_t CurlWriteString(void* buffer, std::size_t size, std::size_t nmemb, void* result) {
+std::size_t CurlWriteString(void* buffer, std::size_t size, std::size_t nmemb,
+                            void* result) {
     if (result) {
         std::string* out = static_cast<std::string*>(result);
         out->append(static_cast<char*>(buffer), nmemb);
@@ -28,8 +29,7 @@ private:
     Headers GetResponseHeaders(std::string header) {
         std::size_t endFirst = header.find("\n");
 
-        if (endFirst != std::string::npos)
-            header = header.substr(endFirst + 1);
+        if (endFirst != std::string::npos) header = header.substr(endFirst + 1);
 
         Tokenizer lines(header);
 
@@ -41,7 +41,8 @@ private:
             Tokenizer kv(line);
             kv(':', 2);
 
-            if (kv.size() != 2 || kv[0].length() == 0 || kv[1].length() == 0) continue;
+            if (kv.size() != 2 || kv[0].length() == 0 || kv[1].length() == 0)
+                continue;
 
             headers[kv[0]] = kv[1].substr(0, kv[1].length() - 1);
         }
@@ -52,17 +53,18 @@ private:
         std::size_t first = header.find(" ");
         std::size_t second = header.find(" ", first + 1);
 
-        if (first != std::string::npos && second != std::string::npos && second != first) {
+        if (first != std::string::npos && second != std::string::npos &&
+            second != first) {
             std::string statusStr = header.substr(first + 1, second - first);
-            if (statusStr.length() == 0)
-                return 0;
+            if (statusStr.length() == 0) return 0;
             return strtol(statusStr.c_str(), nullptr, 10);
         }
 
         return 0;
     }
 
-    HTTPResponse DoRequest(const std::string& url, const std::string& postData, Headers headers) {
+    HTTPResponse DoRequest(const std::string& url, const std::string& postData,
+                           Headers headers) {
         curl_slist* header_list = nullptr;
         CURLcode res;
 
@@ -103,18 +105,13 @@ private:
 
         return response;
     }
+
 public:
-    Impl() {
-        m_Curl = curl_easy_init();
-    }
+    Impl() { m_Curl = curl_easy_init(); }
 
-    ~Impl() {
-        curl_easy_cleanup(m_Curl);
-    }
+    ~Impl() { curl_easy_cleanup(m_Curl); }
 
-    Impl(Impl& other) 
-        : m_Timeout(other.m_Timeout)
-    {
+    Impl(Impl& other) : m_Timeout(other.m_Timeout) {
         m_Curl = curl_easy_init();
     }
 
@@ -131,16 +128,19 @@ public:
         return DoRequest(url, "", headers);
     }
 
-    HTTPResponse Post(const std::string& url, const std::string& postData, Headers headers) {
+    HTTPResponse Post(const std::string& url, const std::string& postData,
+                      Headers headers) {
         return DoRequest(url, postData, headers);
     }
 
-    HTTPResponse PostJSON(const std::string& url, const std::string& postData, Headers headers) {
+    HTTPResponse PostJSON(const std::string& url, const std::string& postData,
+                          Headers headers) {
         headers["Content-Type"] = "application/json";
         return DoRequest(url, postData, headers);
     }
 
-    HTTPResponse PostJSON(const std::string& url, const json& json, Headers headers) {
+    HTTPResponse PostJSON(const std::string& url, const json& json,
+                          Headers headers) {
         headers["Content-Type"] = "application/json";
 
         std::stringstream ss;
@@ -152,16 +152,12 @@ public:
 };
 
 CurlHTTPClient::CurlHTTPClient()
-    : m_Impl(std::make_unique<CurlHTTPClient::Impl>()) {
-
-}
+    : m_Impl(std::make_unique<CurlHTTPClient::Impl>()) {}
 
 CurlHTTPClient::~CurlHTTPClient() = default;
 
-CurlHTTPClient::CurlHTTPClient(const CurlHTTPClient& other) 
-    : m_Impl(std::make_unique<Impl>(*other.m_Impl))
-{
-}
+CurlHTTPClient::CurlHTTPClient(const CurlHTTPClient& other)
+    : m_Impl(std::make_unique<Impl>(*other.m_Impl)) {}
 
 CurlHTTPClient& CurlHTTPClient::operator=(const CurlHTTPClient& rhs) {
     *m_Impl = *rhs.m_Impl;
@@ -175,16 +171,20 @@ HTTPResponse CurlHTTPClient::Get(const std::string& url, Headers headers) {
     return m_Impl->Get(url, headers);
 }
 
-HTTPResponse CurlHTTPClient::Post(const std::string& url, const std::string& data, Headers headers) {
+HTTPResponse CurlHTTPClient::Post(const std::string& url,
+                                  const std::string& data, Headers headers) {
     return m_Impl->Post(url, data, headers);
 }
-HTTPResponse CurlHTTPClient::PostJSON(const std::string& url, const std::string& data, Headers headers) {
+HTTPResponse CurlHTTPClient::PostJSON(const std::string& url,
+                                      const std::string& data,
+                                      Headers headers) {
     return m_Impl->PostJSON(url, data, headers);
 }
 
-HTTPResponse CurlHTTPClient::PostJSON(const std::string& url, const json& json, Headers headers) {
+HTTPResponse CurlHTTPClient::PostJSON(const std::string& url, const json& json,
+                                      Headers headers) {
     return m_Impl->PostJSON(url, json, headers);
 }
 
-} // ns util
-} // ns mc
+}  // namespace util
+}  // namespace mc

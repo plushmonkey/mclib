@@ -6,23 +6,30 @@
 
 namespace example {
 
-class Logger : public mc::protocol::packets::PacketHandler, public mc::core::ClientListener {
+class Logger : public mc::protocol::packets::PacketHandler,
+               public mc::core::ClientListener {
 private:
     mc::core::Client* m_Client;
 
 public:
-    Logger(mc::core::Client* client, mc::protocol::packets::PacketDispatcher* dispatcher);
+    Logger(mc::core::Client* client,
+           mc::protocol::packets::PacketDispatcher* dispatcher);
     ~Logger();
 
     void HandlePacket(mc::protocol::packets::in::ChatPacket* packet) override;
-    void HandlePacket(mc::protocol::packets::in::EntityLookAndRelativeMovePacket* packet) override;
-    void HandlePacket(mc::protocol::packets::in::BlockChangePacket* packet) override;
-    void HandlePacket(mc::protocol::packets::in::MultiBlockChangePacket* packet) override;
-    void HandlePacket(mc::protocol::packets::in::DisconnectPacket* packet) override;
+    void HandlePacket(
+        mc::protocol::packets::in::EntityLookAndRelativeMovePacket* packet)
+        override;
+    void HandlePacket(
+        mc::protocol::packets::in::BlockChangePacket* packet) override;
+    void HandlePacket(
+        mc::protocol::packets::in::MultiBlockChangePacket* packet) override;
+    void HandlePacket(
+        mc::protocol::packets::in::DisconnectPacket* packet) override;
 
     void OnTick() override;
 };
 
-} // ns example
+}  // namespace example
 
 #endif

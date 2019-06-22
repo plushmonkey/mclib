@@ -1,9 +1,9 @@
 #ifndef MCLIB_BLOCK_HOPPER_H_
 #define MCLIB_BLOCK_HOPPER_H_
 
-#include <mclib/common/Nameable.h>
 #include <mclib/block/BlockEntity.h>
 #include <mclib/block/InventoryBlock.h>
+#include <mclib/common/Nameable.h>
 
 #include <unordered_map>
 
@@ -15,13 +15,14 @@ private:
     s32 m_TransferCooldown;
 
 public:
-    MCLIB_API Hopper(BlockEntityType type, Vector3i position) : BlockEntity(type, position) { }
+    MCLIB_API Hopper(BlockEntityType type, Vector3i position)
+        : BlockEntity(type, position) {}
     MCLIB_API bool ImportNBT(nbt::NBT* nbt);
 
     s32 GetTransferCooldown() const noexcept { return m_TransferCooldown; }
 };
 
-} // ns block
-} // ns mc
+}  // namespace block
+}  // namespace mc
 
 #endif

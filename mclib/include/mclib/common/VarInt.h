@@ -1,8 +1,8 @@
 #ifndef MCLIB_COMMON_VAR_INT_H_
 #define MCLIB_COMMON_VAR_INT_H_
 
-#include <mclib/mclib.h>
 #include <mclib/common/Types.h>
+#include <mclib/mclib.h>
 
 #include <iosfwd>
 
@@ -38,7 +38,7 @@ typedef VarInt VarLong;
 MCLIB_API DataBuffer& operator<<(DataBuffer& out, const VarInt& var);
 MCLIB_API DataBuffer& operator>>(DataBuffer& in, VarInt& var);
 
-} // ns mc
+}  // namespace mc
 
 MCLIB_API std::ostream& operator<<(std::ostream& out, const mc::VarInt& v);
 

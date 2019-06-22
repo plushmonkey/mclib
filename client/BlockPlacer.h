@@ -7,7 +7,9 @@
 
 namespace example {
 
-class BlockPlacer : public mc::protocol::packets::PacketHandler, public mc::world::WorldListener, public mc::core::ClientListener {
+class BlockPlacer : public mc::protocol::packets::PacketHandler,
+                    public mc::world::WorldListener,
+                    public mc::core::ClientListener {
 private:
     mc::core::Client* m_Client;
     mc::util::PlayerController* m_PlayerController;
@@ -17,7 +19,9 @@ private:
     mc::inventory::Slot m_HeldItem;
 
 public:
-    BlockPlacer(mc::protocol::packets::PacketDispatcher* dispatcher, mc::core::Client* client, mc::util::PlayerController* pc, mc::world::World* world);
+    BlockPlacer(mc::protocol::packets::PacketDispatcher* dispatcher,
+                mc::core::Client* client, mc::util::PlayerController* pc,
+                mc::world::World* world);
     ~BlockPlacer();
 
     void HandlePacket(mc::protocol::packets::in::WindowItemsPacket* packet);
@@ -26,6 +30,6 @@ public:
     void OnTick();
 };
 
-} // ns example
+}  // namespace example
 
 #endif

@@ -8,12 +8,13 @@ namespace entity {
 
 class PlayerEntity : public LivingEntity {
 public:
-    PlayerEntity(EntityId id, protocol::Version protocolVersion) : LivingEntity(id, protocolVersion) { }
+    PlayerEntity(EntityId id, protocol::Version protocolVersion)
+        : LivingEntity(id, protocolVersion) {}
 };
 
 typedef std::weak_ptr<PlayerEntity> PlayerEntityPtr;
 
-} // ns entity
-} // ns mc
+}  // namespace entity
+}  // namespace mc
 
 #endif

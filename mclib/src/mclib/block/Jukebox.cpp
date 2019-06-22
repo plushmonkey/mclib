@@ -7,14 +7,12 @@ bool Jukebox::ImportNBT(nbt::NBT* nbt) {
     auto recordTag = nbt->GetTag<nbt::TagInt>(L"Record");
     auto itemTag = nbt->GetTag<nbt::TagCompound>(L"RecordItem");
 
-    if (recordTag)
-        m_RecordId = recordTag->GetValue();
+    if (recordTag) m_RecordId = recordTag->GetValue();
 
-    if (itemTag)
-        m_RecordItem = inventory::Slot::FromNBT(*itemTag);
+    if (itemTag) m_RecordItem = inventory::Slot::FromNBT(*itemTag);
 
     return true;
 }
 
-} // ns block
-} // ns mc
+}  // namespace block
+}  // namespace mc

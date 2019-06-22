@@ -11,12 +11,10 @@ bool BrewingStand::ImportNBT(nbt::NBT* nbt) {
     }
 
     auto brewTimeTag = nbt->GetTag<nbt::TagInt>(L"BrewTime");
-    if (brewTimeTag)
-        m_BrewTime = brewTimeTag->GetValue();
+    if (brewTimeTag) m_BrewTime = brewTimeTag->GetValue();
 
     auto fuelTag = nbt->GetTag<nbt::TagByte>(L"Fuel");
-    if (fuelTag)
-        m_Fuel = fuelTag->GetValue();
+    if (fuelTag) m_Fuel = fuelTag->GetValue();
 
     return InventoryBlock::ImportNBT(nbt);
 }
@@ -56,6 +54,5 @@ inventory::Slot BrewingStand::GetFuelSlot() const noexcept {
     return iter->second;
 }
 
-
-} // ns block
-} // ns mc
+}  // namespace block
+}  // namespace mc

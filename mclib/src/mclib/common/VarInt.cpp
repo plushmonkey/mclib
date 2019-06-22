@@ -6,26 +6,11 @@
 
 namespace mc {
 
-VarInt::VarInt() noexcept : m_Value(0)
-{
-
-}
-VarInt::VarInt(s8 val) noexcept : m_Value(val)
-{
-
-}
-VarInt::VarInt(s16 val) noexcept : m_Value(val)
-{
-
-}
-VarInt::VarInt(s32 val) noexcept : m_Value(val)
-{
-
-}
-VarInt::VarInt(s64 val) noexcept : m_Value(val)
-{
-
-}
+VarInt::VarInt() noexcept : m_Value(0) {}
+VarInt::VarInt(s8 val) noexcept : m_Value(val) {}
+VarInt::VarInt(s16 val) noexcept : m_Value(val) {}
+VarInt::VarInt(s32 val) noexcept : m_Value(val) {}
+VarInt::VarInt(s64 val) noexcept : m_Value(val) {}
 
 std::size_t VarInt::GetSerializedLength() const {
     DataBuffer buffer;
@@ -42,8 +27,7 @@ DataBuffer& operator<<(DataBuffer& out, const VarInt& var) {
     do {
         u8 nextByte = uval & 0x7F;
         uval >>= 7;
-        if (uval)
-            nextByte |= 0x80;
+        if (uval) nextByte |= 0x80;
         data[encoded++] = nextByte;
     } while (uval);
     out << std::string(data, encoded);
@@ -76,7 +60,7 @@ DataBuffer& operator>>(DataBuffer& in, VarInt& var) {
     return in;
 }
 
-} // ns mc
+}  // namespace mc
 
 std::ostream& operator<<(std::ostream& out, const mc::VarInt& v) {
     return out << v.GetLong();

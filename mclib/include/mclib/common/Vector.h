@@ -1,8 +1,8 @@
 #ifndef MCLIB_COMMON_VECTOR_H_
 #define MCLIB_COMMON_VECTOR_H_
 
-#include <cstdint>
 #include <cmath>
+#include <cstdint>
 #include <limits>
 #include <ostream>
 #include <sstream>
@@ -24,9 +24,10 @@ public:
 
     typedef VecType value_type;
 
-    constexpr Vector3() noexcept : x(0), y(0), z(0) { }
-    constexpr Vector3(VecType x, VecType y) noexcept : x(x), y(y), z(0) { }
-    constexpr Vector3(VecType x, VecType y, VecType z) noexcept : x(x), y(y), z(z) { }
+    constexpr Vector3() noexcept : x(0), y(0), z(0) {}
+    constexpr Vector3(VecType x, VecType y) noexcept : x(x), y(y), z(0) {}
+    constexpr Vector3(VecType x, VecType y, VecType z) noexcept
+        : x(x), y(y), z(z) {}
 
     Vector3& operator=(const Vector3& other) noexcept {
         x = other.x;
@@ -38,25 +39,19 @@ public:
     bool operator==(const Vector3& rhs) const noexcept {
         double epsilon = 0.00001;
         return std::fabs((double)x - rhs.x) < epsilon &&
-            std::fabs((double)y - rhs.y) < epsilon &&
-            std::fabs((double)z - rhs.z) < epsilon;
+               std::fabs((double)y - rhs.y) < epsilon &&
+               std::fabs((double)z - rhs.z) < epsilon;
     }
 
-    VecType& operator[](std::size_t index) {
-        return values[index];
-    }
+    VecType& operator[](std::size_t index) { return values[index]; }
 
-    const VecType& operator[](std::size_t index) const {
-        return values[index];
-    }
+    const VecType& operator[](std::size_t index) const { return values[index]; }
 
     bool operator!=(const Vector3& rhs) const noexcept {
         return !(*this == rhs);
     }
 
-    Vector3 operator-() const {
-        return Vector3(-x, -y, -z);
-    }
+    Vector3 operator-() const { return Vector3(-x, -y, -z); }
 
     inline Vector3& operator+=(VecType v) noexcept {
         x += v;
@@ -132,9 +127,7 @@ public:
         return Dot(rhs);
     }
 
-    inline double Length() const {
-        return std::sqrt(x * x + y * y + z * z);
-    }
+    inline double Length() const { return std::sqrt(x * x + y * y + z * z); }
 
     inline double LengthSq() const noexcept {
         return (double)x * x + y * y + z * z;
@@ -154,9 +147,8 @@ public:
     }
 
     inline Vector3 Cross(const Vector3& v2) const {
-        return Vector3(y*v2.z - z*v2.y,
-            z*v2.x - x*v2.z,
-            x*v2.y - y*v2.x);
+        return Vector3(y * v2.z - z * v2.y, z * v2.x - x * v2.z,
+                       x * v2.y - y * v2.x);
     }
 
     inline double Distance(const Vector3& other) const {
@@ -178,14 +170,13 @@ public:
 
 template <typename T>
 inline double DotProduct(const Vector3<T>& v1, const Vector3<T>& v2) noexcept {
-    return v1.x*v2.x + v1.y*v2.y + v1.z*v2.z;
+    return v1.x * v2.x + v1.y * v2.y + v1.z * v2.z;
 }
 
 template <typename T>
 inline Vector3<T> CrossProduct(const Vector3<T>& v1, const Vector3<T>& v2) {
-    return Vector3<T>(v1.y*v2.z - v1.z*v2.y,
-        v1.z*v2.x - v1.x*v2.z,
-        v1.x*v2.y - v1.y*v2.x);
+    return Vector3<T>(v1.y * v2.z - v1.z * v2.y, v1.z * v2.x - v1.x * v2.z,
+                      v1.x * v2.y - v1.y * v2.x);
 }
 
 template <typename T>
@@ -219,7 +210,8 @@ template <typename T>
 inline Vector3<T> Vector3RotateAboutY(Vector3<T> vec, double rads) {
     double cosA = std::cos(rads);
     double sinA = std::sin(rads);
-    return Vector3<T>(cosA * vec.x - sinA * vec.z, vec.y, sinA * vec.x + cosA * vec.z);
+    return Vector3<T>(cosA * vec.x - sinA * vec.z, vec.y,
+                      sinA * vec.x + cosA * vec.z);
 }
 
 template <typename T>
@@ -281,7 +273,9 @@ inline Vector3d ToVector3d(const Vector3s& v) {
 }
 
 inline Vector3i ToVector3i(const Vector3d& d) {
-    return Vector3i((Vector3i::value_type)std::floor(d.x), (Vector3i::value_type)std::floor(d.y), (Vector3i::value_type)std::floor(d.z));
+    return Vector3i((Vector3i::value_type)std::floor(d.x),
+                    (Vector3i::value_type)std::floor(d.y),
+                    (Vector3i::value_type)std::floor(d.z));
 }
 
 inline Vector3f ToVector3f(const Vector3i& v) {
@@ -296,7 +290,6 @@ inline Vector3f ToVector3f(const Vector3d& v) {
     return Vector3f((float)v.x, (float)v.y, (float)v.z);
 }
 
-
-} // ns mc
+}  // namespace mc
 
 #endif

@@ -6,7 +6,8 @@
 
 namespace example {
 
-class SneakEnforcer : public mc::core::PlayerListener, public mc::core::ClientListener {
+class SneakEnforcer : public mc::core::PlayerListener,
+                      public mc::core::ClientListener {
 private:
     mc::core::Client* m_Client;
     mc::core::PlayerManager* m_PlayerManager;
@@ -21,6 +22,6 @@ public:
     void OnClientSpawn(mc::core::PlayerPtr player) override;
 };
 
-} // ns example
+}  // namespace example
 
 #endif

@@ -13,5 +13,5 @@ bool Dispenser::ImportNBT(nbt::NBT* nbt) {
     return InventoryBlock::ImportNBT(nbt);
 }
 
-} // ns block
-} // ns mc
+}  // namespace block
+}  // namespace mc

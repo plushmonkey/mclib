@@ -26,35 +26,34 @@
 namespace mc {
 namespace block {
 
-static const std::unordered_map<std::wstring, BlockEntityType> blockEntityTypes =
-{
-    { L"minecraft:banner", BlockEntityType::Banner },
-    { L"minecraft:beacon", BlockEntityType::Beacon },
-    { L"minecraft:bed", BlockEntityType::Bed },
-    { L"minecraft:cauldron", BlockEntityType::Cauldron },
-    { L"minecraft:brewing_stand", BlockEntityType::BrewingStand },
-    { L"minecraft:chest", BlockEntityType::Chest },
-    { L"minecraft:comparator", BlockEntityType::Comparator },
-    { L"minecraft:command_block", BlockEntityType::CommandBlock },
-    { L"minecraft:daylight_detector", BlockEntityType::DaylightSensor },
-    { L"minecraft:dispenser", BlockEntityType::Dispenser },
-    { L"minecraft:dropper", BlockEntityType::Dropper },
-    { L"minecraft:enchanting_table", BlockEntityType::EnchantingTable },
-    { L"minecraft:ender_chest", BlockEntityType::EnderChest },
-    { L"minecraft:end_gateway", BlockEntityType::EndGateway },
-    { L"minecraft:end_portal", BlockEntityType::EndPortal },
-    { L"minecraft:flower_pot", BlockEntityType::FlowerPot },
-    { L"minecraft:furnace", BlockEntityType::Furnace },
-    { L"minecraft:hopper", BlockEntityType::Hopper },
-    { L"minecraft:jukebox", BlockEntityType::Jukebox },
-    { L"minecraft:mob_spawner", BlockEntityType::MonsterSpawner },
-    { L"minecraft:noteblock", BlockEntityType::Noteblock },
-    { L"minecraft:piston", BlockEntityType::Piston },
-    { L"minecraft:sign", BlockEntityType::Sign },
-    { L"minecraft:skull", BlockEntityType::Skull },
-    { L"minecraft:structure_block", BlockEntityType::StructureBlock },
-    { L"minecraft:trapped_chest", BlockEntityType::TrappedChest }
-};
+static const std::unordered_map<std::wstring, BlockEntityType>
+    blockEntityTypes = {
+        {L"minecraft:banner", BlockEntityType::Banner},
+        {L"minecraft:beacon", BlockEntityType::Beacon},
+        {L"minecraft:bed", BlockEntityType::Bed},
+        {L"minecraft:cauldron", BlockEntityType::Cauldron},
+        {L"minecraft:brewing_stand", BlockEntityType::BrewingStand},
+        {L"minecraft:chest", BlockEntityType::Chest},
+        {L"minecraft:comparator", BlockEntityType::Comparator},
+        {L"minecraft:command_block", BlockEntityType::CommandBlock},
+        {L"minecraft:daylight_detector", BlockEntityType::DaylightSensor},
+        {L"minecraft:dispenser", BlockEntityType::Dispenser},
+        {L"minecraft:dropper", BlockEntityType::Dropper},
+        {L"minecraft:enchanting_table", BlockEntityType::EnchantingTable},
+        {L"minecraft:ender_chest", BlockEntityType::EnderChest},
+        {L"minecraft:end_gateway", BlockEntityType::EndGateway},
+        {L"minecraft:end_portal", BlockEntityType::EndPortal},
+        {L"minecraft:flower_pot", BlockEntityType::FlowerPot},
+        {L"minecraft:furnace", BlockEntityType::Furnace},
+        {L"minecraft:hopper", BlockEntityType::Hopper},
+        {L"minecraft:jukebox", BlockEntityType::Jukebox},
+        {L"minecraft:mob_spawner", BlockEntityType::MonsterSpawner},
+        {L"minecraft:noteblock", BlockEntityType::Noteblock},
+        {L"minecraft:piston", BlockEntityType::Piston},
+        {L"minecraft:sign", BlockEntityType::Sign},
+        {L"minecraft:skull", BlockEntityType::Skull},
+        {L"minecraft:structure_block", BlockEntityType::StructureBlock},
+        {L"minecraft:trapped_chest", BlockEntityType::TrappedChest}};
 
 BlockEntityType GetTypeFromString(const std::wstring& str) {
     auto iter = blockEntityTypes.find(str);
@@ -64,10 +63,7 @@ BlockEntityType GetTypeFromString(const std::wstring& str) {
 }
 
 BlockEntity::BlockEntity(BlockEntityType type, Vector3i position) noexcept
-    : m_Type(type), m_Position(position)
-{
-
-}
+    : m_Type(type), m_Position(position) {}
 
 std::unique_ptr<BlockEntity> BlockEntity::CreateFromNBT(nbt::NBT* nbt) {
     auto idTag = nbt->GetTag<nbt::TagString>(L"id");
@@ -75,7 +71,8 @@ std::unique_ptr<BlockEntity> BlockEntity::CreateFromNBT(nbt::NBT* nbt) {
     auto yTag = nbt->GetTag<nbt::TagInt>(L"y");
     auto zTag = nbt->GetTag<nbt::TagInt>(L"z");
 
-    if (idTag == nullptr || xTag == nullptr || yTag == nullptr || zTag == nullptr)
+    if (idTag == nullptr || xTag == nullptr || yTag == nullptr ||
+        zTag == nullptr)
         return nullptr;
 
     std::wstring id = idTag->GetValue();
@@ -152,7 +149,7 @@ std::unique_ptr<BlockEntity> BlockEntity::CreateFromNBT(nbt::NBT* nbt) {
         case BlockEntityType::TrappedChest:
             entity = std::make_unique<Chest>(type, position);
             break;
-        
+
         default:
             entity = std::make_unique<BlockEntity>(type, position);
     }
@@ -163,5 +160,5 @@ std::unique_ptr<BlockEntity> BlockEntity::CreateFromNBT(nbt::NBT* nbt) {
     return entity;
 }
 
-} // ns block
-} // ns mc
+}  // namespace block
+}  // namespace mc

@@ -2,32 +2,32 @@
 
 #include <mclib/common/Json.h>
 
-#include <map>
 #include <iostream>
+#include <map>
 
 namespace mc {
 namespace util {
 
 VersionFetcher::VersionFetcher(const std::string& host, u16 port)
     : m_Dispatcher(),
-      m_Version(mc::protocol::Version::Minecraft_1_12_2), 
+      m_Version(mc::protocol::Version::Minecraft_1_14_2),
       m_Forge(&m_Dispatcher, nullptr),
       m_Connection(nullptr),
       m_Host(host),
       m_Port(port),
-      m_Found(false)
-{
-
-}
+      m_Found(false) {}
 
 void VersionFetcher::OnPingResponse(const json& node) {
     static const std::map<s32, mc::protocol::Version> mapping = {
-        { 210, mc::protocol::Version::Minecraft_1_10_2 },
-        { 315, mc::protocol::Version::Minecraft_1_11_0 },
-        { 316, mc::protocol::Version::Minecraft_1_11_2 },
-        { 335, mc::protocol::Version::Minecraft_1_12_0 },
-        { 338, mc::protocol::Version::Minecraft_1_12_1 },
-        { 340, mc::protocol::Version::Minecraft_1_12_2 },
+        {210, mc::protocol::Version::Minecraft_1_10_2},
+        {315, mc::protocol::Version::Minecraft_1_11_0},
+        {316, mc::protocol::Version::Minecraft_1_11_2},
+        {335, mc::protocol::Version::Minecraft_1_12_0},
+        {338, mc::protocol::Version::Minecraft_1_12_1},
+        {340, mc::protocol::Version::Minecraft_1_12_2},
+        {404, mc::protocol::Version::Minecraft_1_13_2},
+        {485, mc::protocol::Version::Minecraft_1_14_2}  // TODO replace mapping
+                                                        // with enums magic
     };
 
     auto&& versionNode = node.value("version", json());
@@ -64,5 +64,5 @@ mc::protocol::Version VersionFetcher::GetVersion() {
     return m_Version;
 }
 
-} // ns util
-} // ns mc
+}  // namespace util
+}  // namespace mc

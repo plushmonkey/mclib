@@ -15,25 +15,27 @@
 #include <mclib/util/ObserverSubject.h>
 #include <mclib/util/Yggdrasil.h>
 
-#include <string>
-#include <queue>
 #include <future>
 #include <memory>
+#include <queue>
+#include <string>
 
 namespace mc {
 namespace core {
 
 class ConnectionListener {
 public:
-    virtual MCLIB_API ~ConnectionListener() { }
+    virtual MCLIB_API ~ConnectionListener() {}
 
-    virtual void MCLIB_API OnSocketStateChange(network::Socket::Status newStatus) { }
-    virtual void MCLIB_API OnLogin(bool success) { }
-    virtual void MCLIB_API OnAuthentication(bool success, std::string error) { }
-    virtual void MCLIB_API OnPingResponse(const nlohmann::json& node) { }
+    virtual void MCLIB_API
+    OnSocketStateChange(network::Socket::Status newStatus) {}
+    virtual void MCLIB_API OnLogin(bool success) {}
+    virtual void MCLIB_API OnAuthentication(bool success, std::string error) {}
+    virtual void MCLIB_API OnPingResponse(const nlohmann::json& node) {}
 };
 
-class Connection : public protocol::packets::PacketHandler, public util::ObserverSubject<ConnectionListener> {
+class Connection : public protocol::packets::PacketHandler,
+                   public util::ObserverSubject<ConnectionListener> {
 private:
     std::unique_ptr<EncryptionStrategy> m_Encrypter;
     std::unique_ptr<CompressionStrategy> m_Compressor;
@@ -51,12 +53,16 @@ private:
     bool m_SentSettings;
     s32 m_Dimension;
 
-    void AuthenticateClient(const std::wstring& serverId, const std::string& sharedSecret, const std::string& pubkey);
+    void AuthenticateClient(const std::wstring& serverId,
+                            const std::string& sharedSecret,
+                            const std::string& pubkey);
     protocol::packets::Packet* CreatePacket(DataBuffer& buffer);
     void SendSettingsPacket();
 
 public:
-    MCLIB_API Connection(protocol::packets::PacketDispatcher* dispatcher, protocol::Version version = protocol::Version::Minecraft_1_11_2);
+    MCLIB_API Connection(
+        protocol::packets::PacketDispatcher* dispatcher,
+        protocol::Version version = protocol::Version::Minecraft_1_11_2);
     MCLIB_API ~Connection();
 
     Connection(const Connection& other) = delete;
@@ -73,22 +79,30 @@ public:
     void SendSettings() noexcept { m_SentSettings = false; }
 
     void MCLIB_API HandlePacket(protocol::packets::in::KeepAlivePacket* packet);
-    void MCLIB_API HandlePacket(protocol::packets::in::PlayerPositionAndLookPacket* packet);
-    void MCLIB_API HandlePacket(protocol::packets::in::DisconnectPacket* packet);
-    void MCLIB_API HandlePacket(protocol::packets::in::EncryptionRequestPacket* packet);
-    void MCLIB_API HandlePacket(protocol::packets::in::LoginSuccessPacket* packet);
-    void MCLIB_API HandlePacket(protocol::packets::in::SetCompressionPacket* packet);
+    void MCLIB_API
+    HandlePacket(protocol::packets::in::PlayerPositionAndLookPacket* packet);
+    void MCLIB_API
+    HandlePacket(protocol::packets::in::DisconnectPacket* packet);
+    void MCLIB_API
+    HandlePacket(protocol::packets::in::EncryptionRequestPacket* packet);
+    void MCLIB_API
+    HandlePacket(protocol::packets::in::LoginSuccessPacket* packet);
+    void MCLIB_API
+    HandlePacket(protocol::packets::in::SetCompressionPacket* packet);
     void MCLIB_API HandlePacket(protocol::packets::in::JoinGamePacket* packet);
     void MCLIB_API HandlePacket(protocol::packets::in::RespawnPacket* packet);
-    void MCLIB_API HandlePacket(protocol::packets::in::UpdateHealthPacket* packet);
-    void MCLIB_API HandlePacket(protocol::packets::in::status::ResponsePacket* packet);
+    void MCLIB_API
+    HandlePacket(protocol::packets::in::UpdateHealthPacket* packet);
+    void MCLIB_API
+    HandlePacket(protocol::packets::in::status::ResponsePacket* packet);
 
     bool MCLIB_API Connect(const std::string& server, u16 port);
     void MCLIB_API Disconnect();
     void MCLIB_API CreatePacket();
 
     void MCLIB_API Ping();
-    bool MCLIB_API Login(const std::string& username, const std::string& password);
+    bool MCLIB_API Login(const std::string& username,
+                         const std::string& password);
     bool MCLIB_API Login(const std::string& username, AuthToken token);
 
     template <typename T>
@@ -109,7 +123,7 @@ public:
     }
 };
 
-} // ns core
-} // ns mc
+}  // namespace core
+}  // namespace mc
 
 #endif

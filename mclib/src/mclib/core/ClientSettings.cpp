@@ -3,7 +3,10 @@
 namespace mc {
 namespace core {
 
-constexpr auto FullSkin = (u8)((u8)SkinPart::Cape | (u8)SkinPart::Jacket | (u8)SkinPart::LeftSleeve | (u8)SkinPart::RightSleeve | (u8)SkinPart::LeftPants | (u8)SkinPart::RightPants | (u8)SkinPart::Hat);
+constexpr auto FullSkin =
+    (u8)((u8)SkinPart::Cape | (u8)SkinPart::Jacket | (u8)SkinPart::LeftSleeve |
+         (u8)SkinPart::RightSleeve | (u8)SkinPart::LeftPants |
+         (u8)SkinPart::RightPants | (u8)SkinPart::Hat);
 
 ClientSettings::ClientSettings()
     : m_Locale(L"en_GB"),
@@ -11,10 +14,7 @@ ClientSettings::ClientSettings()
       m_MainHand(MainHand::Right),
       m_ViewDistance(16),
       m_SkinParts(FullSkin),
-      m_ChatColors(true)
-{
-
-}
+      m_ChatColors(true) {}
 
 ClientSettings& ClientSettings::SetLocale(const std::wstring& locale) {
     m_Locale = locale;
@@ -50,7 +50,8 @@ ClientSettings& ClientSettings::SetChatColors(bool chatColors) noexcept {
     return *this;
 }
 
-ClientSettings& ClientSettings::SetSkinPart(SkinPart part, bool display) noexcept {
+ClientSettings& ClientSettings::SetSkinPart(SkinPart part,
+                                            bool display) noexcept {
     if (display) {
         m_SkinParts |= (u8)part;
     } else {
@@ -59,5 +60,5 @@ ClientSettings& ClientSettings::SetSkinPart(SkinPart part, bool display) noexcep
     return *this;
 }
 
-} // ns core
-} // ns mc
+}  // namespace core
+}  // namespace mc

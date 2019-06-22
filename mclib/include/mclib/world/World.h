@@ -1,10 +1,10 @@
 #ifndef MCLIB_WORLD_WORLD_H_
 #define MCLIB_WORLD_WORLD_H_
 
-#include <mclib/world/Chunk.h>
-#include <mclib/protocol/packets/PacketHandler.h>
 #include <mclib/protocol/packets/PacketDispatcher.h>
+#include <mclib/protocol/packets/PacketHandler.h>
 #include <mclib/util/ObserverSubject.h>
+#include <mclib/world/Chunk.h>
 
 #include <map>
 
@@ -13,13 +13,17 @@ namespace world {
 
 class MCLIB_API WorldListener {
 public:
-    // yIndex is the chunk section index of the column, 0 means bottom chunk, 15 means top
-    virtual void OnChunkLoad(ChunkPtr chunk, const ChunkColumnMetadata& meta, u16 yIndex) { }
-    virtual void OnChunkUnload(ChunkColumnPtr chunk) { }
-    virtual void OnBlockChange(Vector3i position, block::BlockPtr newBlock, block::BlockPtr oldBlock) { }
+    // yIndex is the chunk section index of the column, 0 means bottom chunk, 15
+    // means top
+    virtual void OnChunkLoad(ChunkPtr chunk, const ChunkColumnMetadata& meta,
+                             u16 yIndex) {}
+    virtual void OnChunkUnload(ChunkColumnPtr chunk) {}
+    virtual void OnBlockChange(Vector3i position, block::BlockPtr newBlock,
+                               block::BlockPtr oldBlock) {}
 };
 
-class World : public protocol::packets::PacketHandler, public util::ObserverSubject<WorldListener> {
+class World : public protocol::packets::PacketHandler,
+              public util::ObserverSubject<WorldListener> {
 private:
     typedef std::pair<s32, s32> ChunkCoord;
 
@@ -37,11 +41,15 @@ public:
     World& operator=(World&& rhs) = delete;
 
     void MCLIB_API HandlePacket(protocol::packets::in::ChunkDataPacket* packet);
-    void MCLIB_API HandlePacket(protocol::packets::in::UnloadChunkPacket* packet);
-    void MCLIB_API HandlePacket(protocol::packets::in::MultiBlockChangePacket* packet);
-    void MCLIB_API HandlePacket(protocol::packets::in::BlockChangePacket* packet);
+    void MCLIB_API
+    HandlePacket(protocol::packets::in::UnloadChunkPacket* packet);
+    void MCLIB_API
+    HandlePacket(protocol::packets::in::MultiBlockChangePacket* packet);
+    void MCLIB_API
+    HandlePacket(protocol::packets::in::BlockChangePacket* packet);
     void MCLIB_API HandlePacket(protocol::packets::in::ExplosionPacket* packet);
-    void MCLIB_API HandlePacket(protocol::packets::in::UpdateBlockEntityPacket* packet);
+    void MCLIB_API
+    HandlePacket(protocol::packets::in::UpdateBlockEntityPacket* packet);
     void MCLIB_API HandlePacket(protocol::packets::in::RespawnPacket* packet);
 
     /**
@@ -57,11 +65,15 @@ public:
     // Gets all of the known block entities in loaded chunks
     MCLIB_API std::vector<block::BlockEntityPtr> GetBlockEntities() const;
 
-    const std::map<ChunkCoord, ChunkColumnPtr>::const_iterator begin() const { return m_Chunks.begin(); }
-    const std::map<ChunkCoord, ChunkColumnPtr>::const_iterator end() const { return m_Chunks.end(); }
+    const std::map<ChunkCoord, ChunkColumnPtr>::const_iterator begin() const {
+        return m_Chunks.begin();
+    }
+    const std::map<ChunkCoord, ChunkColumnPtr>::const_iterator end() const {
+        return m_Chunks.end();
+    }
 };
 
-} // ns world
-} // ns mc
+}  // namespace world
+}  // namespace mc
 
 #endif

@@ -11,7 +11,7 @@ private:
 public:
 };
 
-} // ns entity
-} // ns mc
+}  // namespace entity
+}  // namespace mc
 
 #endif

@@ -2,12 +2,12 @@
 
 #include <mclib/common/DataBuffer.h>
 
-#include <algorithm>
-#include <random>
-#include <functional>
 #include <openssl/aes.h>
 #include <openssl/rsa.h>
 #include <openssl/x509.h>
+#include <algorithm>
+#include <functional>
+#include <random>
 
 namespace mc {
 namespace core {
@@ -18,13 +18,9 @@ private:
     std::mt19937 m_Generator;
 
 public:
-    RandomGenerator() : m_RandomDevice(), m_Generator(m_RandomDevice())
-    {
-    }
+    RandomGenerator() : m_RandomDevice(), m_Generator(m_RandomDevice()) {}
 
-    RandomGenerator(unsigned int seed) : m_RandomDevice(), m_Generator(seed)
-    {
-    }
+    RandomGenerator(unsigned int seed) : m_RandomDevice(), m_Generator(seed) {}
 
     unsigned int GetInt(unsigned int min, unsigned int max) {
         std::uniform_int_distribution<unsigned int> distr(min, max);
@@ -59,19 +55,21 @@ private:
         unsigned int len;
     } m_SharedSecret;
 
-    bool Initialize(const std::string& publicKey, const std::string& verifyToken) {
+    bool Initialize(const std::string& publicKey,
+                    const std::string& verifyToken) {
         // Store received public key
         m_PublicKey.len = publicKey.length();
         m_PublicKey.key = new unsigned char[m_PublicKey.len];
         std::copy(publicKey.begin(), publicKey.end(), m_PublicKey.key);
 
-        RSA* rsa = d2i_RSA_PUBKEY(NULL, (const unsigned char**)&m_PublicKey.key, m_PublicKey.len);
+        RSA* rsa = d2i_RSA_PUBKEY(NULL, (const unsigned char**)&m_PublicKey.key,
+                                  m_PublicKey.len);
 
         // Generate random shared secret
         m_SharedSecret.len = AES_BLOCK_SIZE;
         std::generate(m_SharedSecret.key,
-            m_SharedSecret.key + m_SharedSecret.len,
-            std::bind(&RandomGenerator::GetInt, &m_RNG, 0, 255));
+                      m_SharedSecret.key + m_SharedSecret.len,
+                      std::bind(&RandomGenerator::GetInt, &m_RNG, 0, 255));
 
         int rsaSize = RSA_size(rsa);
 
@@ -82,41 +80,46 @@ private:
         encryptedToken.resize(rsaSize);
 
         // Encrypt the shared secret with public key
-        RSA_public_encrypt(AES_BLOCK_SIZE, m_SharedSecret.key, (unsigned char*)&encryptedSS[0], rsa, RSA_PKCS1_PADDING);
+        RSA_public_encrypt(AES_BLOCK_SIZE, m_SharedSecret.key,
+                           (unsigned char*)&encryptedSS[0], rsa,
+                           RSA_PKCS1_PADDING);
         // Encrypt the verify token with public key
-        RSA_public_encrypt(verifyToken.length(), (const unsigned char*)verifyToken.c_str(), (unsigned char*)&encryptedToken[0], rsa, RSA_PKCS1_PADDING);
+        RSA_public_encrypt(
+            verifyToken.length(), (const unsigned char*)verifyToken.c_str(),
+            (unsigned char*)&encryptedToken[0], rsa, RSA_PKCS1_PADDING);
         RSA_free(rsa);
 
         // Initialize AES encryption and decryption
-        if (!(m_EncryptCTX = EVP_CIPHER_CTX_new()))
+        if (!(m_EncryptCTX = EVP_CIPHER_CTX_new())) return false;
+
+        if (!(EVP_EncryptInit_ex(m_EncryptCTX, EVP_aes_128_cfb8(), nullptr,
+                                 m_SharedSecret.key, m_SharedSecret.key)))
             return false;
 
-        if (!(EVP_EncryptInit_ex(m_EncryptCTX, EVP_aes_128_cfb8(), nullptr, m_SharedSecret.key, m_SharedSecret.key)))
-            return false;
+        if (!(m_DecryptCTX = EVP_CIPHER_CTX_new())) return false;
 
-        if (!(m_DecryptCTX = EVP_CIPHER_CTX_new()))
-            return false;
-
-        if (!(EVP_DecryptInit_ex(m_DecryptCTX, EVP_aes_128_cfb8(), nullptr, m_SharedSecret.key, m_SharedSecret.key)))
+        if (!(EVP_DecryptInit_ex(m_DecryptCTX, EVP_aes_128_cfb8(), nullptr,
+                                 m_SharedSecret.key, m_SharedSecret.key)))
             return false;
 
         m_BlockSize = EVP_CIPHER_block_size(EVP_aes_128_cfb8());
 
-        m_ResponsePacket = new protocol::packets::out::EncryptionResponsePacket(encryptedSS, encryptedToken);
+        m_ResponsePacket = new protocol::packets::out::EncryptionResponsePacket(
+            encryptedSS, encryptedToken);
         return true;
     }
 
 public:
     Impl(const std::string& publicKey, const std::string& verifyToken)
-        : m_EncryptCTX(nullptr), m_DecryptCTX(nullptr), m_ResponsePacket(nullptr)
-    {
+        : m_EncryptCTX(nullptr),
+          m_DecryptCTX(nullptr),
+          m_ResponsePacket(nullptr) {
         m_PublicKey.key = nullptr;
         Initialize(publicKey, verifyToken);
     }
 
     ~Impl() {
-        if (m_ResponsePacket)
-            delete m_ResponsePacket;
+        if (m_ResponsePacket) delete m_ResponsePacket;
 
         EVP_CIPHER_CTX_free(m_EncryptCTX);
         EVP_CIPHER_CTX_free(m_DecryptCTX);
@@ -130,7 +133,8 @@ public:
         int size = 0;
 
         result.Resize(buffer.GetSize() + m_BlockSize);
-        EVP_EncryptUpdate(m_EncryptCTX, &result[0], &size, &buffer[0], buffer.GetSize());
+        EVP_EncryptUpdate(m_EncryptCTX, &result[0], &size, &buffer[0],
+                          buffer.GetSize());
         result.Resize(size);
 
         return result;
@@ -141,7 +145,8 @@ public:
         int size = 0;
 
         result.Resize(buffer.GetSize() + m_BlockSize);
-        EVP_DecryptUpdate(m_DecryptCTX, &result[0], &size, &buffer[0], buffer.GetSize());
+        EVP_DecryptUpdate(m_DecryptCTX, &result[0], &size, &buffer[0],
+                          buffer.GetSize());
         result.Resize(size);
 
         return result;
@@ -151,18 +156,18 @@ public:
         return std::string((char*)m_SharedSecret.key, m_SharedSecret.len);
     }
 
-    protocol::packets::out::EncryptionResponsePacket* GenerateResponsePacket() const {
+    protocol::packets::out::EncryptionResponsePacket* GenerateResponsePacket()
+        const {
         return m_ResponsePacket;
     }
 };
 
-EncryptionStrategyAES::EncryptionStrategyAES(const std::string& publicKey, const std::string& verifyToken) {
+EncryptionStrategyAES::EncryptionStrategyAES(const std::string& publicKey,
+                                             const std::string& verifyToken) {
     m_Impl = new Impl(publicKey, verifyToken);
 }
 
-EncryptionStrategyAES::~EncryptionStrategyAES() {
-    delete m_Impl;
-}
+EncryptionStrategyAES::~EncryptionStrategyAES() { delete m_Impl; }
 
 DataBuffer EncryptionStrategyAES::Encrypt(const DataBuffer& buffer) {
     return m_Impl->encrypt(buffer);
@@ -176,9 +181,10 @@ std::string EncryptionStrategyAES::GetSharedSecret() const {
     return m_Impl->GetSharedSecret();
 }
 
-protocol::packets::out::EncryptionResponsePacket* EncryptionStrategyAES::GenerateResponsePacket() const {
+protocol::packets::out::EncryptionResponsePacket*
+EncryptionStrategyAES::GenerateResponsePacket() const {
     return m_Impl->GenerateResponsePacket();
 }
 
-} // ns core
-} // ns mc
+}  // namespace core
+}  // namespace mc

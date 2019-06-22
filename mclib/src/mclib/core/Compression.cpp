@@ -19,7 +19,8 @@ DataBuffer CompressionNone::Compress(DataBuffer& buffer) {
     return packet;
 }
 
-DataBuffer CompressionNone::Decompress(DataBuffer& buffer, std::size_t packetLength) {
+DataBuffer CompressionNone::Decompress(DataBuffer& buffer,
+                                       std::size_t packetLength) {
     DataBuffer ret;
     buffer.ReadSome(ret, packetLength);
     return ret;
@@ -27,7 +28,8 @@ DataBuffer CompressionNone::Decompress(DataBuffer& buffer, std::size_t packetLen
 
 unsigned long inflate(const std::string& source, std::string& dest) {
     unsigned long size = dest.size();
-    uncompress((Bytef*)&dest[0], &size, (const Bytef*)source.c_str(), source.length());
+    uncompress((Bytef*)&dest[0], &size, (const Bytef*)source.c_str(),
+               source.length());
     return size;
 }
 
@@ -35,7 +37,8 @@ unsigned long deflate(const std::string& source, std::string& dest) {
     unsigned long size = source.length();
     dest.resize(size);
 
-    compress((Bytef*)&dest[0], &size, (const Bytef*)source.c_str(), source.length());
+    compress((Bytef*)&dest[0], &size, (const Bytef*)source.c_str(),
+             source.length());
     dest.resize(size);
     return size;
 }
@@ -47,7 +50,8 @@ DataBuffer CompressionZ::Compress(DataBuffer& buffer) {
     if (buffer.GetSize() < m_CompressionThreshold) {
         // Don't compress since it's a small packet
         VarInt dataLength(0);
-        VarInt packetLength((s32)(buffer.GetSize() + dataLength.GetSerializedLength()));
+        VarInt packetLength(
+            (s32)(buffer.GetSize() + dataLength.GetSerializedLength()));
 
         packet << packetLength;
         packet << dataLength;
@@ -55,11 +59,11 @@ DataBuffer CompressionZ::Compress(DataBuffer& buffer) {
         return packet;
     }
 
-
     deflate(buffer.ToString(), compressedData);
 
     VarInt dataLength((s32)buffer.GetSize());
-    VarInt packetLength((s32)(compressedData.length() + dataLength.GetSerializedLength()));
+    VarInt packetLength(
+        (s32)(compressedData.length() + dataLength.GetSerializedLength()));
 
     packet << packetLength;
     packet << dataLength;
@@ -67,12 +71,14 @@ DataBuffer CompressionZ::Compress(DataBuffer& buffer) {
     return packet;
 }
 
-DataBuffer CompressionZ::Decompress(DataBuffer& buffer, std::size_t packetLength) {
+DataBuffer CompressionZ::Decompress(DataBuffer& buffer,
+                                    std::size_t packetLength) {
     VarInt uncompressedLength;
 
     buffer >> uncompressedLength;
 
-    std::size_t compressedLength = packetLength - uncompressedLength.GetSerializedLength();
+    std::size_t compressedLength =
+        packetLength - uncompressedLength.GetSerializedLength();
 
     if (uncompressedLength.GetInt() == 0) {
         // Uncompressed
@@ -80,7 +86,6 @@ DataBuffer CompressionZ::Decompress(DataBuffer& buffer, std::size_t packetLength
         buffer.ReadSome(ret, compressedLength);
         return ret;
     }
-
 
     assert(buffer.GetReadOffset() + compressedLength <= buffer.GetSize());
 
@@ -96,5 +101,5 @@ DataBuffer CompressionZ::Decompress(DataBuffer& buffer, std::size_t packetLength
     return DataBuffer(inflated);
 }
 
-} // ns core
-} // ns mc
+}  // namespace core
+}  // namespace mc

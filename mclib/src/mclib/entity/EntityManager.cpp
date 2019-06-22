@@ -4,9 +4,9 @@
 #include <mclib/entity/XPOrb.h>
 #include <mclib/protocol/packets/PacketDispatcher.h>
 
-#include <unordered_map>
 #include <algorithm>
 #include <iostream>
+#include <unordered_map>
 
 // todo: Use factories to create the entities
 
@@ -18,67 +18,85 @@ namespace entity {
 
 EntityType GetEntityTypeFromObjectId(s32 oid) {
     static const std::unordered_map<s32, EntityType> mapping = {
-        { 1, EntityType::Boat },
-        { 2, EntityType::Item },
-        { 3, EntityType::AreaEffectCloud },
-        { 10, EntityType::MinecartRideable },
-        { 50, EntityType::PrimedTnt },
-        { 51, EntityType::EnderCrystal },
-        { 60, EntityType::Arrow },
-        { 61, EntityType::Snowball },
-        { 62, EntityType::ThrownEgg },
-        { 63, EntityType::Fireball },
-        { 64, EntityType::SmallFireball },
-        { 65, EntityType::ThrownEnderpearl },
-        { 66, EntityType::WitherSkull },
-        { 67, EntityType::ShulkerBullet },
-        { 68, EntityType::LlamaSpit },
-        { 70, EntityType::FallingObject },
-        { 71, EntityType::ItemFrame },
-        { 72, EntityType::EyeOfEnderSignal },
-        { 73, EntityType::ThrownPotion },
-        { 75, EntityType::ThrownExpBottle },
-        { 76, EntityType::FireworksRocketEntity },
-        { 77, EntityType::LeashKnot },
-        { 78, EntityType::ArmorStand },
-        { 79, EntityType::EvocationFangs },
-        { 90, EntityType::FishingHook },
-        { 91, EntityType::SpectralArrow },
-        { 93, EntityType::DragonFireball }
-    };
+        {1, EntityType::Boat},
+        {2, EntityType::Item},
+        {3, EntityType::AreaEffectCloud},
+        {10, EntityType::MinecartRideable},
+        {50, EntityType::PrimedTnt},
+        {51, EntityType::EnderCrystal},
+        {60, EntityType::Arrow},
+        {61, EntityType::Snowball},
+        {62, EntityType::ThrownEgg},
+        {63, EntityType::Fireball},
+        {64, EntityType::SmallFireball},
+        {65, EntityType::ThrownEnderpearl},
+        {66, EntityType::WitherSkull},
+        {67, EntityType::ShulkerBullet},
+        {68, EntityType::LlamaSpit},
+        {70, EntityType::FallingObject},
+        {71, EntityType::ItemFrame},
+        {72, EntityType::EyeOfEnderSignal},
+        {73, EntityType::ThrownPotion},
+        {75, EntityType::ThrownExpBottle},
+        {76, EntityType::FireworksRocketEntity},
+        {77, EntityType::LeashKnot},
+        {78, EntityType::ArmorStand},
+        {79, EntityType::EvocationFangs},
+        {90, EntityType::FishingHook},
+        {91, EntityType::SpectralArrow},
+        {93, EntityType::DragonFireball}};
 
     return mapping.at(oid);
 }
 
-EntityManager::EntityManager(protocol::packets::PacketDispatcher* dispatcher, protocol::Version protocolVersion)
-    : protocol::packets::PacketHandler(dispatcher), m_ProtocolVersion(protocolVersion)
-{
-    GetDispatcher()->RegisterHandler(protocol::State::Play, protocol::play::JoinGame, this);
-    GetDispatcher()->RegisterHandler(protocol::State::Play, protocol::play::PlayerPositionAndLook, this);
-    GetDispatcher()->RegisterHandler(protocol::State::Play, protocol::play::SpawnPlayer, this);
-    GetDispatcher()->RegisterHandler(protocol::State::Play, protocol::play::SpawnPainting, this);
-    GetDispatcher()->RegisterHandler(protocol::State::Play, protocol::play::SpawnExperienceOrb, this);
-    GetDispatcher()->RegisterHandler(protocol::State::Play, protocol::play::SpawnGlobalEntity, this);
-    GetDispatcher()->RegisterHandler(protocol::State::Play, protocol::play::SpawnMob, this);
-    GetDispatcher()->RegisterHandler(protocol::State::Play, protocol::play::SpawnObject, this);
-    GetDispatcher()->RegisterHandler(protocol::State::Play, protocol::play::Entity, this);
-    GetDispatcher()->RegisterHandler(protocol::State::Play, protocol::play::EntityRelativeMove, this);
-    GetDispatcher()->RegisterHandler(protocol::State::Play, protocol::play::EntityLookAndRelativeMove, this);
-    GetDispatcher()->RegisterHandler(protocol::State::Play, protocol::play::EntityTeleport, this);
-    GetDispatcher()->RegisterHandler(protocol::State::Play, protocol::play::EntityLook, this);
-    GetDispatcher()->RegisterHandler(protocol::State::Play, protocol::play::EntityHeadLook, this);
-    GetDispatcher()->RegisterHandler(protocol::State::Play, protocol::play::EntityMetadata, this);
-    GetDispatcher()->RegisterHandler(protocol::State::Play, protocol::play::EntityVelocity, this);
-    GetDispatcher()->RegisterHandler(protocol::State::Play, protocol::play::EntityProperties, this);
-    GetDispatcher()->RegisterHandler(protocol::State::Play, protocol::play::DestroyEntities, this);
-    GetDispatcher()->RegisterHandler(protocol::State::Play, protocol::play::AttachEntity, this);
+EntityManager::EntityManager(protocol::packets::PacketDispatcher* dispatcher,
+                             protocol::Version protocolVersion)
+    : protocol::packets::PacketHandler(dispatcher),
+      m_ProtocolVersion(protocolVersion) {
+    GetDispatcher()->RegisterHandler(protocol::State::Play,
+                                     protocol::play::JoinGame, this);
+    GetDispatcher()->RegisterHandler(
+        protocol::State::Play, protocol::play::PlayerPositionAndLook, this);
+    GetDispatcher()->RegisterHandler(protocol::State::Play,
+                                     protocol::play::SpawnPlayer, this);
+    GetDispatcher()->RegisterHandler(protocol::State::Play,
+                                     protocol::play::SpawnPainting, this);
+    GetDispatcher()->RegisterHandler(protocol::State::Play,
+                                     protocol::play::SpawnExperienceOrb, this);
+    GetDispatcher()->RegisterHandler(protocol::State::Play,
+                                     protocol::play::SpawnGlobalEntity, this);
+    GetDispatcher()->RegisterHandler(protocol::State::Play,
+                                     protocol::play::SpawnMob, this);
+    GetDispatcher()->RegisterHandler(protocol::State::Play,
+                                     protocol::play::SpawnObject, this);
+    GetDispatcher()->RegisterHandler(protocol::State::Play,
+                                     protocol::play::Entity, this);
+    GetDispatcher()->RegisterHandler(protocol::State::Play,
+                                     protocol::play::EntityRelativeMove, this);
+    GetDispatcher()->RegisterHandler(
+        protocol::State::Play, protocol::play::EntityLookAndRelativeMove, this);
+    GetDispatcher()->RegisterHandler(protocol::State::Play,
+                                     protocol::play::EntityTeleport, this);
+    GetDispatcher()->RegisterHandler(protocol::State::Play,
+                                     protocol::play::EntityLook, this);
+    GetDispatcher()->RegisterHandler(protocol::State::Play,
+                                     protocol::play::EntityHeadLook, this);
+    GetDispatcher()->RegisterHandler(protocol::State::Play,
+                                     protocol::play::EntityMetadata, this);
+    GetDispatcher()->RegisterHandler(protocol::State::Play,
+                                     protocol::play::EntityVelocity, this);
+    GetDispatcher()->RegisterHandler(protocol::State::Play,
+                                     protocol::play::EntityProperties, this);
+    GetDispatcher()->RegisterHandler(protocol::State::Play,
+                                     protocol::play::DestroyEntities, this);
+    GetDispatcher()->RegisterHandler(protocol::State::Play,
+                                     protocol::play::AttachEntity, this);
 }
 
-EntityManager::~EntityManager() {
-    GetDispatcher()->UnregisterHandler(this);
-}
+EntityManager::~EntityManager() { GetDispatcher()->UnregisterHandler(this); }
 
-void EntityManager::HandlePacket(protocol::packets::in::AttachEntityPacket* packet) {
+void EntityManager::HandlePacket(
+    protocol::packets::in::AttachEntityPacket* packet) {
     EntityId eid = packet->GetEntityId();
     EntityId vid = packet->GetVehicleId();
 
@@ -86,21 +104,23 @@ void EntityManager::HandlePacket(protocol::packets::in::AttachEntityPacket* pack
     if (iter == m_Entities.end()) return;
 
     auto entity = iter->second;
-    if (entity)
-        entity->SetVehicleId(vid);
+    if (entity) entity->SetVehicleId(vid);
 }
 
-void EntityManager::HandlePacket(protocol::packets::in::JoinGamePacket* packet) {
+void EntityManager::HandlePacket(
+    protocol::packets::in::JoinGamePacket* packet) {
     EntityId id = packet->GetEntityId();
 
     m_EntityId = id;
 
-    std::shared_ptr<PlayerEntity> entity = std::make_shared<PlayerEntity>(id, m_ProtocolVersion);
+    std::shared_ptr<PlayerEntity> entity =
+        std::make_shared<PlayerEntity>(id, m_ProtocolVersion);
 
     m_Entities[id] = entity;
 }
 
-void EntityManager::HandlePacket(protocol::packets::in::PlayerPositionAndLookPacket* packet) {
+void EntityManager::HandlePacket(
+    protocol::packets::in::PlayerPositionAndLookPacket* packet) {
     auto iter = m_Entities.find(m_EntityId);
     EntityPtr entity;
 
@@ -117,10 +137,12 @@ void EntityManager::HandlePacket(protocol::packets::in::PlayerPositionAndLookPac
     }
 }
 
-void EntityManager::HandlePacket(protocol::packets::in::SpawnPlayerPacket* packet) {
+void EntityManager::HandlePacket(
+    protocol::packets::in::SpawnPlayerPacket* packet) {
     EntityId id = packet->GetEntityId();
 
-    std::shared_ptr<PlayerEntity> entity = std::make_shared<PlayerEntity>(id, m_ProtocolVersion);
+    std::shared_ptr<PlayerEntity> entity =
+        std::make_shared<PlayerEntity>(id, m_ProtocolVersion);
 
     m_Entities[id] = entity;
 
@@ -132,11 +154,13 @@ void EntityManager::HandlePacket(protocol::packets::in::SpawnPlayerPacket* packe
 
     UUID uuid = packet->GetUUID();
 
-    NotifyListeners(&EntityListener::OnPlayerSpawn, PlayerEntityPtr(entity), uuid);
+    NotifyListeners(&EntityListener::OnPlayerSpawn, PlayerEntityPtr(entity),
+                    uuid);
     NotifyListeners(&EntityListener::OnEntitySpawn, entity);
 }
 
-void EntityManager::HandlePacket(protocol::packets::in::SpawnObjectPacket* packet) {
+void EntityManager::HandlePacket(
+    protocol::packets::in::SpawnObjectPacket* packet) {
     EntityId eid = packet->GetEntityId();
     EntityPtr entity = std::make_shared<Entity>(eid, m_ProtocolVersion);
 
@@ -154,7 +178,8 @@ void EntityManager::HandlePacket(protocol::packets::in::SpawnObjectPacket* packe
     NotifyListeners(&EntityListener::OnObjectSpawn, entity);
 }
 
-void EntityManager::HandlePacket(protocol::packets::in::SpawnPaintingPacket* packet) {
+void EntityManager::HandlePacket(
+    protocol::packets::in::SpawnPaintingPacket* packet) {
     EntityId eid = packet->GetEntityId();
     auto entity = std::make_shared<PaintingEntity>(eid, m_ProtocolVersion);
 
@@ -166,9 +191,11 @@ void EntityManager::HandlePacket(protocol::packets::in::SpawnPaintingPacket* pac
     entity->SetDirection((PaintingEntity::Direction)packet->GetDirection());
 }
 
-void EntityManager::HandlePacket(protocol::packets::in::SpawnExperienceOrbPacket* packet) {
+void EntityManager::HandlePacket(
+    protocol::packets::in::SpawnExperienceOrbPacket* packet) {
     EntityId eid = packet->GetEntityId();
-    EntityPtr entity = std::make_shared<XPOrb>(eid, packet->GetCount(), m_ProtocolVersion);
+    EntityPtr entity =
+        std::make_shared<XPOrb>(eid, packet->GetCount(), m_ProtocolVersion);
 
     m_Entities[eid] = entity;
 
@@ -176,7 +203,8 @@ void EntityManager::HandlePacket(protocol::packets::in::SpawnExperienceOrbPacket
     entity->SetType(EntityType::XPOrb);
 }
 
-void EntityManager::HandlePacket(protocol::packets::in::SpawnGlobalEntityPacket* packet) {
+void EntityManager::HandlePacket(
+    protocol::packets::in::SpawnGlobalEntityPacket* packet) {
     EntityId eid = packet->GetEntityId();
     EntityPtr entity = std::make_shared<Entity>(eid, m_ProtocolVersion);
 
@@ -186,7 +214,8 @@ void EntityManager::HandlePacket(protocol::packets::in::SpawnGlobalEntityPacket*
     entity->SetType(EntityType::Lightning);
 }
 
-void EntityManager::HandlePacket(protocol::packets::in::SpawnMobPacket* packet) {
+void EntityManager::HandlePacket(
+    protocol::packets::in::SpawnMobPacket* packet) {
     EntityId eid = packet->GetEntityId();
     EntityPtr entity = std::make_shared<Entity>(eid, m_ProtocolVersion);
 
@@ -205,7 +234,8 @@ void EntityManager::HandlePacket(protocol::packets::in::SpawnMobPacket* packet) 
     NotifyListeners(&EntityListener::OnEntitySpawn, entity);
 }
 
-void EntityManager::HandlePacket(protocol::packets::in::DestroyEntitiesPacket* packet) {
+void EntityManager::HandlePacket(
+    protocol::packets::in::DestroyEntitiesPacket* packet) {
     std::vector<EntityId> eids = packet->GetEntityIds();
 
     for (EntityId eid : eids) {
@@ -232,7 +262,8 @@ void EntityManager::HandlePacket(protocol::packets::in::EntityPacket* packet) {
     }
 }
 
-void EntityManager::HandlePacket(protocol::packets::in::EntityVelocityPacket* packet) {
+void EntityManager::HandlePacket(
+    protocol::packets::in::EntityVelocityPacket* packet) {
     EntityId eid = packet->GetEntityId();
 
     auto iter = m_Entities.find(eid);
@@ -247,7 +278,8 @@ void EntityManager::HandlePacket(protocol::packets::in::EntityVelocityPacket* pa
     }
 }
 
-void EntityManager::HandlePacket(protocol::packets::in::EntityRelativeMovePacket* packet) {
+void EntityManager::HandlePacket(
+    protocol::packets::in::EntityRelativeMovePacket* packet) {
     EntityId eid = packet->GetEntityId();
 
     Vector3d delta = ToVector3d(packet->GetDelta()) / (32.0 * 128.0);
@@ -267,7 +299,8 @@ void EntityManager::HandlePacket(protocol::packets::in::EntityRelativeMovePacket
     }
 }
 
-void EntityManager::HandlePacket(protocol::packets::in::EntityLookAndRelativeMovePacket* packet) {
+void EntityManager::HandlePacket(
+    protocol::packets::in::EntityLookAndRelativeMovePacket* packet) {
     EntityId eid = packet->GetEntityId();
 
     Vector3d delta = ToVector3d(packet->GetDelta()) / (32.0 * 128.0);
@@ -289,7 +322,8 @@ void EntityManager::HandlePacket(protocol::packets::in::EntityLookAndRelativeMov
     }
 }
 
-void EntityManager::HandlePacket(protocol::packets::in::EntityTeleportPacket* packet) {
+void EntityManager::HandlePacket(
+    protocol::packets::in::EntityTeleportPacket* packet) {
     EntityId eid = packet->GetEntityId();
 
     auto iter = m_Entities.find(eid);
@@ -309,7 +343,8 @@ void EntityManager::HandlePacket(protocol::packets::in::EntityTeleportPacket* pa
     }
 }
 
-void EntityManager::HandlePacket(protocol::packets::in::EntityLookPacket* packet) {
+void EntityManager::HandlePacket(
+    protocol::packets::in::EntityLookPacket* packet) {
     EntityId eid = packet->GetEntityId();
 
     auto iter = m_Entities.find(eid);
@@ -322,30 +357,32 @@ void EntityManager::HandlePacket(protocol::packets::in::EntityLookPacket* packet
     }
 }
 
-void EntityManager::HandlePacket(protocol::packets::in::EntityHeadLookPacket* packet) {
+void EntityManager::HandlePacket(
+    protocol::packets::in::EntityHeadLookPacket* packet) {
     EntityId eid = packet->GetEntityId();
 
     auto iter = m_Entities.find(eid);
     if (iter == m_Entities.end()) return;
 
     auto entity = iter->second;
-    if (entity)
-        entity->SetYaw(packet->GetYaw() / 256.0f * TAU);
+    if (entity) entity->SetYaw(packet->GetYaw() / 256.0f * TAU);
 }
 
-void EntityManager::HandlePacket(protocol::packets::in::EntityMetadataPacket* packet) {
+void EntityManager::HandlePacket(
+    protocol::packets::in::EntityMetadataPacket* packet) {
     EntityId eid = packet->GetEntityId();
 
     auto iter = m_Entities.find(eid);
     if (iter == m_Entities.end()) return;
-    
+
     auto entity = iter->second;
     if (entity) {
         entity->SetMetadata(packet->GetMetadata());
     }
 }
 
-void EntityManager::HandlePacket(protocol::packets::in::EntityPropertiesPacket* packet) {
+void EntityManager::HandlePacket(
+    protocol::packets::in::EntityPropertiesPacket* packet) {
     auto eid = packet->GetEntityId();
 
     auto iter = m_Entities.find(eid);
@@ -354,7 +391,7 @@ void EntityManager::HandlePacket(protocol::packets::in::EntityPropertiesPacket* 
     auto entity = iter->second;
     if (entity) {
         const auto& props = packet->GetProperties();
-        
+
         for (const auto& entry : props) {
             const auto& key = entry.first;
             const auto& attrib = entry.second;
@@ -364,5 +401,5 @@ void EntityManager::HandlePacket(protocol::packets::in::EntityPropertiesPacket* 
     }
 }
 
-} // ns entity
-} // ns mc
+}  // namespace entity
+}  // namespace mc

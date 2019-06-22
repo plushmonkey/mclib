@@ -13,13 +13,14 @@ private:
     s32 m_Color;
 
 public:
-    MCLIB_API Bed(BlockEntityType type, Vector3i position) : BlockEntity(type, position) { }
+    MCLIB_API Bed(BlockEntityType type, Vector3i position)
+        : BlockEntity(type, position) {}
     MCLIB_API bool ImportNBT(nbt::NBT* nbt);
 
     inline s32 GetColor() const noexcept { return m_Color; }
 };
 
-} // ns block
-} // ns mc
+}  // namespace block
+}  // namespace mc
 
 #endif

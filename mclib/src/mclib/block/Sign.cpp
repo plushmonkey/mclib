@@ -27,5 +27,5 @@ const std::wstring& Sign::GetText(std::size_t index) const {
     return m_Text[index];
 }
 
-} // ns block
-} // ns mc
+}  // namespace block
+}  // namespace mc

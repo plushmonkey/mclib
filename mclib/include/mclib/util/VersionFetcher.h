@@ -27,7 +27,7 @@ public:
     mc::util::ForgeHandler& GetForge() { return m_Forge; }
 };
 
-} // ns util
-} // ns mc
+}  // namespace util
+}  // namespace mc
 
 #endif

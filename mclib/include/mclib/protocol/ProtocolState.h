@@ -7,12 +7,7 @@
 namespace mc {
 namespace protocol {
 
-enum class State {
-    Handshake,
-    Status,
-    Login,
-    Play
-};
+enum class State { Handshake, Status, Login, Play };
 
 enum class Version {
     Minecraft_1_10_2 = 210,
@@ -22,6 +17,7 @@ enum class Version {
     Minecraft_1_12_1 = 338,
     Minecraft_1_12_2 = 340,
     Minecraft_1_13_2 = 404,
+    Minecraft_1_14_2 = 485,
 };
 
 MCLIB_API std::string to_string(Version version);
@@ -32,12 +28,14 @@ private:
     State m_ProtocolState;
 
 public:
-    UnfinishedProtocolException(VarInt id, State state) : m_PacketId(id), m_ProtocolState(state) { }
+    UnfinishedProtocolException(VarInt id, State state)
+        : m_PacketId(id), m_ProtocolState(state) {}
     std::string what() const {
-        return "Unknown packet type " + std::to_string(m_PacketId.GetInt()) + " received during " + std::to_string((s32)m_ProtocolState) + " protocol state.";
+        return "Unknown packet type " + std::to_string(m_PacketId.GetInt()) +
+               " received during " + std::to_string((s32)m_ProtocolState) +
+               " protocol state.";
     }
 };
-
 
 namespace login {
 
@@ -48,16 +46,13 @@ enum ProtocolLogin {
     SetCompression
 };
 
-} // ns login
+}  // namespace login
 
 namespace status {
 
-enum ProtocolStatus {
-    Response = 0,
-    Pong
-};
+enum ProtocolStatus { Response = 0, Pong };
 
-} // ns status
+}  // namespace status
 
 namespace play {
 
@@ -139,16 +134,29 @@ enum ProtocolPlay {
     EntityProperties,
     EntityEffect,
     AdvancementProgress = 0x4E,
-
     Advancements,
     UnlockRecipes,
     CraftRecipeResponse,
+    OpenHorseWindow,
+    UpdateLight,
+    TradeList,
+    OpenBook,
+    PlayerInfo,
+    FacePlayer,
+    SelectAdvancementTab,
+    UpdateViewPosition,
+    UpdateViewDistance,
+    EntitySoundEffect,
+    StopSound,
+    NBTQueryResponse,
+    DeclareRecipes,
+    Tags,
 };
 
-} // ns play
+}  // namespace play
 
-} // ns protocol
-} // ns mc
+}  // namespace protocol
+}  // namespace mc
 
 namespace std {
 
@@ -166,6 +174,6 @@ struct hash<mc::protocol::Version> {
     }
 };
 
-} // ns std
+}  // namespace std
 
 #endif

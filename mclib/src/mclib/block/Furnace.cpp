@@ -11,16 +11,13 @@ bool Furnace::ImportNBT(nbt::NBT* nbt) {
     }
 
     auto burnTimeTag = nbt->GetTag<nbt::TagShort>(L"BurnTime");
-    if (burnTimeTag)
-        m_BurnTime = burnTimeTag->GetValue();
+    if (burnTimeTag) m_BurnTime = burnTimeTag->GetValue();
 
     auto cookTimeTag = nbt->GetTag<nbt::TagShort>(L"CookTime");
-    if (cookTimeTag)
-        m_CookTime = cookTimeTag->GetValue();
+    if (cookTimeTag) m_CookTime = cookTimeTag->GetValue();
 
     auto cookTimeTotalTag = nbt->GetTag<nbt::TagShort>(L"CookTimeTotal");
-    if (cookTimeTotalTag)
-        m_CookTimeTotal = cookTimeTotalTag->GetValue();
+    if (cookTimeTotalTag) m_CookTimeTotal = cookTimeTotalTag->GetValue();
 
     return InventoryBlock::ImportNBT(nbt);
 }
@@ -46,5 +43,5 @@ inventory::Slot Furnace::GetResultSlot() const noexcept {
     return iter->second;
 }
 
-} // ns block
-} // ns mc
+}  // namespace block
+}  // namespace mc

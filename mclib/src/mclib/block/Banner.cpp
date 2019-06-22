@@ -17,7 +17,7 @@ bool Banner::ImportNBT(nbt::NBT* nbt) {
 
     auto patternsTag = nbt->GetTag<nbt::TagList>(L"Patterns");
     if (!patternsTag) return true;
-    
+
     for (auto iter = patternsTag->begin(); iter != patternsTag->end(); ++iter) {
         nbt::TagCompound* sectionCompound = (nbt::TagCompound*)iter->get();
 
@@ -37,5 +37,5 @@ bool Banner::ImportNBT(nbt::NBT* nbt) {
     return true;
 }
 
-} // ns block
-} // ns mc
+}  // namespace block
+}  // namespace mc

@@ -8,14 +8,11 @@ bool InventoryBlock::ImportNBT(nbt::NBT* nbt) {
     auto lootTableTag = nbt->GetTag<nbt::TagString>(L"LootTable");
     auto lootTableSeedTag = nbt->GetTag<nbt::TagInt>(L"LootTableSeed");
 
-    if (lockTag)
-        m_Lock = lockTag->GetValue();
+    if (lockTag) m_Lock = lockTag->GetValue();
 
-    if (lootTableTag)
-        m_LootTable = lootTableTag->GetValue();
+    if (lootTableTag) m_LootTable = lootTableTag->GetValue();
 
-    if (lootTableSeedTag)
-        m_LootTableSeed = lootTableSeedTag->GetValue();
+    if (lootTableSeedTag) m_LootTableSeed = lootTableSeedTag->GetValue();
 
     auto itemsTag = nbt->GetTag<nbt::TagList>(L"Items");
     if (itemsTag == nullptr) return false;
@@ -33,5 +30,5 @@ bool InventoryBlock::ImportNBT(nbt::NBT* nbt) {
     return true;
 }
 
-} // ns block
-} // ns mc
+}  // namespace block
+}  // namespace mc

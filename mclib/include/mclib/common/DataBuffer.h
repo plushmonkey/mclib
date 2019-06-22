@@ -2,10 +2,10 @@
 #define MCLIB_COMMON_DATA_BUFFER_H_
 
 #include <mclib/common/Common.h>
-#include <vector>
 #include <algorithm>
-#include <cstring>
 #include <cassert>
+#include <cstring>
+#include <vector>
 
 namespace mc {
 
@@ -67,7 +67,7 @@ public:
     template <typename T>
     DataBuffer& operator>>(T& data) {
         assert(m_ReadOffset + sizeof(T) <= GetSize());
-        data = *(T *)&m_Buffer[m_ReadOffset];
+        data = *(T*)&m_Buffer[m_ReadOffset];
         std::reverse((u8*)&data, (u8*)&data + sizeof(T));
         m_ReadOffset += sizeof(T);
         return *this;
@@ -75,14 +75,16 @@ public:
 
     DataBuffer& operator>>(DataBuffer& data) {
         data.Resize(GetSize() - m_ReadOffset);
-        std::copy(m_Buffer.begin() + m_ReadOffset, m_Buffer.end(), data.begin());
+        std::copy(m_Buffer.begin() + m_ReadOffset, m_Buffer.end(),
+                  data.begin());
         m_ReadOffset = m_Buffer.size();
         return *this;
     }
 
     DataBuffer& operator>>(std::string& data) {
         data.resize(GetSize() - m_ReadOffset);
-        std::copy(m_Buffer.begin() + m_ReadOffset, m_Buffer.end(), data.begin());
+        std::copy(m_Buffer.begin() + m_ReadOffset, m_Buffer.end(),
+                  data.begin());
         m_ReadOffset = m_Buffer.size();
         return *this;
     }
@@ -113,26 +115,18 @@ public:
         m_ReadOffset += amount;
     }
 
-    void Resize(std::size_t size) {
-        m_Buffer.resize(size);
-    }
+    void Resize(std::size_t size) { m_Buffer.resize(size); }
 
-    void Reserve(std::size_t amount) {
-        m_Buffer.reserve(amount);
-    }
+    void Reserve(std::size_t amount) { m_Buffer.reserve(amount); }
 
-    void erase(iterator it) {
-        m_Buffer.erase(it);
-    }
+    void erase(iterator it) { m_Buffer.erase(it); }
 
     void Clear() {
         m_Buffer.clear();
         m_ReadOffset = 0;
     }
 
-    bool IsFinished() const {
-        return m_ReadOffset >= m_Buffer.size();
-    }
+    bool IsFinished() const { return m_ReadOffset >= m_Buffer.size(); }
 
     std::size_t GetReadOffset() const { return m_ReadOffset; }
     void MCLIB_API SetReadOffset(std::size_t pos);
@@ -153,6 +147,6 @@ public:
 
 MCLIB_API std::ostream& operator<<(std::ostream& os, const DataBuffer& buffer);
 
-} // ns mc
+}  // namespace mc
 
 #endif

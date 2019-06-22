@@ -6,13 +6,18 @@
 
 namespace mc {
 
-DataBuffer::DataBuffer() { }
-DataBuffer::DataBuffer(const DataBuffer& other) : m_Buffer(other.m_Buffer), m_ReadOffset(other.m_ReadOffset) { }
-DataBuffer::DataBuffer(DataBuffer&& other) : m_Buffer(std::move(other.m_Buffer)), m_ReadOffset(std::move(other.m_ReadOffset)) { }
-DataBuffer::DataBuffer(const std::string& str) : m_Buffer(str.begin(), str.end()) { }
+DataBuffer::DataBuffer() {}
+DataBuffer::DataBuffer(const DataBuffer& other)
+    : m_Buffer(other.m_Buffer), m_ReadOffset(other.m_ReadOffset) {}
+DataBuffer::DataBuffer(DataBuffer&& other)
+    : m_Buffer(std::move(other.m_Buffer)),
+      m_ReadOffset(std::move(other.m_ReadOffset)) {}
+DataBuffer::DataBuffer(const std::string& str)
+    : m_Buffer(str.begin(), str.end()) {}
 DataBuffer::DataBuffer(const DataBuffer& other, std::size_t offset) {
     m_Buffer.reserve(other.GetSize() - offset);
-    std::copy(other.m_Buffer.begin() + offset, other.m_Buffer.end(), std::back_inserter(m_Buffer));
+    std::copy(other.m_Buffer.begin() + offset, other.m_Buffer.end(),
+              std::back_inserter(m_Buffer));
 }
 
 DataBuffer& DataBuffer::operator=(const DataBuffer& other) {
@@ -42,18 +47,12 @@ std::size_t DataBuffer::GetRemaining() const {
     return m_Buffer.size() - m_ReadOffset;
 }
 
-DataBuffer::iterator DataBuffer::begin() {
-    return m_Buffer.begin();
-}
-DataBuffer::iterator DataBuffer::end() {
-    return m_Buffer.end();
-}
+DataBuffer::iterator DataBuffer::begin() { return m_Buffer.begin(); }
+DataBuffer::iterator DataBuffer::end() { return m_Buffer.end(); }
 DataBuffer::const_iterator DataBuffer::begin() const {
     return m_Buffer.begin();
 }
-DataBuffer::const_iterator DataBuffer::end() const {
-    return m_Buffer.end();
-}
+DataBuffer::const_iterator DataBuffer::end() const { return m_Buffer.end(); }
 
 std::ostream& operator<<(std::ostream& os, const DataBuffer& buffer) {
     for (unsigned char u : buffer)
@@ -62,5 +61,4 @@ std::ostream& operator<<(std::ostream& os, const DataBuffer& buffer) {
     return os;
 }
 
-} // ns mc
-
+}  // namespace mc

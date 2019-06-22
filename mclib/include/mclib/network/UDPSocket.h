@@ -23,7 +23,7 @@ public:
     DataBuffer MCLIB_API Receive(std::size_t amount);
 };
 
-} // ns network
-} // ns mc
+}  // namespace network
+}  // namespace mc
 
 #endif

@@ -9,7 +9,9 @@ namespace mc {
 namespace protocol {
 namespace packets {
 
-Packet* PacketFactory::CreatePacket(Protocol& protocol, protocol::State state, DataBuffer data, std::size_t length, core::Connection* connection) {
+Packet* PacketFactory::CreatePacket(Protocol& protocol, protocol::State state,
+                                    DataBuffer data, std::size_t length,
+                                    core::Connection* connection) {
     if (data.GetSize() == 0) return nullptr;
 
     VarInt vid;
@@ -27,10 +29,8 @@ Packet* PacketFactory::CreatePacket(Protocol& protocol, protocol::State state, D
     return packet;
 }
 
-void PacketFactory::FreePacket(Packet* packet) {
-    delete packet;
-}
+void PacketFactory::FreePacket(Packet* packet) { delete packet; }
 
-} // ns packets
-} // ns protocol
-} // ns mc
+}  // namespace packets
+}  // namespace protocol
+}  // namespace mc

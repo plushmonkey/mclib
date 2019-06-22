@@ -11,12 +11,13 @@ private:
     float m_Health;
 
 public:
-    LivingEntity(EntityId id, protocol::Version protocolVersion) : Entity(id, protocolVersion) { }
+    LivingEntity(EntityId id, protocol::Version protocolVersion)
+        : Entity(id, protocolVersion) {}
 
     float GetHealth() const { return m_Health; }
 };
 
-} // ns entity
-} // ns mc
+}  // namespace entity
+}  // namespace mc
 
 #endif
