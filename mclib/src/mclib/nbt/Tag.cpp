@@ -186,6 +186,8 @@ void TagList::Read(DataBuffer& buffer) {
     buffer >> type;
     buffer >> size;
 
+    m_ListType = static_cast<TagType>(type);
+
     for (s32 i = 0; i < size; ++i) {
         TagPtr tag;
 
