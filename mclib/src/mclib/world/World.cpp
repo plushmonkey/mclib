@@ -71,8 +71,20 @@ void World::HandlePacket(protocol::packets::in::ChunkDataPacket* packet) {
         return;
     }
 
-    if (!m_Chunks[key])
+    auto iter = m_Chunks.find(key);
+
+    if (!meta.continuous) {
+        // This isn't an entire column of chunks, so just update the existing chunk column with the provided chunks.
+        for (s16 i = 0; i < ChunkColumn::ChunksPerColumn; ++i) {
+            // The section mask says whether or not there is data in this chunk.
+            if (meta.sectionmask & (1 << i)) {
+                (*iter->second)[i] = (*col)[i];
+            }
+        }
+    } else {
+        // This is an entire column of chunks, so just replace the entire column with the new one.
         m_Chunks[key] = col;
+    }
 
     for (s32 i = 0; i < ChunkColumn::ChunksPerColumn; ++i) {
         ChunkPtr chunk = (*col)[i];
