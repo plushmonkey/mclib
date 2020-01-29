@@ -78,7 +78,7 @@ void Logger::HandlePacket(mc::protocol::packets::in::MultiBlockChangePacket* pac
     auto chunkZ = packet->GetChunkZ();
 
     for (const auto& change : packet->GetBlockChanges()) {
-        mc::Vector3i pos(chunkX + change.x, change.y + chunkZ + change.z);
+        mc::Vector3i pos(chunkX*16 + change.x, change.y, chunkZ*16 + change.z);
 
         std::cout << "Block changed at " << pos << " to " << change.blockData << std::endl;
     }
