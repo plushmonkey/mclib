@@ -99,8 +99,31 @@ public:
         NBTType(nbt::NBT value) : value(value) { }
     };
 
+    struct VillagerDataType : public Type {
+      VarInt type;
+      VarInt profession;
+      VarInt level;
+
+      VillagerDataType() = default;
+      VillagerDataType(VarInt type, VarInt profession, VarInt level) : type(type), profession(profession), level(level) { }
+    };
+
+    struct OptVarIntType : public Type {
+      VarInt value;
+
+      OptVarIntType() = default;
+      OptVarIntType(VarInt value) : value(value) { }
+    };
+
+    struct PoseType : public Type {
+      VarInt value;
+
+      PoseType() = default;
+      PoseType(VarInt value) : value(value) { }
+    };
+
 private:
-    enum DataType { Byte, VarInt, Float, String, Chat, OptChat, Slot, Boolean, Rotation, Position, OptPosition, Direction, OptUUID, OptBlockID, NBT, Particle, None };
+    enum DataType { Byte, VarInt, Float, String, Chat, OptChat, Slot, Boolean, Rotation, Position, OptPosition, Direction, OptUUID, OptBlockID, NBT, Particle, VillagerData, OptVarInt, Pose, None };
 
     enum { MetadataCount = 0xFE };
     std::array<std::pair<std::unique_ptr<Type>, DataType>, MetadataCount> m_Metadata;
@@ -136,6 +159,9 @@ MCLIB_API DataBuffer& operator<<(DataBuffer& out, const EntityMetadata::Rotation
 MCLIB_API DataBuffer& operator<<(DataBuffer& out, const EntityMetadata::PositionType& value);
 MCLIB_API DataBuffer& operator<<(DataBuffer& out, const EntityMetadata::UUIDType& value);
 MCLIB_API DataBuffer& operator<<(DataBuffer& out, const EntityMetadata::NBTType& value);
+MCLIB_API DataBuffer& operator<<(DataBuffer& out, const EntityMetadata::VillagerDataType& value);
+MCLIB_API DataBuffer& operator<<(DataBuffer& out, const EntityMetadata::OptVarIntType& value);
+MCLIB_API DataBuffer& operator<<(DataBuffer& out, const EntityMetadata::PoseType& value);
 
 MCLIB_API DataBuffer& operator>>(DataBuffer& in, EntityMetadata& metadata);
 MCLIB_API DataBuffer& operator>>(DataBuffer& in, EntityMetadata::ByteType& value);
@@ -147,6 +173,9 @@ MCLIB_API DataBuffer& operator>>(DataBuffer& in, EntityMetadata::RotationType& v
 MCLIB_API DataBuffer& operator>>(DataBuffer& in, EntityMetadata::PositionType& value);
 MCLIB_API DataBuffer& operator>>(DataBuffer& in, EntityMetadata::UUIDType& value);
 MCLIB_API DataBuffer& operator>>(DataBuffer& in, EntityMetadata::NBTType& value);
+MCLIB_API DataBuffer& operator>>(DataBuffer& in, EntityMetadata::VillagerDataType& value);
+MCLIB_API DataBuffer& operator>>(DataBuffer& in, EntityMetadata::OptVarIntType& value);
+MCLIB_API DataBuffer& operator>>(DataBuffer& in, EntityMetadata::PoseType& value);
 
 } // ns entity
 } // ns mc

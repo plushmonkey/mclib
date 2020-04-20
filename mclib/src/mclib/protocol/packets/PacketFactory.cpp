@@ -4,6 +4,7 @@
 
 #include <exception>
 #include <string>
+#include <iostream>
 
 namespace mc {
 namespace protocol {
@@ -19,7 +20,11 @@ Packet* PacketFactory::CreatePacket(Protocol& protocol, protocol::State state, D
 
     if (packet) {
         packet->SetConnection(connection);
-        packet->Deserialize(data, length);
+        try {
+          packet->Deserialize(data, length);
+        } catch (std::exception & e) {
+          std::cerr << vid.GetInt() << ": " << e.what();
+        }
     } else {
         throw protocol::UnfinishedProtocolException(vid, state);
     }

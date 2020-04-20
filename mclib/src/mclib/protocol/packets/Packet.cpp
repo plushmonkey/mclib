@@ -151,7 +151,10 @@ bool SpawnMobPacket::Deserialize(DataBuffer& data, std::size_t packetLength) {
     short vx, vy, vz;
     data >> vx >> vy >> vz;
     m_Velocity = Vector3s(vx, vy, vz);
-    data >> m_Metadata;
+
+    if (GetProtocolVersion() < Version::Minecraft_1_15_2) {
+      data >> m_Metadata;
+    }
 
     return true;
 }
@@ -230,7 +233,9 @@ bool SpawnPlayerPacket::Deserialize(DataBuffer& data, std::size_t packetLength) 
     data >> m_Yaw;
     data >> m_Pitch;
 
-    data >> m_Metadata;
+    if (GetProtocolVersion() < Version::Minecraft_1_15_2) {
+      data >> m_Metadata;
+    }
     return true;
 }
 
@@ -993,6 +998,15 @@ bool ChunkDataPacket::Deserialize(DataBuffer& data, std::size_t packetLength) {
     VarInt mask;
     data >> mask;
 
+    nbt::NBT heightmaps;
+
+    data >> heightmaps;
+
+    if (GetProtocolVersion() > Version::Minecraft_1_13_2 && metadata.continuous) {
+      // Skip biome data
+      data.SetReadOffset(data.GetReadOffset() + 1024 * sizeof(u32));
+    }
+
     metadata.sectionmask = mask.GetInt();
 
     if (m_Connection)
@@ -1004,13 +1018,14 @@ bool ChunkDataPacket::Deserialize(DataBuffer& data, std::size_t packetLength) {
 
     data >> size;
 
-    m_ChunkColumn = std::make_shared<world::ChunkColumn>(metadata);
+    m_ChunkColumn = std::make_shared<world::ChunkColumn>(metadata, GetProtocolVersion());
 
     data >> *m_ChunkColumn;
 
     // Skip biome information
-    if (metadata.continuous)
-        data.SetReadOffset(data.GetReadOffset() + 256);
+    if (GetProtocolVersion() <= Version::Minecraft_1_13_2 && metadata.continuous) {
+      data.SetReadOffset(data.GetReadOffset() + 256);
+    }
 
     VarInt entities;
     data >> entities;
@@ -1104,10 +1119,28 @@ bool JoinGamePacket::Deserialize(DataBuffer& data, std::size_t packetLength) {
     data >> m_EntityId;
     data >> m_Gamemode;
     data >> m_Dimension;
-    data >> m_Difficulty;
+
+    if (this->GetProtocolVersion() >= Version::Minecraft_1_15_2) {
+      u64 hashedSeed;
+      data >> hashedSeed;
+    } else {
+      data >> m_Difficulty;
+    }
     data >> m_MaxPlayers;
     data >> m_LevelType;
+
+    if (this->GetProtocolVersion() >= Version::Minecraft_1_15_2) {
+      VarInt viewDistance;
+
+      data >> viewDistance;
+    }
+
     data >> m_ReducedDebug;
+
+    if (this->GetProtocolVersion() >= Version::Minecraft_1_15_2) {
+      bool respawnScreen;
+      data >> respawnScreen;
+    }
     return true;
 }
 
@@ -1574,7 +1607,14 @@ RespawnPacket::RespawnPacket() {
 
 bool RespawnPacket::Deserialize(DataBuffer& data, std::size_t packetLength) {
     data >> m_Dimension;
-    data >> m_Difficulty;
+
+    if (GetProtocolVersion() <= Version::Minecraft_1_13_2) {
+      data >> m_Difficulty;
+    } else if (GetProtocolVersion() >= Version::Minecraft_1_15_2) {
+      u64 hashedSeed;
+      data >> hashedSeed;
+    }
+
     data >> m_Gamemode;
 
     MCString level;
@@ -2413,6 +2453,25 @@ DataBuffer EncryptionResponsePacket::Serialize() const {
     buffer << verifyLength;
     buffer << m_VerifyToken;
     return buffer;
+}
+
+LoginPluginResponsePacket::LoginPluginResponsePacket(u32 messageId, bool successful, const std::string& data)
+  : m_MessageId(messageId), m_Successful(successful), m_Data(data)
+{
+
+}
+
+DataBuffer LoginPluginResponsePacket::Serialize() const {
+  DataBuffer buffer;
+
+  buffer << m_Id;
+
+  VarInt messageId((s32)m_MessageId);
+
+  buffer << messageId << m_Successful;
+  buffer << m_Data;
+
+  return buffer;
 }
 
 // Play packets

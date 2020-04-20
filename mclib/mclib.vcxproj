@@ -68,6 +68,7 @@
     <ClInclude Include="include\mclib\inventory\Hotbar.h" />
     <ClInclude Include="include\mclib\inventory\Inventory.h" />
     <ClInclude Include="include\mclib\inventory\Slot.h" />
+    <ClInclude Include="include\mclib\mclib.h" />
     <ClInclude Include="include\mclib\nbt\NBT.h" />
     <ClInclude Include="include\mclib\nbt\Tag.h" />
     <ClInclude Include="include\mclib\network\IPAddress.h" />
@@ -159,18 +160,19 @@
     <ProjectGuid>{2A6A98AE-F46F-4C53-8E64-003289FEB7E7}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
     <RootNamespace>mclib</RootNamespace>
+    <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>v141</PlatformToolset>
+    <PlatformToolset>v142</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
-    <PlatformToolset>v141</PlatformToolset>
+    <PlatformToolset>v142</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>

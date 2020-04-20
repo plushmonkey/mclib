@@ -47,6 +47,18 @@ DataBuffer& operator<<(DataBuffer& out, const EntityMetadata::NBTType& value) {
     return out << value.value;
 }
 
+DataBuffer& operator<<(DataBuffer& out, const EntityMetadata::VillagerDataType& value) {
+  return out << value.type << value.profession << value.level;
+}
+
+DataBuffer& operator<<(DataBuffer& out, const EntityMetadata::OptVarIntType& value) {
+  return out << value.value;
+}
+
+DataBuffer& operator<<(DataBuffer& out, const EntityMetadata::PoseType& value) {
+  return out << value.value;
+}
+
 
 DataBuffer& operator>>(DataBuffer& in, EntityMetadata::ByteType& value) {
     return in >> value.value;
@@ -91,6 +103,19 @@ DataBuffer& operator>>(DataBuffer& in, EntityMetadata::UUIDType& value) {
 
 DataBuffer& operator>>(DataBuffer& in, EntityMetadata::NBTType& value) {
     return in >> value.value;
+}
+
+DataBuffer& operator>>(DataBuffer& in, EntityMetadata::VillagerDataType& value) {
+  return in >> value.type >> value.profession >> value.level;
+}
+
+
+DataBuffer& operator>>(DataBuffer& in, EntityMetadata::OptVarIntType& value) {
+  return in >> value.value;
+}
+
+DataBuffer& operator>>(DataBuffer& in, EntityMetadata::PoseType& value) {
+  return in >> value.value;
 }
 
 DataBuffer& operator<<(DataBuffer& out, const EntityMetadata& md) {
@@ -156,6 +181,17 @@ DataBuffer& operator<<(DataBuffer& out, const EntityMetadata& md) {
         case EntityMetadata::DataType::NBT:
             out << *((EntityMetadata::NBTType*)value);
             break;
+        case EntityMetadata::DataType::Particle:
+          break;
+        case EntityMetadata::DataType::VillagerData:
+          out << *((EntityMetadata::VillagerDataType*)value);
+          break;
+        case EntityMetadata::DataType::OptVarInt:
+          out << *((EntityMetadata::OptVarIntType*)value);
+          break;
+        case EntityMetadata::DataType::Pose:
+          out << *((EntityMetadata::PoseType*)value);
+          break;
         default:
             break;
         }
@@ -284,6 +320,32 @@ DataBuffer& operator>>(DataBuffer& in, EntityMetadata& md) {
                 md.m_Metadata[index].first = std::move(value);
             }
             break;
+            case EntityMetadata::DataType::Particle:
+            {
+              assert(!"Particle metadat not implemented");
+            }
+            break;
+            case EntityMetadata::DataType::VillagerData:
+            {
+              std::unique_ptr<EntityMetadata::VillagerDataType> value = std::make_unique<EntityMetadata::VillagerDataType>();
+              in >> *value;
+              md.m_Metadata[index].first = std::move(value);
+            }
+            break;
+            case EntityMetadata::DataType::OptVarInt:
+            {
+              std::unique_ptr<EntityMetadata::OptVarIntType> value = std::make_unique<EntityMetadata::OptVarIntType>();
+              in >> *value;
+              md.m_Metadata[index].first = std::move(value);
+            }
+            break;
+            case EntityMetadata::DataType::Pose:
+            {
+              std::unique_ptr<EntityMetadata::PoseType> value = std::make_unique<EntityMetadata::PoseType>();
+              in >> *value;
+              md.m_Metadata[index].first = std::move(value);
+            }
+            break;
             default:
                 break;
         }
@@ -337,6 +399,20 @@ void EntityMetadata::CopyOther(const EntityMetadata& other) {
             case DataType::NBT:
                 m_Metadata[i].first = std::make_unique<NBTType>(dynamic_cast<NBTType*>(other.m_Metadata[i].first.get())->value);
                 break;
+            case DataType::Particle:
+              assert(!"Particle metadata copy not implemented");
+              break;
+            case DataType::VillagerData:
+              m_Metadata[i].first = std::make_unique<VillagerDataType>(dynamic_cast<VillagerDataType*>(other.m_Metadata[i].first.get())->type, 
+                                                                       dynamic_cast<VillagerDataType*>(other.m_Metadata[i].first.get())->profession, 
+                                                                       dynamic_cast<VillagerDataType*>(other.m_Metadata[i].first.get())->level );
+              break;
+            case DataType::OptVarInt:
+              m_Metadata[i].first = std::make_unique<OptVarIntType>(dynamic_cast<OptVarIntType*>(other.m_Metadata[i].first.get())->value);
+              break;
+            case DataType::Pose:
+              m_Metadata[i].first = std::make_unique<PoseType>(dynamic_cast<PoseType*>(other.m_Metadata[i].first.get())->value);
+              break;
             default:
                 break;
         }

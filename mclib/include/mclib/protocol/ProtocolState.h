@@ -15,6 +15,7 @@ enum class State {
 };
 
 enum class Version {
+    Minecraft_Ping = -1,
     Minecraft_1_10_2 = 210,
     Minecraft_1_11_0 = 315,
     Minecraft_1_11_2 = 316,
@@ -22,6 +23,8 @@ enum class Version {
     Minecraft_1_12_1 = 338,
     Minecraft_1_12_2 = 340,
     Minecraft_1_13_2 = 404,
+
+    Minecraft_1_15_2 = 578,
 };
 
 MCLIB_API std::string to_string(Version version);

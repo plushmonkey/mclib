@@ -52,7 +52,7 @@ public:
     /**
      * chunkIndex is the index (0-16) of this chunk in the ChunkColumn
      */
-    void MCLIB_API Load(DataBuffer& in, ChunkColumnMetadata* meta, s32 chunkIndex);
+    void MCLIB_API Load(DataBuffer& in, ChunkColumnMetadata* meta, s32 chunkIndex, protocol::Version version);
 };
 
 typedef std::shared_ptr<Chunk> ChunkPtr;
@@ -74,9 +74,10 @@ private:
     std::array<ChunkPtr, ChunksPerColumn> m_Chunks;
     ChunkColumnMetadata m_Metadata;
     std::map<Vector3i, block::BlockEntityPtr> m_BlockEntities;
+    protocol::Version m_ProtocolVersion;
 
 public:
-    MCLIB_API ChunkColumn(ChunkColumnMetadata metadata);
+    MCLIB_API ChunkColumn(ChunkColumnMetadata metadata, protocol::Version protocolVersion);
 
     ChunkColumn(const ChunkColumn& rhs) = default;
     ChunkColumn& operator=(const ChunkColumn& rhs) = default;
@@ -111,8 +112,12 @@ public:
         m_BlockEntities.insert(std::make_pair(blockEntity->GetPosition(), blockEntity));
     }
 
-    void RemoveBlockEntity(Vector3i pos) {
+    void MCLIB_API RemoveBlockEntity(Vector3i pos) {
         m_BlockEntities.erase(pos);
+    }
+
+    protocol::Version MCLIB_API GetProtocolVersion() const {
+      return m_ProtocolVersion;
     }
 
     /**

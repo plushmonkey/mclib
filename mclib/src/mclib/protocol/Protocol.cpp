@@ -185,6 +185,77 @@ public:
     virtual s32 GetPacketId(packets::out::PrepareCraftingGridPacket) override { throw UnsupportedPacketException("PrepareCraftingGridPacket does not work with protocol 1.13.2"); }
 };
 
+class Protocol_1_15_2 : public Protocol {
+public:
+  Protocol_1_15_2(Version version, StateMap inbound)
+    : Protocol(version, inbound)
+  {
+
+  }
+
+  // Handshake
+  virtual s32 GetPacketId(packets::out::HandshakePacket) override { return 0x00; }
+
+  // Login
+  virtual s32 GetPacketId(packets::out::LoginStartPacket) override { return 0x00; }
+  virtual s32 GetPacketId(packets::out::EncryptionResponsePacket) override { return 0x01; }
+  virtual s32 GetPacketId(packets::out::LoginPluginResponsePacket) override { return 0x02; }
+
+  // Status
+  virtual s32 GetPacketId(packets::out::status::RequestPacket) override { return 0x00; }
+  virtual s32 GetPacketId(packets::out::status::PingPacket) override { return 0x01; }
+
+  // Play
+  virtual s32 GetPacketId(packets::out::TeleportConfirmPacket) override { return 0x00; }
+  // QueryBlockNBT = 0x01
+  // SetDifficulty = 0x02
+  virtual s32 GetPacketId(packets::out::ChatPacket) override { return 0x03; }
+  virtual s32 GetPacketId(packets::out::ClientStatusPacket) override { return 0x04; }
+  virtual s32 GetPacketId(packets::out::ClientSettingsPacket) override { return 0x05; }
+  virtual s32 GetPacketId(packets::out::TabCompletePacket) override { return 0x06; }
+  virtual s32 GetPacketId(packets::out::ConfirmTransactionPacket) override { return 0x07; }
+  virtual s32 GetPacketId(packets::out::EnchantItemPacket) override { return 0x08; } // = ClickWindowButton now
+  virtual s32 GetPacketId(packets::out::ClickWindowPacket) override { return 0x09; }
+  virtual s32 GetPacketId(packets::out::CloseWindowPacket) override { return 0x0A; }
+  virtual s32 GetPacketId(packets::out::PluginMessagePacket) override { return 0x0B; }
+  // EditBook = 0x0C
+  // QueryEntityNBT = 0x0D
+  virtual s32 GetPacketId(packets::out::UseEntityPacket) override { return 0x0E; }
+  virtual s32 GetPacketId(packets::out::KeepAlivePacket) override { return 0x0F; }
+  // LockDifficulty = 0x10
+  virtual s32 GetPacketId(packets::out::PlayerPositionPacket) override { return 0x11; }
+  virtual s32 GetPacketId(packets::out::PlayerPositionAndLookPacket) override { return 0x12; }
+  virtual s32 GetPacketId(packets::out::PlayerLookPacket) override { return 0x13; }
+  virtual s32 GetPacketId(packets::out::PlayerPacket) override { return 0x14; }
+  virtual s32 GetPacketId(packets::out::VehicleMovePacket) override { return 0x15; }
+  virtual s32 GetPacketId(packets::out::SteerBoatPacket) override { return 0x16; }
+  // PickItem = 0x17
+  virtual s32 GetPacketId(packets::out::CraftRecipeRequestPacket) override { return 0x18; }
+  virtual s32 GetPacketId(packets::out::PlayerAbilitiesPacket) override { return 0x19; }
+  virtual s32 GetPacketId(packets::out::PlayerDiggingPacket) override { return 0x1A; }
+  virtual s32 GetPacketId(packets::out::EntityActionPacket) override { return 0x1B; }
+  virtual s32 GetPacketId(packets::out::SteerVehiclePacket) override { return 0x1C; }
+  virtual s32 GetPacketId(packets::out::CraftingBookDataPacket) override { return 0x1D; }
+  // NameItem = 0x1E
+  virtual s32 GetPacketId(packets::out::ResourcePackStatusPacket) override { return 0x1F; }
+  virtual s32 GetPacketId(packets::out::AdvancementTabPacket) override { return 0x20; }
+  // SelectTrade = 0x21
+  // SetBeaconEffect = 0x22
+  virtual s32 GetPacketId(packets::out::HeldItemChangePacket) override { return 0x23; }
+  // UpdateCommandBlock = 0x24
+  // UpdateCommandBlockMinecart = 0x25
+  virtual s32 GetPacketId(packets::out::CreativeInventoryActionPacket) override { return 0x26; }
+  // UpdateJigsawBlock = 0x27
+  // UpdateStructure = 0x28
+  virtual s32 GetPacketId(packets::out::UpdateSignPacket) override { return 0x29; }
+  virtual s32 GetPacketId(packets::out::AnimationPacket) override { return 0x2A; }
+  virtual s32 GetPacketId(packets::out::SpectatePacket) override { return 0x2B; }
+  virtual s32 GetPacketId(packets::out::PlayerBlockPlacementPacket) override { return 0x2C; }
+  virtual s32 GetPacketId(packets::out::UseItemPacket) override { return 0x2D; }
+
+  virtual s32 GetPacketId(packets::out::PrepareCraftingGridPacket) override { throw UnsupportedPacketException("PrepareCraftingGridPacket does not work with protocol 1.13.2"); }
+};
+
 // Protocol agnostic protocol id to packet creators.
 std::unordered_map<State, std::unordered_map<s32, PacketCreator>> agnosticStateMap = {
     {
@@ -709,7 +780,126 @@ Protocol::StateMap inboundMap_1_13_2 = {
     }
 };
 
+Protocol::StateMap inboundMap_1_15_2 = {
+    {
+        State::Login,
+        {
+            { 0x00, protocol::login::Disconnect },
+            { 0x01, protocol::login::EncryptionRequest },
+            { 0x02, protocol::login::LoginSuccess },
+            { 0x03, protocol::login::SetCompression },
+            // 0x04 LoginPluginRequest
+        }
+    },
+    {
+        State::Status,
+        {
+            { 0x00, protocol::status::Response },
+            { 0x01, protocol::status::Pong },
+        }
+    },
+    {
+        State::Play,
+        {
+            { 0x00, protocol::play::SpawnObject },
+            { 0x01, protocol::play::SpawnExperienceOrb },
+            { 0x02, protocol::play::SpawnGlobalEntity },
+            { 0x03, protocol::play::SpawnMob },
+            { 0x04, protocol::play::SpawnPainting },
+            { 0x05, protocol::play::SpawnPlayer },
+            { 0x06, protocol::play::Animation },
+            { 0x07, protocol::play::Statistics },
+            { 0x08, protocol::play::BlockBreakAnimation },
+            { 0x09, protocol::play::UpdateBlockEntity },
+            //{ 0x0A, protocol::play::BlockEntityData },
+            { 0x0B, protocol::play::BlockAction },
+            { 0x0C, protocol::play::BlockChange },
+            { 0x0D, protocol::play::BossBar },
+            { 0x0E, protocol::play::ServerDifficulty },
+            { 0x0F, protocol::play::Chat },
+            { 0x10, protocol::play::MultiBlockChange },
+            { 0x11, protocol::play::TabComplete },
+            // { 0x12, protocol::play::DeclareCommands },
+            { 0x13, protocol::play::ConfirmTransaction },
+            { 0x14, protocol::play::CloseWindow },
+            { 0x15, protocol::play::WindowItems },
+            { 0x16, protocol::play::WindowProperty },
+            { 0x17, protocol::play::SetSlot },
+            { 0x18, protocol::play::SetCooldown },
+            { 0x19, protocol::play::PluginMessage },
+            { 0x1A, protocol::play::NamedSoundEffect },
+            { 0x1B, protocol::play::Disconnect },
+            { 0x1C, protocol::play::EntityStatus },
+            { 0x1D, protocol::play::Explosion },
+            { 0x1E, protocol::play::UnloadChunk },
+            { 0x1F, protocol::play::ChangeGameState },
+            //{ 0x20, protocol::play::OpenHorseWindow },
+            { 0x21, protocol::play::KeepAlive },
+            { 0x22, protocol::play::ChunkData },
+            { 0x23, protocol::play::Effect },
+            { 0x24, protocol::play::Particle },
+            //{ 0x25, protocol::play::UpdateLight },
+            { 0x26, protocol::play::JoinGame },
+            { 0x27, protocol::play::Map },
+            //{ 0x28, protocol::play::TradeList },
+            { 0x29, protocol::play::EntityRelativeMove },
+            { 0x2A, protocol::play::EntityLookAndRelativeMove },
+            { 0x2B, protocol::play::EntityLook },
+            { 0x2C, protocol::play::Entity },
+            { 0x2D, protocol::play::VehicleMove },
+            //{ 0x2E, protocol::play::OpenBook },
+            { 0x2F, protocol::play::OpenWindow },
+            { 0x30, protocol::play::OpenSignEditor },
+            { 0x31, protocol::play::CraftRecipeResponse },
+            { 0x32, protocol::play::PlayerAbilities },
+            { 0x33, protocol::play::CombatEvent },
+            { 0x34, protocol::play::PlayerListItem },
+            //{ 0x35, protocol::play::FacePlayer },
+            { 0x36, protocol::play::PlayerPositionAndLook },
+            { 0x37, protocol::play::UnlockRecipes },
+            { 0x38, protocol::play::DestroyEntities },
+            { 0x39, protocol::play::RemoveEntityEffect },
+            { 0x3A, protocol::play::ResourcePackSend },
+            { 0x3B, protocol::play::Respawn },
+            { 0x3C, protocol::play::EntityHeadLook },
+            //{ 0x3D, protocol::play::SelectAdvancementTab },
+            { 0x3E, protocol::play::WorldBorder },
+            { 0x3F, protocol::play::Camera },
+            { 0x40, protocol::play::HeldItemChange },
+            //{ 0x41, protocol::play::UpdateViewPosition },
+            //{ 0x42, protocol::play::UpdateViewDistance },
+            { 0x43, protocol::play::DisplayScoreboard },
+            { 0x44, protocol::play::EntityMetadata },
+            { 0x45, protocol::play::AttachEntity },
+            { 0x46, protocol::play::EntityVelocity },
+            { 0x47, protocol::play::EntityEquipment },
+            { 0x48, protocol::play::SetExperience },
+            { 0x49, protocol::play::UpdateHealth },
+            { 0x4A, protocol::play::ScoreboardObjective },
+            { 0x4B, protocol::play::SetPassengers },
+            { 0x4C, protocol::play::Teams },
+            { 0x4D, protocol::play::UpdateScore },
+            { 0x4E, protocol::play::SpawnPosition },
+            { 0x4F, protocol::play::TimeUpdate },
+            //{ 0x51, protocol::play::EntitySoundEffect },
+            { 0x52, protocol::play::SoundEffect },
+            //{ 0x53, protocol::play::StopSound },
+            { 0x54, protocol::play::PlayerListHeaderAndFooter },
+            //{ 0x55, protocol::play::NBTQueryResponse },
+            { 0x56, protocol::play::CollectItem },
+            { 0x57, protocol::play::EntityTeleport },
+            { 0x58, protocol::play::Advancements },
+            { 0x59, protocol::play::EntityProperties },
+            { 0x5A, protocol::play::EntityEffect },
+            //{ 0x5B, protocol::play::DeclareRecipes },
+            //{ 0x5C, protocol::play::Tags },
+        }
+    }
+};
+
 const std::unordered_map<Version, std::shared_ptr<Protocol>> protocolMap = {
+    { Version::Minecraft_Ping, std::make_shared<Protocol>(Version::Minecraft_1_10_2, inboundMap_1_11_2) },
+
     { Version::Minecraft_1_10_2, std::make_shared<Protocol>(Version::Minecraft_1_10_2, inboundMap_1_11_2) },
     { Version::Minecraft_1_11_0, std::make_shared<Protocol>(Version::Minecraft_1_11_0, inboundMap_1_11_2) },
     { Version::Minecraft_1_11_2, std::make_shared<Protocol>(Version::Minecraft_1_11_2, inboundMap_1_11_2) },
@@ -717,6 +907,7 @@ const std::unordered_map<Version, std::shared_ptr<Protocol>> protocolMap = {
     { Version::Minecraft_1_12_1, std::make_shared<Protocol_1_12_1>(Version::Minecraft_1_12_1, inboundMap_1_12_1) },
     { Version::Minecraft_1_12_2, std::make_shared<Protocol_1_12_1>(Version::Minecraft_1_12_2, inboundMap_1_12_1) },
     { Version::Minecraft_1_13_2, std::make_shared<Protocol_1_13_2>(Version::Minecraft_1_13_2, inboundMap_1_13_2) },
+    { Version::Minecraft_1_15_2, std::make_shared<Protocol_1_15_2>(Version::Minecraft_1_15_2, inboundMap_1_15_2) },
 };
 
 bool Protocol::GetAgnosticId(State state, s32 protocolId, s32& agnosticId) {
@@ -765,6 +956,7 @@ Protocol& Protocol::GetProtocol(Version version) {
 
 std::string to_string(Version version) {
     static const std::unordered_map<mc::protocol::Version, std::string> mapping = {
+        { mc::protocol::Version::Minecraft_Ping, "Ping" },
         { mc::protocol::Version::Minecraft_1_10_2, "1.10.2" },
         { mc::protocol::Version::Minecraft_1_11_0, "1.11.0" },
         { mc::protocol::Version::Minecraft_1_11_2, "1.11.2" },
@@ -772,6 +964,7 @@ std::string to_string(Version version) {
         { mc::protocol::Version::Minecraft_1_12_1, "1.12.1" },
         { mc::protocol::Version::Minecraft_1_12_2, "1.12.2" },
         { mc::protocol::Version::Minecraft_1_13_2, "1.13.2" },
+        { mc::protocol::Version::Minecraft_1_15_2, "1.15.2" },
     };
 
     auto iter = mapping.find(version);

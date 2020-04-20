@@ -23,18 +23,26 @@ Chunk& Chunk::operator=(const Chunk& other) {
     return *this;
 }
 
-void Chunk::Load(DataBuffer& in, ChunkColumnMetadata* meta, s32 chunkIndex) {
+void Chunk::Load(DataBuffer& in, ChunkColumnMetadata* meta, s32 chunkIndex, protocol::Version version) {
+    if (version >= protocol::Version::Minecraft_1_15_2) {
+      u16 blockCount;
+
+      in >> blockCount;
+    }
+
     in >> m_BitsPerBlock;
 
-    VarInt paletteLength;
-    in >> paletteLength;
+    if (m_BitsPerBlock < 9) {
+      VarInt paletteLength;
+      in >> paletteLength;
 
-    m_Palette.reserve(paletteLength.GetInt());
+      m_Palette.reserve(paletteLength.GetInt());
 
-    for (s32 i = 0; i < paletteLength.GetInt(); ++i) {
+      for (s32 i = 0; i < paletteLength.GetInt(); ++i) {
         VarInt paletteValue;
         in >> paletteValue;
         m_Palette.push_back((u16)paletteValue.GetInt());
+      }
     }
 
     VarInt dataArrayLength;
@@ -48,14 +56,16 @@ void Chunk::Load(DataBuffer& in, ChunkColumnMetadata* meta, s32 chunkIndex) {
         m_Data[i] = data;
     }
 
-    static const s64 lightSize = 16 * 16 * 16 / 2;
+    if (version <= protocol::Version::Minecraft_1_13_2) {
+      static const s64 lightSize = 16 * 16 * 16 / 2;
 
-    // Block light data
-    in.SetReadOffset(in.GetReadOffset() + lightSize);
+      // Block light data
+      in.SetReadOffset(in.GetReadOffset() + lightSize);
 
-    // Sky Light
-    if (meta->skylight) {
+      // Sky Light
+      if (meta->skylight) {
         in.SetReadOffset(in.GetReadOffset() + lightSize);
+      }
     }
 }
 
@@ -128,8 +138,8 @@ void Chunk::SetBlock(Vector3i chunkPosition, block::BlockPtr block) {
     }
 }
 
-ChunkColumn::ChunkColumn(ChunkColumnMetadata metadata)
-    : m_Metadata(metadata)
+ChunkColumn::ChunkColumn(ChunkColumnMetadata metadata, protocol::Version protocolVersion)
+    : m_Metadata(metadata), m_ProtocolVersion(protocolVersion)
 {
     for (std::size_t i = 0; i < m_Chunks.size(); ++i)
         m_Chunks[i] = nullptr;
@@ -167,7 +177,7 @@ DataBuffer& operator>>(DataBuffer& in, ChunkColumn& column) {
         if (meta->sectionmask & (1 << i)) {
             column.m_Chunks[i] = std::make_shared<Chunk>();
 
-            column.m_Chunks[i]->Load(in, meta, i);
+            column.m_Chunks[i]->Load(in, meta, i, column.GetProtocolVersion());
         } else {
             // Air section, leave null
             column.m_Chunks[i] = nullptr;

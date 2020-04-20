@@ -60,6 +60,7 @@ public:
     // Login
     virtual s32 GetPacketId(packets::out::LoginStartPacket) { return 0x00; }
     virtual s32 GetPacketId(packets::out::EncryptionResponsePacket) { return 0x01; }
+    virtual s32 GetPacketId(packets::out::LoginPluginResponsePacket) { throw UnsupportedPacketException("LoginPluginResponse requires protocol 1.15.2"); }
 
     // Status
     virtual s32 GetPacketId(packets::out::status::RequestPacket) { return 0x00; }

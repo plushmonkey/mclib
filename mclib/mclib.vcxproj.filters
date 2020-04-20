@@ -321,6 +321,9 @@
     <ClInclude Include="include\mclib\common\JsonFwd.h">
       <Filter>Header Files\common</Filter>
     </ClInclude>
+    <ClInclude Include="include\mclib\mclib.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\mclib\block\Block.cpp">

@@ -29,6 +29,8 @@ void VersionFetcher::OnPingResponse(const json& node) {
         { 338, mc::protocol::Version::Minecraft_1_12_1 },
         { 340, mc::protocol::Version::Minecraft_1_12_2 },
         { 404, mc::protocol::Version::Minecraft_1_13_2 },
+
+        { 578, mc::protocol::Version::Minecraft_1_15_2 },
     };
 
     auto&& versionNode = node.value("version", json());
@@ -54,7 +56,7 @@ void VersionFetcher::OnPingResponse(const json& node) {
 mc::protocol::Version VersionFetcher::GetVersion() {
     if (m_Found) return m_Version;
 
-    mc::core::Client m_Client(&m_Dispatcher);
+    mc::core::Client m_Client(&m_Dispatcher, protocol::Version::Minecraft_1_15_2);
 
     m_Connection = m_Client.GetConnection();
 

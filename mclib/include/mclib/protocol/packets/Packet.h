@@ -1737,6 +1737,17 @@ public:
     std::string GetVerifyToken() const { return m_VerifyToken; }
 };
 
+class LoginPluginResponsePacket : public OutboundPacket { // 0x02
+private:
+  u32 m_MessageId;
+  bool m_Successful;
+  std::string m_Data;
+
+public:
+  MCLIB_API LoginPluginResponsePacket(u32 messageId, bool successful, const std::string& data);
+  DataBuffer MCLIB_API Serialize() const;
+};
+
 // Play packets
 class TeleportConfirmPacket : public OutboundPacket { // 0x00
 private:
